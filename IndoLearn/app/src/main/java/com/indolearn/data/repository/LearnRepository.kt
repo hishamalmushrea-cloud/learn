@@ -22,6 +22,13 @@ class LearnRepository(private val db: AppDatabase) {
     fun getUserProgress() = db.progressDao().getProgress()
     suspend fun updateProgress(progress: UserProgressEntity) = db.progressDao().updateProgress(progress)
 
+    // Lesson details
+    suspend fun getLessonById(id: Int) = db.lessonDao().getLessonById(id)
+    suspend fun getLessonDetail(id: Int) = db.lessonDetailDao().getLessonDetail(id)
+
+    // Quizzes
+    suspend fun getRandomQuizzes(limit: Int) = db.trainingDao().getRandomQuizzes(limit)
+
     // Seed initial data (called once)
     suspend fun seedInitialData() {
         // Level 0 Lessons
@@ -201,31 +208,31 @@ class LearnRepository(private val db: AppDatabase) {
             
             LessonDetailEntity(31, 22, "ستتعلم المقارنة والتفضيل.",
                 "Ini lebih murah.\nIni paling murah.\nIni sangat murah.\nIni terlalu mahal.",
-                "lebih = أكثر\npaling = الأكثر\nsangat = جداً\nterlalu = أكثر من اللازم", "terlalu غالباً ما يكون سلبياً.", "Casual: banget"),
+                "lebih = أكثر\npaling = الأكثر\nsangat = جداً\nterlalu = أكثر من اللازم", "terlalu غالباً ما يكون سلبياً.", "", "Casual: banget"),
             
             LessonDetailEntity(32, 23, "ستتعلم ربط الجمل بأدوات الربط.",
                 "Saya lapar, jadi saya makan.\nSaya tidak lapar, tetapi saya makan.",
-                "dan = و\ntetapi = لكن\nkarena = لأن\njadi = لذلك\nkalau = إذا", "ابدأ بـ dan ثم tetapi ثم karena.", "Casual: tapi"),
+                "dan = و\ntetapi = لكن\nkarena = لأن\njadi = لذلك\nkalau = إذا", "ابدأ بـ dan ثم tetapi ثم karena.", "", "Casual: tapi"),
             
             LessonDetailEntity(33, 24, "ستتعلم اللغة اليومية الواقعية المستخدمة في الشارع.",
                 "Nggak apa-apa.\nSantai aja.\nMahal banget!\nBisa kurang?\nJangan gitu dong.",
-                "nggak = tidak\nudah = sudah\naja = saja\ndong = أداة تأكيد\nbanget = sangat", "هذه الكلمات شائعة جداً في الحياة اليومية.", "عامي جداً"),
+                "nggak = tidak\nudah = sudah\naja = saja\ndong = أداة تأكيد\nbanget = sangat", "هذه الكلمات شائعة جداً في الحياة اليومية.", "", "عامي جداً"),
             
             LessonDetailEntity(34, 25, "ستتعلم كيف تتفاوض في السوق بلغة طبيعية.",
                 "Berapa harganya?\nBisa kurang?\nMahal banget.\nHarga teman dong.\nSaya ambil dua.",
-                "Berapa = كم\nBisa kurang = هل يمكن تخفيض\nHarga teman = سعر الصديق", "استخدم هذه الجمل في السوق.", "عامي"),
+                "Berapa = كم\nBisa kurang = هل يمكن تخفيض\nHarga teman = سعر الصديق", "استخدم هذه الجمل في السوق.", "", "عامي"),
             
             LessonDetailEntity(35, 26, "ستتعلم الحديث عن العمل والحياة اليومية.",
                 "Saya bekerja di kantor.\nSaya sibuk hari ini.\nSaya terlambat.",
-                "bekerja = يعمل\nsibuk = مشغول\nterlambat = متأخر", "استخدمها مع الزملاء.", "Formal & Casual: sama"),
+                "bekerja = يعمل\nsibuk = مشغول\nterlambat = متأخر", "استخدمها مع الزملاء.", "", "Formal & Casual: sama"),
             
             LessonDetailEntity(36, 27, "ستتعلم محادثات واقعية في مواقف يومية.",
                 "A: Mau ke mana?\nB: Ke pasar. Ikut?\nA: Nggak, nanti saja.",
-                "Mau ke mana? = إلى أين ذاهب؟\nIkut? = ترافقني؟\nNanti saja = لاحقاً", "هذه المحادثات شائعة جداً.", "عامي"),
+                "Mau ke mana? = إلى أين ذاهب؟\nIkut? = ترافقني؟\nNanti saja = لاحقاً", "هذه المحادثات شائعة جداً.", "", "عامي"),
             
             LessonDetailEntity(37, 28, "ستبدأ في التفكير وإنتاج الجمل بالإندونيسية.",
                 "Saya mau pergi ke pasar besok.\nKamu mau ikut?",
-                "حاول تكوين جمل باستخدام ما تعلمته.", "لا تترجم حرفياً من العربية.", "Formal & Casual mixed"),
+                "حاول تكوين جمل باستخدام ما تعلمته.", "لا تترجم حرفياً من العربية.", "", "Formal & Casual mixed"),
         )
         db.lessonDetailDao().insertAll(stage2Lessons)
 
@@ -279,6 +286,9 @@ class LearnRepository(private val db: AppDatabase) {
             TrainingItemEntity(209, "MULTIPLE_CHOICE", "Saya ___ makan. (أنا أكلت بالفعل)", "sudah", "belum,sedang,sudah,akan", "sudah = already", "امتحان"),
         )
         db.trainingDao().insertAll(stage2FinalExam)
+            
+        // === STAGE 1 UNITS ===
+        val units = listOf(
             UnitEntity(1, 1, "الوحدة 1: التحيات والتعارف", "Unit 1: Salam & Perkenalan", "تحيات + تقديم النفس", false),
             UnitEntity(2, 1, "الوحدة 2: الضمائر", "Unit 2: Kata Ganti", "saya, aku, kamu, dia, kami, kita", false),
             UnitEntity(3, 1, "الوحدة 3: تكوين الجملة", "Unit 3: Kalimat Dasar", "فاعل + فعل + مفعول", false),
@@ -354,7 +364,7 @@ class LearnRepository(private val db: AppDatabase) {
 
             LessonDetailEntity(14, 5, "ستتعلم استخدام belum وjangan.", 
                 "belum = لم بعد\njangan = لا تفعل\nSaya belum makan.\nJangan lari!", 
-                "Belum = لم يحدث بعد\nJangan = أمر سلبي", "jangan مهم جداً للأوامر", "Formal & Casual: sama"),
+                "Belum = لم يحدث بعد\nJangan = أمر سلبي", "jangan مهم جداً للأوامر", "", "Formal & Casual: sama"),
 
             // Unit 6 - Questions
             LessonDetailEntity(15, 6, "ستتعلم جميع أدوات السؤال الأساسية.", 
@@ -389,7 +399,7 @@ class LearnRepository(private val db: AppDatabase) {
             // Unit 12 - Family
             LessonDetailEntity(21, 12, "ستتعلم مفردات الأسرة والأشخاص.", 
                 "ayah / bapak = الأب\nibu / mama = الأم\nkakak = الأخ/الأخت الأكبر\nadik = الأخ/الأخت الأصغر\nanak = الابن/الابنة\nsuami = الزوج\nistri = الزوجة\nteman = الصديق", 
-                "Ini ayah saya.\nKakak saya bekerja di bank.", "kakak vs adik يعتمد على العمر", "Formal & Casual: sama"),
+                "Ini ayah saya.\nKakak saya bekerja di bank.", "kakak vs adik يعتمد على العمر", "", "Formal & Casual: sama"),
 
             // Unit 13 - Daily Objects
             LessonDetailEntity(22, 13, "ستتعلم أسماء الأشياء اليومية.", 
