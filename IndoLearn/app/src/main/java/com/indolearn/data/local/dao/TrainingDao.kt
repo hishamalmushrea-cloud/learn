@@ -12,9 +12,6 @@ interface TrainingDao {
     @Query("SELECT * FROM training_items WHERE category = :category")
     fun getTrainingByCategory(category: String): Flow<List<TrainingItemEntity>>
 
-    @Query("SELECT * FROM training_items ORDER BY RANDOM() LIMIT :limit")
-    suspend fun getRandomQuizzes(limit: Int): List<TrainingItemEntity>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<TrainingItemEntity>)
 }

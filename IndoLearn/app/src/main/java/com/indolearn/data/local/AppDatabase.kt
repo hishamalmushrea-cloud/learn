@@ -10,6 +10,7 @@ import com.indolearn.data.local.entity.*
         LessonEntity::class,
         VocabularyEntity::class,
         GrammarEntity::class,
+        DialogueEntity::class,
         UserProgressEntity::class,
         FlashcardEntity::class,
         CasualExpressionEntity::class,
@@ -20,13 +21,14 @@ import com.indolearn.data.local.entity.*
         TrainingItemEntity::class,
         UnitEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun lessonDao(): LessonDao
     abstract fun vocabularyDao(): VocabularyDao
     abstract fun grammarDao(): GrammarDao
+    abstract fun dialogueDao(): DialogueDao
     abstract fun progressDao(): ProgressDao
     abstract fun flashcardDao(): FlashcardDao
     abstract fun casualDao(): CasualDao
