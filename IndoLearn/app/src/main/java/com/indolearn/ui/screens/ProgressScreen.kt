@@ -7,10 +7,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.HomeViewModel
 
 @Composable
-fun ProgressScreen(navController: NavController, viewModel: MainViewModel) {
+fun ProgressScreen(navController: NavController, viewModel: HomeViewModel) {
     val progress = viewModel.progress.collectAsState().value
     Column(Modifier.fillMaxSize().padding(24.dp)) {
         Text("تقدمي", style = MaterialTheme.typography.headlineMedium)

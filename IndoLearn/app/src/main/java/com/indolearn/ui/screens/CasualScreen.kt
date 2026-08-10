@@ -9,10 +9,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.LearnViewModel
 
 @Composable
-fun CasualScreen(navController: NavController, viewModel: MainViewModel) {
+fun CasualScreen(navController: NavController, viewModel: LearnViewModel) {
     // For demo we use the existing repository via a new flow if needed.
     // Here we show a static rich list of real daily Indonesian.
 

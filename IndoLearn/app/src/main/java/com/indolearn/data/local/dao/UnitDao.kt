@@ -14,4 +14,7 @@ interface UnitDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(units: List<UnitEntity>)
+
+    @Query("UPDATE units SET isCompleted = 1 WHERE id = :id")
+    suspend fun markUnitCompleted(id: Int)
 }

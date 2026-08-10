@@ -11,10 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.indolearn.utils.TtsManager
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.LearnViewModel
 
 @Composable
-fun CasualInteractiveScreen(navController: NavController, viewModel: MainViewModel) {
+fun CasualInteractiveScreen(navController: NavController, viewModel: LearnViewModel) {
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
 
@@ -27,7 +27,7 @@ fun CasualInteractiveScreen(navController: NavController, viewModel: MainViewMod
 
         // Progress indicator (demo)
         LinearProgressIndicator(
-            progress = 0.65f,
+            progress = { 0.65f },
             modifier = Modifier.fillMaxWidth()
         )
         Text("تقدمك: 65%", style = MaterialTheme.typography.bodySmall)
@@ -158,7 +158,7 @@ fun TrainingTab(tts: TtsManager) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Divider()
+        HorizontalDivider()
         Spacer(Modifier.height(16.dp))
 
         Button(onClick = { showListenExercise = !showListenExercise }) {

@@ -7,10 +7,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.LearnViewModel
 
 @Composable
-fun ReviewScreen(navController: NavController, viewModel: MainViewModel) {
+fun ReviewScreen(navController: NavController, viewModel: LearnViewModel) {
     Column(
         Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

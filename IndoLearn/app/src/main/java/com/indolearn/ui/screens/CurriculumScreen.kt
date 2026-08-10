@@ -10,10 +10,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.LearnViewModel
 
 @Composable
-fun CurriculumScreen(navController: NavController, viewModel: MainViewModel) {
+fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
     val stages = listOf(
         "المرحلة 1 — الصفر" to "التحيات، الأرقام، الضمائر",
         "المرحلة 2 — المبتدئ" to "ترتيب الجملة، النفي، السؤال",

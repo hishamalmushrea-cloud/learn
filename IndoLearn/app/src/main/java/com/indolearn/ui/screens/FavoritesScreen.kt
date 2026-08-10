@@ -9,10 +9,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.LearnViewModel
 
 @Composable
-fun FavoritesScreen(navController: NavController, viewModel: MainViewModel) {
+fun FavoritesScreen(navController: NavController, viewModel: LearnViewModel) {
     val words = viewModel.vocabulary.collectAsState().value.filter { it.favorite }
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {

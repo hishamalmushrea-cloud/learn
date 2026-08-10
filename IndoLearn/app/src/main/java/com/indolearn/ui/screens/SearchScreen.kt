@@ -8,10 +8,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.indolearn.viewmodel.MainViewModel
+import com.indolearn.viewmodel.LearnViewModel
 
 @Composable
-fun SearchScreen(navController: NavController, viewModel: MainViewModel) {
+fun SearchScreen(navController: NavController, viewModel: LearnViewModel) {
     var query by remember { mutableStateOf("") }
     val words = viewModel.vocabulary.collectAsState().value
 
