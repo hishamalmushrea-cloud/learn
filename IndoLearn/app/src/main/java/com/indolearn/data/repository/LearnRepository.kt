@@ -679,11 +679,11 @@ class LearnRepository(private val db: AppDatabase) {
 
             LessonDetailEntity(204, 204, "ستتعلم الألوان الأساسية باللغة التركية.",
                 "Mavi = أزرق\nKırmızı = أحمر\nYeşil = أخضر\nSarı = أصفر\nSiyah = أسود\nBeyaz = أبيض\nTuruncu = برتقالي",
-                "صفة اللون تأتي دائماً قبل الاسم الموصوف: kırmızı araba = السيارة الحمراء.", "تأتي الصفة قبل الاسم كما في الإنجليزية والفرنسية.", "Formal & Casual: sama"),
+                "صفة اللون تأتي دائماً قبل الاسم الموصوف: kırmızı araba = السيارة الحمراء.", "ألوان جميلة ومفيدة يومياً.", "تأتي الصفة قبل الاسم كما في الإنجليزية والفرنسية.", "Formal & Casual: sama"),
 
             LessonDetailEntity(205, 205, "ستتعلم الضمائر الشخصية الستة في اللغة التركية.",
                 "Ben = أنا\nSen = أنت/أنتِ\nO = هو/هي\nBiz = نحن\nSiz = أنتم/أنتن\nOnlar = هم/هن",
-                "لا يوجد جنس تذكير وتأنيث في اللغة التركية، الضمير O يصلح للغائب مطلقاً.", "الضمير O يمثل أيضاً اسم الإشارة 'ذلك للبعيد جداً'.", "Formal & Casual: sama"),
+                "لا يوجد جنس تذكير وتأنيث في اللغة التركية، الضمير O يصلح للغائب مطلقاً.", "تستخدم بكثرة في المحادثة اليومية.", "الضمير O يمثل أيضاً اسم الإشارة 'ذلك للبعيد جداً'.", "Formal & Casual: sama"),
 
             LessonDetailEntity(206, 206, "ستتعلم كيفية جمع الأسماء التركية باستخدام قاعدة التوافق الثنائي.",
                 "نضيف اللاحقة -lar للأحرف الثقيلة (a, ı, o, u) ونضيف -ler للأحرف الخفيفة (e, i, ö, ü).",
@@ -692,7 +692,7 @@ class LearnRepository(private val db: AppDatabase) {
         )
         db.lessonDetailDao().insertAll(turkishLessonDetails)
 
-        // 4. Turkish Vocabulary (Expanded with turk_duzenlenmis.md)
+        // 4. Turkish Vocabulary
         val turkishVocab = listOf(
             VocabularyEntity(2001, "olmak", "olmak", "أول-ماك", "يكون / يصبح", "Şimdi hasta oluyorum.", "الآن أنا أصبح مريضاً.", "أفعال", 0, true, false, "TR"),
             VocabularyEntity(2002, "yapmak", "yapmak", "ياب-ماك", "يفعل / يصنع", "Ödev yapıyorum.", "أنا أفعل الواجب.", "أفعال", 0, true, false, "TR"),
@@ -701,49 +701,19 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(2005, "vermek", "vermek", "فير-ميك", "يعطي", "Sana kalem veriyorum.", "أنا أعطيك قلماً.", "أفعال", 0, true, false, "TR"),
             VocabularyEntity(2006, "sevmek", "sevmek", "سيف-ميك", "يحب", "Seni çok seviyorum.", "أنا أحبك كثيراً.", "أفعال", 0, true, false, "TR"),
             VocabularyEntity(2007, "istemek", "istemek", "إيس-تي-ميك", "يريد", "Su istiyorum.", "أنا أريد ماءً.", "أفعال", 0, true, false, "TR"),
-            
-            // Days of the week
             VocabularyEntity(2008, "pazartesi", "pazartesi", "با-زار-تي-سي", "الاثنين", "Hari Pazartesi.", "اليوم هو الاثنين.", "أيام", 0, true, false, "TR"),
             VocabularyEntity(2009, "salı", "salı", "سا-لي", "الثلاثاء", "Hari Salı.", "اليوم هو الثلاثاء.", "أيام", 0, true, false, "TR"),
             VocabularyEntity(2010, "çarşamba", "çarşamba", "تشار-شام-با", "الأربعاء", "Hari Çarşamba.", "اليوم هو الأربعاء.", "أيام", 0, true, false, "TR"),
-            
-            // Colors
             VocabularyEntity(2011, "mavi", "mavi", "ما-في", "أزرق", "Mavi deniz.", "البحر الأزرق.", "ألوان", 0, true, false, "TR"),
-            VocabularyEntity(2012, "kırmızı", "kırmızı", "كير-مي-زي", "أحمر", "Kırmızı araba.", "السيارة الحمراء.", "ألوان", 0, true, false, "TR"),
-            VocabularyEntity(2013, "yeşil", "yeşil", "يي-شيل", "أخضر", "Yeşil elma.", "التفاحة الخضراء.", "ألوان", 0, true, false, "TR"),
-            
-            // Family (New from turk_duzenlenmis.md)
-            VocabularyEntity(2014, "anne", "anne", "أن-نيه", "أم", "Benim annem çok iyi.", "أمي طيبة جداً.", "عائلة", 0, true, false, "TR"),
-            VocabularyEntity(2015, "baba", "baba", "با-با", "أب", "Benim babam öğretmen.", "أبي معلم.", "عائلة", 0, true, false, "TR"),
-            VocabularyEntity(2016, "kardeş", "kardeş", "كار-ديش", "أخ / أخت", "Benim bir kardeşem var.", "لدي أخ واحد.", "عائلة", 0, true, false, "TR"),
-            
-            // House (New from turk_duzenlenmis.md)
-            VocabularyEntity(2017, "ev", "ev", "إيف", "بيت / منزل", "Bu ev çok büyük.", "هذا البيت كبير جداً.", "أماكن", 0, true, false, "TR"),
-            VocabularyEntity(2018, "kapı", "kapı", "كا-بي", "باب", "Kapıyı kapat lütfen.", "أغلق الباب من فضلك.", "أشياء", 0, true, false, "TR"),
-            VocabularyEntity(2019, "masa", "masa", "ما-سا", "طاولة", "Kitap masada.", "الكتاب على الطاولة.", "أشياء", 0, true, false, "TR"),
-            
-            // Food & Drink (New from turk_duzenlenmis.md)
-            VocabularyEntity(2020, "su", "su", "سو", "ماء", "Bir su lütfen.", "ماء من فضلك.", "طعام", 0, true, false, "TR"),
-            VocabularyEntity(2021, "ekmek", "ekmek", "إيك-ميك", "خبز", "Sıcak ekmek.", "خبز ساخن.", "طعام", 0, true, false, "TR"),
-            VocabularyEntity(2022, "çay", "çay", "تشاي", "شاي", "Çay istiyorum.", "أريد شاياً.", "طعام", 0, true, false, "TR"),
-            
-            // Adjectives (New from turk_duzenlenmis.md)
-            VocabularyEntity(2023, "iyi", "iyi", "إي-يي", "جيد / بخير", "Ben iyiyim.", "أنا بخير.", "صفات", 0, true, false, "TR"),
-            VocabularyEntity(2024, "büyük", "büyük", "بو-يوك", "كبير", "Bu araba büyük.", "هذه السيارة كبيرة.", "صفات", 0, true, false, "TR"),
-            VocabularyEntity(2025, "ucuz", "ucuz", "أو-جوز", "رخيص", "Bu ucuz bir كتاب.", "هذا كتاب رخيص.", "صفات", 0, true, false, "TR"),
-            VocabularyEntity(2026, "pahalı", "pahalı", "با-ها-لي", "غالي", "Bu çok pahalı.", "هذا غالي جداً.", "صفات", 0, true, false, "TR")
+            VocabularyEntity(2012, "kırmızı", "kırmızı", "كير-مي-زي", "أمر", "Kırmızı araba.", "السيارة الحمراء.", "ألوان", 0, true, false, "TR"),
+            VocabularyEntity(2013, "yeşil", "yeşil", "يي-شيل", "أخضر", "Yeşil elma.", "التفاحة الخضراء.", "ألوان", 0, true, false, "TR")
         )
         db.vocabularyDao().insertAll(turkishVocab)
 
-        // 5. Turkish Grammar Rules (Expanded with turk_duzenlenmis.md)
+        // 5. Turkish Grammar Rules
         val turkishGrammar = listOf(
             GrammarEntity(2001, "بنية الجملة التركية (SOV)", "Cümle Yapısı", "ترتيب الجملة: فاعل + مفعول به + فعل. الفعل يأتي دائماً في نهاية الجملة خلافاً للإندونيسية.", "S + O + V", "Ben kitap okuyorum. (أنا أقرأ كتاباً)", 0, "TR"),
-            GrammarEntity(2002, "قاعدة الجمع الثنائي", "Çoğul Eki Kuralları", "لاحقة الجمع تكون -lar للأحرف الصوتية الثقيلة (a, ı, o, u) وتكون -ler للأحرف الصوتية الخفيفة (e, i, ö, ü).", "lar / ler", "Arabalar (السيارات) / Evler (البيوت)", 1, "TR"),
-            
-            // New from turk_duzenlenmis.md
-            GrammarEntity(2003, "الجملة الاسمية (ضمير الفاعل والخبر)", "İsim Cümlesi", "تصاغ الجملة الاسمية بإضافة لاحقة الضمير في نهاية الصفة أو الخبر (مثال: أنا طالب -> öğrenciyim).", "ım / sin / yim", "Ben öğrenciyim (أنا طالب) • Sen öğrencisin (أنت طالب)", 0, "TR"),
-            GrammarEntity(2004, "ضمائر الملكية التركية", "İyelik Zamirleri", "الملكية الطبيعية في التركية تحتاج إلى صفة ملكية قبل الاسم ملحوقة بلاحقة ملكية مطابقة في نهاية الاسم.", "benim ... -im / senin ... -in", "Benim evim (بيتي) • Senin evin (بيتك)", 1, "TR"),
-            GrammarEntity(2005, "حالات الاسم الأربعة (الجر والمفعولية)", "İsmin Halleri", "تتغير نهايات الأسماء التركية عند الجر: إلى (-e/-a)، في (-de/-da)، من (-den/-dan)، والمفعول المحدد (-i/-ı).", "e / de / den / i", "Okula gidiyorum (أذهب إلى المدرسة) • Evde kalıyorum (أقيم في البيت)", 1, "TR")
+            GrammarEntity(2002, "قاعدة الجمع الثنائي", "Çoğul Eki Kuralları", "لاحقة الجمع تكون -lar للأحرف الصوتية الثقيلة (a, ı, o, u) وتكون -ler للأحرف الصوتية الخفيفة (e, i, ö, ü).", "lar / ler", "Arabalar (السيارات) / Evler (البيوت)", 1, "TR")
         )
         db.grammarDao().insertAll(turkishGrammar)
 
