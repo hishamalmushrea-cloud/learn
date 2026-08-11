@@ -40,7 +40,13 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable("lessons") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
-            LessonsScreen(navController, learnViewModel) 
+            LessonsScreen(navController, learnViewModel, 0) 
+        }
+        composable("lessons/{level}") { backStackEntry ->
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            val level = backStackEntry.arguments?.getString("level")?.toIntOrNull() ?: 0
+            learnViewModel.loadLessonsForLevel(level)
+            LessonsScreen(navController, learnViewModel, level)
         }
         composable("lesson/{id}") { backStackEntry ->
             val learnViewModel: LearnViewModel = hiltViewModel()
@@ -76,7 +82,10 @@ fun AppNavigation(navController: NavHostController) {
             val learnViewModel: LearnViewModel = hiltViewModel()
             ReviewScreen(navController, learnViewModel) 
         }
-        composable("dialogue") { DialogueScreen(navController) }
+        composable("dialogue") { 
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            DialogueScreen(navController, learnViewModel) 
+        }
         composable("grammar_detail") { GrammarDetailScreen(navController) }
         composable("favorites") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
@@ -93,6 +102,17 @@ fun AppNavigation(navController: NavHostController) {
         composable("curriculum") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
             CurriculumScreen(navController, learnViewModel) 
+        }
+        composable("notebook") { 
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            NotebookScreen(navController, learnViewModel) 
+        }
+        composable("study_guide") { 
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            StudyGuideScreen(navController, learnViewModel) 
+        }
+        composable("riyada_guide") { 
+            RiyadaGuideScreen(navController) 
         }
     }
 }

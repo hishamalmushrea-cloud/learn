@@ -11,5 +11,6 @@ data class LessonEntity(
     val titleId: String,
     val description: String,
     val content: String,
-    val completed: Boolean = false
+    val completed: Boolean = false,
+    val languageCode: String = "ID"
 )

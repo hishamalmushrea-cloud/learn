@@ -15,5 +15,6 @@ data class VocabularyEntity(
     val category: String,
     val level: Int,
     val isFormal: Boolean = true,
-    val favorite: Boolean = false
+    val favorite: Boolean = false,
+    val languageCode: String = "ID"
 )

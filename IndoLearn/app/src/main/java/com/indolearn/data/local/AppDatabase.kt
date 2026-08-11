@@ -19,9 +19,10 @@ import com.indolearn.data.local.entity.*
         QuizResultEntity::class,
         StageEntity::class,
         TrainingItemEntity::class,
-        UnitEntity::class
+        UnitEntity::class,
+        NoteEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,4 +38,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun unitDao(): UnitDao
     abstract fun lessonDetailDao(): LessonDetailDao
     abstract fun quizResultDao(): QuizResultDao
+    abstract fun noteDao(): NoteDao
 }

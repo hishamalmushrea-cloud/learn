@@ -2,68 +2,69 @@ package com.indolearn.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// === LIGHT THEME ===
-val PrimaryLight = Color(0xFF1CB0F6)        // Duolingo Blue
+// === PREMIUM LIGHT THEME (Indigo, Emerald & Amber) ===
+val PrimaryLight = Color(0xFF4F46E5)        // Premium Indigo Blue (Academic & Business Hybrid)
 val OnPrimaryLight = Color.White
-val PrimaryContainerLight = Color(0xFFD6EEFF)
-val OnPrimaryContainerLight = Color(0xFF001D33)
+val PrimaryContainerLight = Color(0xFFEEF2FF) // Very soft Indigo tint
+val OnPrimaryContainerLight = Color(0xFF312E81)
 
-val SecondaryLight = Color(0xFF58CC02)       // Duolingo Green
+val SecondaryLight = Color(0xFF10B981)       // Emerald Green (Success & Growth)
 val OnSecondaryLight = Color.White
-val SecondaryContainerLight = Color(0xFFD7F5C2)
-val OnSecondaryContainerLight = Color(0xFF0B2000)
+val SecondaryContainerLight = Color(0xFFECFDF5) // Soft Emerald tint
+val OnSecondaryContainerLight = Color(0xFF064E3B)
 
-val TertiaryLight = Color(0xFFFF9600)        // Orange Accent
+val TertiaryLight = Color(0xFFF59E0B)        // Amber/Gold (Rewards, Streaks & Achievements)
 val OnTertiaryLight = Color.White
-val TertiaryContainerLight = Color(0xFFFFEDD6)
-val OnTertiaryContainerLight = Color(0xFF2A1700)
+val TertiaryContainerLight = Color(0xFFFFFBEB) // Soft Amber tint
+val OnTertiaryContainerLight = Color(0xFF78350F)
 
-val BackgroundLight = Color(0xFFF5F7FA)
-val OnBackgroundLight = Color(0xFF1A1C1E)
+val BackgroundLight = Color(0xFFF8FAFC)      // Ultra-clean Slate White
+val OnBackgroundLight = Color(0xFF0F172A)    // Deep Slate Blue for text
 val SurfaceLight = Color.White
-val OnSurfaceLight = Color(0xFF1A1C1E)
-val SurfaceVariantLight = Color(0xFFECEFF3)
-val OnSurfaceVariantLight = Color(0xFF43474E)
-val OutlineLight = Color(0xFF73777F)
-val OutlineVariantLight = Color(0xFFC3C7CF)
-val ErrorLight = Color(0xFFFF4B4B)
+val OnSurfaceLight = Color(0xFF0F172A)
+val SurfaceVariantLight = Color(0xFFF1F5F9)  // Soft Slate grey
+val OnSurfaceVariantLight = Color(0xFF475569)
+val OutlineLight = Color(0xFF94A3B8)         // Slate outline
+val OutlineVariantLight = Color(0xFFE2E8F0)  // Very soft border Slate
+val ErrorLight = Color(0xFFEF4444)           // Rose Red for errors
 val OnErrorLight = Color.White
-val ErrorContainerLight = Color(0xFFFFDAD6)
+val ErrorContainerLight = Color(0xFFFEF2F2)  // Soft Rose tint
 
-// === DARK THEME ===
-val PrimaryDark = Color(0xFF7DCFFF)
-val OnPrimaryDark = Color(0xFF003548)
-val PrimaryContainerDark = Color(0xFF004D67)
-val OnPrimaryContainerDark = Color(0xFFD6EEFF)
+// === PREMIUM DARK THEME (Deep Obsidian & Neon Accents) ===
+val BackgroundDark = Color(0xFF0B0F19)       // Deep Obsidian Space Black
+val OnBackgroundDark = Color(0xFFF1F5F9)
+val SurfaceDark = Color(0xFF111827)          // Obsidian Grey
+val OnSurfaceDark = Color(0xFFF1F5F9)
+val SurfaceVariantDark = Color(0xFF1F2937)
+val OnSurfaceVariantDark = Color(0xFF9CA3AF)
 
-val SecondaryDark = Color(0xFF89E04B)
-val OnSecondaryDark = Color(0xFF163800)
-val SecondaryContainerDark = Color(0xFF225200)
-val OnSecondaryContainerDark = Color(0xFFD7F5C2)
+val PrimaryDark = Color(0xFF818CF8)          // Neon Indigo
+val OnPrimaryDark = Color(0xFF1E1B4B)
+val PrimaryContainerDark = Color(0xFF312E81)
+val OnPrimaryContainerDark = Color(0xFFE0E7FF)
 
-val TertiaryDark = Color(0xFFFFB95A)
-val OnTertiaryDark = Color(0xFF462A00)
-val TertiaryContainerDark = Color(0xFF643E00)
-val OnTertiaryContainerDark = Color(0xFFFFEDD6)
+val SecondaryDark = Color(0xFF34D399)         // Neon Emerald
+val OnSecondaryDark = Color(0xFF064E3B)
+val SecondaryContainerDark = Color(0xFF065F46)
+val OnSecondaryContainerDark = Color(0xFFA7F3D0)
 
-val BackgroundDark = Color(0xFF0F1417)
-val OnBackgroundDark = Color(0xFFE2E3E6)
-val SurfaceDark = Color(0xFF1A1F23)
-val OnSurfaceDark = Color(0xFFE2E3E6)
-val SurfaceVariantDark = Color(0xFF252A2F)
-val OnSurfaceVariantDark = Color(0xFFC3C7CF)
-val OutlineDark = Color(0xFF8D9199)
-val OutlineVariantDark = Color(0xFF43474E)
-val ErrorDark = Color(0xFFFF6B6B)
-val OnErrorDark = Color(0xFF690005)
-val ErrorContainerDark = Color(0xFF93000A)
+val TertiaryDark = Color(0xFFFBBF24)          // Neon Amber
+val OnTertiaryDark = Color(0xFF78350F)
+val TertiaryContainerDark = Color(0xFF92400E)
+val OnTertiaryContainerDark = Color(0xFFFEF3C7)
 
-// === CUSTOM ACCENT COLORS (for cards/badges) ===
-val GoldBadge = Color(0xFFFFD700)
-val CorrectGreen = Color(0xFF58CC02)
-val WrongRed = Color(0xFFFF4B4B)
-val CardBlue = Color(0xFFE8F4FD)
-val CardGreen = Color(0xFFEDF7E4)
-val CardOrange = Color(0xFFFFF4E6)
-val CardPurple = Color(0xFFF3EEFF)
-val CardPink = Color(0xFFFFF0F3)
+val OutlineDark = Color(0xFF4B5563)
+val OutlineVariantDark = Color(0xFF374151)
+val ErrorDark = Color(0xFFF87171)
+val OnErrorDark = Color(0xFF7F1D1D)
+val ErrorContainerDark = Color(0xFF991B1B)
+
+// === CUSTOM ACCENT COLORS (for editorial badges & cards) ===
+val GoldBadge = Color(0xFFF59E0B)
+val CorrectGreen = Color(0xFF10B981)
+val WrongRed = Color(0xFFEF4444)
+val CardBlue = Color(0xFFEFF6FF)
+val CardGreen = Color(0xFFECFDF5)
+val CardOrange = Color(0xFFFFFBEB)
+val CardPurple = Color(0xFFFAF5FF)
+val CardPink = Color(0xFFFDF2F8)
