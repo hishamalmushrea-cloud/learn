@@ -13,9 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 
+import androidx.compose.foundation.isSystemInDarkTheme
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RiyadaGuideScreen(navController: NavController) {
+    val isDarkTheme = isSystemInDarkTheme()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,6 +52,10 @@ fun RiyadaGuideScreen(navController: NavController) {
                     }
                     loadUrl("file:///android_asset/index.html")
                 }
+            },
+            update = { webView ->
+                val theme = if (isDarkTheme) "dark" else "light"
+                webView.evaluateJavascript("document.documentElement.setAttribute('data-theme', '$theme');", null)
             }
         )
     }
