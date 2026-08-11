@@ -111,8 +111,18 @@ fun AppNavigation(navController: NavHostController) {
             val learnViewModel: LearnViewModel = hiltViewModel()
             StudyGuideScreen(navController, learnViewModel) 
         }
-        composable("riyada_guide") { 
-            RiyadaGuideScreen(navController) 
+        composable("riyada_guide") {
+            val riyadaViewModel: com.indolearn.viewmodel.RiyadaViewModel = hiltViewModel()
+            com.indolearn.ui.screens.RiyadaHomeScreen(navController, riyadaViewModel)
+        }
+        composable("riyada_plan") {
+            val riyadaViewModel: com.indolearn.viewmodel.RiyadaViewModel = hiltViewModel()
+            com.indolearn.ui.screens.RiyadaPlanScreen(navController, riyadaViewModel)
+        }
+        composable("riyada_detail/{sectionId}") { backStackEntry ->
+            val riyadaViewModel: com.indolearn.viewmodel.RiyadaViewModel = hiltViewModel()
+            val sectionId = backStackEntry.arguments?.getString("sectionId") ?: "learning"
+            com.indolearn.ui.screens.RiyadaDetailScreen(navController, riyadaViewModel, sectionId)
         }
     }
 }

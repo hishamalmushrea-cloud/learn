@@ -11,5 +11,6 @@ data class UserProgressEntity(
     val totalLessons: Int = 50,
     val learnedWords: Int = 0,
     val totalWords: Int = 300,
-    val lastStudyDate: Long = System.currentTimeMillis()
+    val lastStudyDate: Long = 0L,
+    val streakDays: Int = 0
 )

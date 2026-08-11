@@ -1,5 +1,7 @@
 package com.indolearn.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 // === PREMIUM LIGHT THEME (Indigo, Emerald & Amber) ===
@@ -59,12 +61,42 @@ val ErrorDark = Color(0xFFF87171)
 val OnErrorDark = Color(0xFF7F1D1D)
 val ErrorContainerDark = Color(0xFF991B1B)
 
-// === CUSTOM ACCENT COLORS (for editorial badges & cards) ===
-val GoldBadge = Color(0xFFF59E0B)
-val CorrectGreen = Color(0xFF10B981)
-val WrongRed = Color(0xFFEF4444)
-val CardBlue = Color(0xFFEFF6FF)
-val CardGreen = Color(0xFFECFDF5)
-val CardOrange = Color(0xFFFFFBEB)
-val CardPurple = Color(0xFFFAF5FF)
-val CardPink = Color(0xFFFDF2F8)
+// === CUSTOM ACCENT COLORS (Adaptive) ===
+val GoldBadge: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFFBBF24) else Color(0xFFF59E0B)
+
+val CorrectGreen: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFF34D399) else Color(0xFF10B981)
+
+val WrongRed: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFF87171) else Color(0xFFEF4444)
+
+val CardBlue: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFF172554) else Color(0xFFEFF6FF)
+
+val CardGreen: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFF022C22) else Color(0xFFECFDF5)
+
+val CardOrange: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFF451A03) else Color(0xFFFFFBEB)
+
+val CardPurple: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFF2E1065) else Color(0xFFFAF5FF)
+
+val CardPink: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFF500724) else Color(0xFFFDF2F8)
+
+val OnCardBlue: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFDBEAFE) else Color(0xFF1E40AF)
+
+val OnCardGreen: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFD1FAE5) else Color(0xFF065F46)
+
+val OnCardOrange: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFFEF3C7) else Color(0xFF92400E)
+
+val OnCardPurple: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFEDE9FE) else Color(0xFF5B21B6)
+
+val OnCardPink: Color
+    @Composable get() = if (isSystemInDarkTheme()) Color(0xFFFCE7F3) else Color(0xFF9D174D)

@@ -29,6 +29,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.seedInitialData()
+                repository.checkAndUpdateStreak()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

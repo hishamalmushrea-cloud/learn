@@ -26,8 +26,8 @@ object NotificationHelper {
     fun showDailyReminder(context: Context) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("IndoLearn")
-            .setContentText("حان وقت مراجعة اللغة الإندونيسية 🇮🇩")
+            .setContentTitle("لا تكسر سلسلتك! 🔥")
+            .setContentText("لا تنسَ مراجعة الكلمات الجديدة اليوم للحفاظ على سلسلة تقدمك!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 

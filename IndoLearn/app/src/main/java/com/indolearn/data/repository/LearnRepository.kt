@@ -28,6 +28,34 @@ class LearnRepository(private val db: AppDatabase) {
     fun getUserProgress() = db.progressDao().getProgress()
     suspend fun updateProgress(progress: UserProgressEntity) = db.progressDao().updateProgress(progress)
 
+    suspend fun checkAndUpdateStreak() {
+        val currentProgress = db.progressDao().getProgressSync() ?: UserProgressEntity()
+        val currentTime = System.currentTimeMillis()
+        val lastStudyDate = currentProgress.lastStudyDate
+
+        val oneDayMillis = 24 * 60 * 60 * 1000L
+        val lastDay = lastStudyDate / oneDayMillis
+        val currentDay = currentTime / oneDayMillis
+        
+        var newStreak = currentProgress.streakDays
+        if (currentDay - lastDay == 1L) {
+            newStreak += 1
+        } else if (currentDay - lastDay > 1L) {
+            newStreak = 1
+        } else if (lastStudyDate == 0L) {
+            newStreak = 1
+        }
+        
+        if (lastStudyDate == 0L || currentDay > lastDay) {
+            db.progressDao().updateProgress(
+                currentProgress.copy(
+                    lastStudyDate = currentTime,
+                    streakDays = newStreak
+                )
+            )
+        }
+    }
+
     // Lesson details
     suspend fun getLessonById(id: Int) = db.lessonDao().getLessonById(id)
     suspend fun getLessonDetail(id: Int) = db.lessonDetailDao().getLessonDetail(id)
