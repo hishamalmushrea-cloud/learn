@@ -114,5 +114,8 @@ fun AppNavigation(navController: NavHostController) {
         composable("riyada_guide") { 
             RiyadaGuideScreen(navController) 
         }
+        composable("encyclopedia") { 
+            EncyclopediaScreen(navController) 
+        }
     }
 }
