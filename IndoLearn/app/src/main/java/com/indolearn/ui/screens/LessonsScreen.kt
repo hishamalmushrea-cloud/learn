@@ -26,7 +26,7 @@ import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LessonsScreen(navController: NavController, viewModel: LearnViewModel) {
+fun LessonsScreen(navController: NavController, viewModel: LearnViewModel, level: Int = 0) {
     val lessons = viewModel.lessons.collectAsState().value
     val completedCount = lessons.count { it.completed }
     val totalCount = lessons.size
@@ -34,7 +34,7 @@ fun LessonsScreen(navController: NavController, viewModel: LearnViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("📖 الدروس") },
+                title = { Text("📖 الدروس — المرحلة ${level + 1}") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "رجوع")

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,7 +29,18 @@ class PreferencesManager @Inject constructor(@ApplicationContext context: Contex
         }
     }
 
+    val selectedLanguage: Flow<String> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SELECTED_LANGUAGE] ?: "ID"
+    }
+
+    suspend fun setSelectedLanguage(lang: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SELECTED_LANGUAGE] = lang
+        }
+    }
+
     private object PreferencesKeys {
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+        val SELECTED_LANGUAGE = stringPreferencesKey("selected_language")
     }
 }

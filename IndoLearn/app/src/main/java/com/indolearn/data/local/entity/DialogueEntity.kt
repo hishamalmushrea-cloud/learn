@@ -9,5 +9,6 @@ data class DialogueEntity(
     val titleAr: String,
     val titleId: String,
     val content: String,
-    val level: Int
+    val level: Int,
+    val languageCode: String = "ID"
 )

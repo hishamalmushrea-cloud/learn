@@ -11,5 +11,6 @@ data class GrammarEntity(
     val explanation: String,
     val rule: String,
     val examples: String,
-    val level: Int
+    val level: Int,
+    val languageCode: String = "ID"
 )

@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GrammarDao {
-    @Query("SELECT * FROM grammar WHERE level = :level ORDER BY id")
-    fun getGrammarByLevel(level: Int): Flow<List<GrammarEntity>>
+    @Query("SELECT * FROM grammar WHERE level = :level AND languageCode = :langCode ORDER BY id")
+    fun getGrammarByLevel(level: Int, langCode: String): Flow<List<GrammarEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(grammar: List<GrammarEntity>)

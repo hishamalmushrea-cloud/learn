@@ -10,5 +10,6 @@ data class StageEntity(
     val titleId: String,
     val description: String,
     val level: Int,
-    val isUnlocked: Boolean = false
+    val isUnlocked: Boolean = false,
+    val languageCode: String = "ID"
 )

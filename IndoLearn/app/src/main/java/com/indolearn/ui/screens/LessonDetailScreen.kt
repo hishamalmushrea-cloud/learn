@@ -25,6 +25,7 @@ fun LessonDetailScreen(
 ) {
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    val currentLanguage = viewModel.currentLanguage.collectAsState().value
 
     var lesson by remember { mutableStateOf<LessonEntity?>(null) }
     var lessonDetail by remember { mutableStateOf<LessonDetailEntity?>(null) }
@@ -99,9 +100,19 @@ fun LessonDetailScreen(
 
             // Explanation
             item {
+                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Card {
                     Column(Modifier.padding(16.dp)) {
-                        Text("📖 الشرح", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("📖 الشرح", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            IconButton(onClick = {
+                                clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(lessonDetail?.explanation ?: ""))
+                                android.widget.Toast.makeText(context, "تم نسخ الشرح! 📋", android.widget.Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text("📋")
+                            }
+                        }
                         Spacer(Modifier.height(8.dp))
                         Text(lessonDetail?.explanation ?: "")
                     }
@@ -110,16 +121,29 @@ fun LessonDetailScreen(
 
             // Example with full analysis
             item {
+                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                val context = androidx.compose.ui.platform.LocalContext.current
                 Card {
                     Column(Modifier.padding(16.dp)) {
-                        Text("🇮🇩 مثال", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🇮🇩 مثال", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            IconButton(onClick = {
+                                val exampleText = (lessonDetail?.wordByWord?.split("\n")?.firstOrNull() ?: "") + 
+                                    "\nتفكيك الكلمات:\n" + (lessonDetail?.wordByWord ?: "") +
+                                    "\nتركيب الجملة:\n" + (lessonDetail?.sentenceStructure ?: "")
+                                clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(exampleText))
+                                android.widget.Toast.makeText(context, "تم نسخ المثال وتفكيك الجملة! 📋", android.widget.Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text("📋")
+                            }
+                        }
                         Spacer(Modifier.height(8.dp))
 
                         val example = lessonDetail?.wordByWord?.split("\n")?.firstOrNull() ?: ""
                         Text(example, style = MaterialTheme.typography.titleLarge)
                         
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { tts.speak(example, currentSpeed) }) {
+                            IconButton(onClick = { tts.speak(example, currentSpeed, langCode = currentLanguage) }) {
                                 Text("🔊")
                             }
                             Text("استمع للمثال", style = MaterialTheme.typography.bodyMedium)

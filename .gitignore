@@ -37,3 +37,5 @@ Thumbs.db
 
 # Agent artifacts
 .artifacts/
+turk/
+work/

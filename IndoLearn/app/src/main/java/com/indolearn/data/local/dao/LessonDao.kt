@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LessonDao {
-    @Query("SELECT * FROM lessons WHERE level = :level ORDER BY id")
-    fun getLessonsByLevel(level: Int): Flow<List<LessonEntity>>
+    @Query("SELECT * FROM lessons WHERE level = :level AND languageCode = :langCode ORDER BY id")
+    fun getLessonsByLevel(level: Int, langCode: String): Flow<List<LessonEntity>>
 
     @Query("SELECT * FROM lessons WHERE id = :id")
     suspend fun getLessonById(id: Int): LessonEntity?
