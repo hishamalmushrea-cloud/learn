@@ -86,7 +86,6 @@ fun AppNavigation(navController: NavHostController) {
             val learnViewModel: LearnViewModel = hiltViewModel()
             DialogueScreen(navController, learnViewModel) 
         }
-        composable("grammar_detail") { GrammarDetailScreen(navController) }
         composable("favorites") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
             FavoritesScreen(navController, learnViewModel) 

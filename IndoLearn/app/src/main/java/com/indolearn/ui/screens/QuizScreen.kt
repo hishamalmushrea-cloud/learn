@@ -204,8 +204,14 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                     Button(
                         onClick = {
                             showFeedback = false; textAnswer = ""
-                            if (currentQuestionIndex < questions.size - 1) currentQuestionIndex++
-                            else showResult = true
+                            if (currentQuestionIndex < questions.size - 1) {
+                                currentQuestionIndex++
+                            } else {
+                                // حفظ النتيجة — لم تكن تُحفظ إطلاقاً قبل الإصلاح،
+                                // فتضيع بمجرد مغادرة الشاشة (لا تاريخ ولا أفضل نتيجة).
+                                viewModel.saveQuizResult(0, score, questions.size)
+                                showResult = true
+                            }
                         },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(16.dp)

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -30,6 +31,10 @@ fun FavoritesScreen(navController: NavController, viewModel: LearnViewModel) {
     val favorites = viewModel.favorites.collectAsState().value
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    // إطلاق محرك النطق عند مغادرة الشاشة.
+    // بدونه يبقى TextToSpeech حياً بعد إغلاق الشاشة (تسريب موارد)،
+    // ويتراكم مع كل زيارة للشاشة.
+    DisposableEffect(Unit) { onDispose { tts.shutdown() } }
 
     Scaffold(
         topBar = {

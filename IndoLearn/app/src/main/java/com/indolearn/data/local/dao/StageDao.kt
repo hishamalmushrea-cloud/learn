@@ -12,6 +12,9 @@ interface StageDao {
     @Query("SELECT * FROM stages WHERE languageCode = :langCode ORDER BY id")
     fun getAllStages(langCode: String): Flow<List<StageEntity>>
 
+    @Query("SELECT * FROM stages WHERE languageCode = :langCode ORDER BY id")
+    suspend fun getAllStagesOnce(langCode: String): List<StageEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(stages: List<StageEntity>)
 

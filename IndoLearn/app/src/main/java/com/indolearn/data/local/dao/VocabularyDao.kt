@@ -18,6 +18,12 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary WHERE favorite = 1 AND languageCode = :langCode")
     fun getFavorites(langCode: String): Flow<List<VocabularyEntity>>
 
+    @Query("SELECT COUNT(*) FROM vocabulary WHERE languageCode = :langCode")
+    suspend fun countAll(langCode: String): Int
+
+    @Query("SELECT * FROM vocabulary WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Int>): List<VocabularyEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(words: List<VocabularyEntity>)
 

@@ -56,6 +56,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         HomeMenuItem("🧪", "اختبار سريع", "اختبر مستواك وحصيلتك", "quiz", CardOrange, OnTertiaryContainerLight),
         HomeMenuItem("🔄", "مراجعة اليوم", "كرر وثبت ما تعلمته", "review", CardBlue, OnPrimaryContainerLight),
         HomeMenuItem("⭐", "المفضلة", "كلماتك المحفوظة", "favorites", CardGreen, OnSecondaryContainerLight),
+        // كانت شاشة "تقدمي" مُعرَّفة في AppNavigation بلا أي مسار يصل إليها.
+        HomeMenuItem("📊", "تقدمي", "إحصاءات إتقانك الحقيقية", "progress", CardPurple, OnPrimaryContainerLight),
     )
 
     val otherItems = listOf(
@@ -65,6 +67,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         HomeMenuItem("📓", "دفتر أفكاري", "مذكراتك اللغوية والشخصية", "notebook", CardBlue, OnPrimaryContainerLight),
         HomeMenuItem("🔍", "البحث", "ابحث عن معاني الكلمات", "search", CardGreen, OnSecondaryContainerLight),
         HomeMenuItem("💼", "ريادة الأعمال", "تأسيس وإدارة المشاريع", "riyada_guide", CardPurple, OnPrimaryContainerLight),
+        // كانت الموسوعة (405 أسطر محتوى) غير قابلة للوصول إطلاقاً.
+        HomeMenuItem("🌍", "الموسوعة", "معلومات ثقافية ومرجعية", "encyclopedia", CardOrange, OnTertiaryContainerLight),
     )
 
     Column(

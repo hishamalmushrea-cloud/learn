@@ -13,5 +13,6 @@ data class CasualExpressionEntity(
     val usage: String,
     val formalEquivalent: String?,
     val category: String,           // سوق، شارع، أصدقاء، عام
-    val level: Int = 0
+    val level: Int = 0,
+    val languageCode: String = "ID"
 )

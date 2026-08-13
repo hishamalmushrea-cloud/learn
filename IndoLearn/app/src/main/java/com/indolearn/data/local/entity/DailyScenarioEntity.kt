@@ -11,5 +11,6 @@ data class DailyScenarioEntity(
     val dialogue: String,
     val translation: String,
     val level: Int = 0,
-    val category: String
+    val category: String,
+    val languageCode: String = "ID"
 )

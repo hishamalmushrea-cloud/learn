@@ -10,17 +10,20 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CasualDao {
-    @Query("SELECT * FROM casual_expressions WHERE category = :category ORDER BY id")
-    fun getExpressionsByCategory(category: String): Flow<List<CasualExpressionEntity>>
+    @Query("SELECT * FROM casual_expressions WHERE category = :category AND languageCode = :langCode ORDER BY id")
+    fun getExpressionsByCategory(category: String, langCode: String): Flow<List<CasualExpressionEntity>>
 
-    @Query("SELECT * FROM casual_expressions")
-    fun getAllExpressions(): Flow<List<CasualExpressionEntity>>
+    @Query("SELECT * FROM casual_expressions WHERE languageCode = :langCode ORDER BY id")
+    fun getAllExpressions(langCode: String): Flow<List<CasualExpressionEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(expressions: List<CasualExpressionEntity>)
 
-    @Query("SELECT * FROM daily_scenarios")
-    fun getAllScenarios(): Flow<List<DailyScenarioEntity>>
+    @Query("SELECT * FROM daily_scenarios WHERE languageCode = :langCode ORDER BY id")
+    fun getAllScenarios(langCode: String): Flow<List<DailyScenarioEntity>>
+
+    @Query("SELECT * FROM daily_scenarios WHERE languageCode = :langCode")
+    suspend fun getAllScenariosOnce(langCode: String): List<DailyScenarioEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertScenarios(scenarios: List<DailyScenarioEntity>)

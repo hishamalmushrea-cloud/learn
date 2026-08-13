@@ -23,6 +23,7 @@ import com.indolearn.viewmodel.LearnViewModel
 @Composable
 fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
     val stages = viewModel.stages.collectAsState().value
+    val lessonCounts = viewModel.lessonCounts.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -87,11 +88,9 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                            if (stage.isUnlocked) {
-                                navController.navigate("lessons/${stage.level}")
-                            }
-                        },
+                                .clickable(enabled = stage.isUnlocked && (lessonCounts[stage.level] ?: 0) > 0) {
+                                    navController.navigate("lessons/${stage.level}")
+                                },
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (stage.isUnlocked) {
@@ -121,15 +120,23 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
                                             }
                                         )
                                         Spacer(Modifier.width(8.dp))
-                                        if (stage.isUnlocked) {
-                                            Badge(
+                                        val count = lessonCounts[stage.level] ?: 0
+                                        // الصدق مع المستخدم: مرحلة بلا دروس تُعرض كذلك،
+                                        // بدل أن تُفتح على شاشة فارغة بلا تفسير.
+                                        when {
+                                            count == 0 -> Badge(
+                                                containerColor = MaterialTheme.colorScheme.outlineVariant,
+                                                contentColor = MaterialTheme.colorScheme.outline
+                                            ) {
+                                                Text("قيد الإعداد", modifier = Modifier.padding(horizontal = 4.dp))
+                                            }
+                                            stage.isUnlocked -> Badge(
                                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                             ) {
-                                                Text("نشط", modifier = Modifier.padding(horizontal = 4.dp))
+                                                Text("$count درساً", modifier = Modifier.padding(horizontal = 4.dp))
                                             }
-                                        } else {
-                                            Badge(
+                                            else -> Badge(
                                                 containerColor = MaterialTheme.colorScheme.outlineVariant,
                                                 contentColor = MaterialTheme.colorScheme.outline
                                             ) {
@@ -158,7 +165,11 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
                                 }
                                 
                                 Text(
-                                    text = if (stage.isUnlocked) "🔓" else "🔒",
+                                    text = when {
+                                        (lessonCounts[stage.level] ?: 0) == 0 -> "🚧"
+                                        stage.isUnlocked -> "🔓"
+                                        else -> "🔒"
+                                    },
                                     fontSize = 24.sp
                                 )
                             }

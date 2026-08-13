@@ -12,6 +12,9 @@ interface ProgressDao {
     @Query("SELECT * FROM user_progress WHERE id = 1")
     fun getProgress(): Flow<UserProgressEntity>
 
+    @Query("SELECT * FROM user_progress WHERE id = 1")
+    suspend fun getProgressOnce(): UserProgressEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateProgress(progress: UserProgressEntity)
 }
