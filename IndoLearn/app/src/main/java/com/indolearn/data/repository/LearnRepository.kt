@@ -248,6 +248,8 @@ class LearnRepository(private val db: AppDatabase) {
             GrammarEntity(1, "ترتيب الجملة", "Susunan Kalimat", "الفاعل + الفعل + المفعول", "S + V + O", "Saya makan nasi.", 0),
         )
         db.grammarDao().insertAll(grammar)
+        // قواعد الإندونيسية الأساسية — كانت قاعدة واحدة فقط مقابل 5 للتركية
+        db.grammarDao().insertAll(CoreVocabulary.indonesianGrammar)
 
         // Default progress
         db.progressDao().updateProgress(UserProgressEntity())

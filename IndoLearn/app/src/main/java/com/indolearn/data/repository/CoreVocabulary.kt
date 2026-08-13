@@ -1,6 +1,7 @@
 package com.indolearn.data.repository
 
 import com.indolearn.data.local.entity.CasualExpressionEntity
+import com.indolearn.data.local.entity.GrammarEntity
 import com.indolearn.data.local.entity.VocabularyEntity
 
 /**
@@ -317,6 +318,119 @@ object CoreVocabulary {
             "أنا أتعلم التركية", "🔵 يومي",
             "جملة مفيدة جداً: تشرح ضعف لغتك فيتلطف محدثك ويبطئ كلامه.",
             null, "تحيات وتعارف", 0, "TR"),
+    )
+
+
+    /**
+     * قواعد الإندونيسية الأساسية.
+     *
+     * كشف التدقيق أن جدول القواعد كان يحوي **قاعدة واحدة** للإندونيسية
+     * («ترتيب الجملة») مقابل خمس قواعد للتركية. أي أن متعلم الإندونيسية
+     * يفتح قسم «القواعد» فيجد سطراً واحداً — رغم أن الدروس نفسها تشرح
+     * النفي والملكية والأزمنة والبادئات. القواعد كانت محبوسة داخل
+     * الدروس ولا يمكن الرجوع إليها كمرجع مستقل.
+     *
+     * كل قاعدة هنا مستخلصة مما تشرحه الدروس فعلاً (لا محتوى جديد
+     * مخترع)، ومصاغة بالبنية: شرح ← قاعدة مختصرة ← أمثلة مفكَّكة.
+     *
+     * نطاق المعرّفات: 3300+ (كتلة فارغة، لا تصادم مع 1 أو 2001–2005).
+     */
+    val indonesianGrammar: List<GrammarEntity> = listOf(
+        GrammarEntity(3300, "النفي: tidak و bukan", "Negasi",
+            "الإندونيسية تفرّق بين أداتي نفي حسب المنفي: tidak تنفي الفعل والصفة، " +
+            "وbukan تنفي الاسم. الخلط بينهما من أشيع أخطاء المبتدئين.",
+            "tidak + فعل/صفة  •  bukan + اسم",
+            "Saya tidak makan. = أنا لا آكل. (فعل)\n" +
+            "Saya tidak lapar. = لست جائعاً. (صفة)\n" +
+            "Ini bukan buku saya. = هذا ليس كتابي. (اسم)\n" +
+            "Dia bukan guru. = هو ليس مدرساً. (اسم)", 0, "ID"),
+
+        GrammarEntity(3301, "belum و jangan", "Belum & Jangan",
+            "belum تعني «لم... بعد» وتفيد أن الفعل لم يحدث حتى الآن لكنه متوقع. " +
+            "وjangan للنهي (لا تفعل)، ولا تُستعمل tidak للنهي إطلاقاً.",
+            "belum = لم بعد  •  jangan + فعل = لا تفعل",
+            "Saya belum makan. = لم آكل بعد.\n" +
+            "Dia belum datang. = لم يأتِ بعد.\n" +
+            "Jangan lari! = لا تركض!\n" +
+            "Jangan lupa. = لا تنسَ.", 0, "ID"),
+
+        GrammarEntity(3302, "الملكية", "Kepemilikan",
+            "الملكية في الإندونيسية تأتي بوضع المالك **بعد** الشيء المملوك، " +
+            "عكس العربية في الترتيب الذهني. وتوجد صيغة مختصرة بلواحق.",
+            "اسم + ضمير المالك  •  المختصر: -ku, -mu, -nya",
+            "rumah saya = بيتي\n" +
+            "buku kamu = كتابك\n" +
+            "mobil dia = سيارته\n" +
+            "bukuku = كتابي (مختصر)\n" +
+            "bukunya = كتابه (مختصر)", 0, "ID"),
+
+        GrammarEntity(3303, "أدوات الاستفهام", "Kata Tanya",
+            "أدوات السؤال تأتي غالباً في أول الجملة أو آخرها، والجملة تبقى " +
+            "بترتيبها الطبيعي دون قلب كما في الإنجليزية.",
+            "apa / siapa / di mana / ke mana / berapa / kapan / kenapa / bagaimana",
+            "Apa ini? = ما هذا؟\n" +
+            "Siapa nama kamu? = ما اسمك؟\n" +
+            "Di mana rumah kamu? = أين بيتك؟\n" +
+            "Berapa harganya? = كم سعره؟\n" +
+            "Kenapa kamu terlambat? = لماذا تأخرت؟", 0, "ID"),
+
+        GrammarEntity(3304, "الزمن: sudah / sedang / akan / belum", "Waktu",
+            "الفعل الإندونيسي **لا يتصرف** حسب الزمن — لا ماضي ولا مضارع في " +
+            "شكل الفعل. الزمن يُفهم من كلمة مساعدة قبل الفعل. هذه أسهل نقطة " +
+            "في الإندونيسية للناطق بالعربية.",
+            "sudah = قد فعل  •  sedang = يفعل الآن  •  akan = سيفعل  •  belum = لم بعد",
+            "Saya sudah makan. = قد أكلت.\n" +
+            "Saya sedang makan. = أنا آكل الآن.\n" +
+            "Saya akan makan. = سآكل.\n" +
+            "Saya belum makan. = لم آكل بعد.", 1, "ID"),
+
+        GrammarEntity(3305, "الصفة بعد الاسم", "Kata Sifat",
+            "الصفة تأتي **بعد** الموصوف كما في العربية تماماً، ولا يوجد " +
+            "تطابق في الجنس أو العدد.",
+            "اسم + صفة",
+            "rumah besar = بيت كبير\n" +
+            "buku baru = كتاب جديد\n" +
+            "Harganya mahal. = سعره غالٍ.\n" +
+            "Kopi panas. = قهوة ساخنة.", 0, "ID"),
+
+        GrammarEntity(3306, "المقارنة والتفضيل", "Perbandingan",
+            "المقارنة تُبنى بكلمات مساعدة قبل الصفة، ولا تتغير الصفة نفسها.",
+            "lebih = أكثر  •  paling = الأكثر  •  sangat = جداً  •  terlalu = أكثر من اللازم",
+            "Ini lebih murah. = هذا أرخص.\n" +
+            "Ini paling murah. = هذا الأرخص.\n" +
+            "Ini sangat murah. = هذا رخيص جداً.\n" +
+            "Ini terlalu mahal. = هذا غالٍ أكثر من اللازم.", 1, "ID"),
+
+        GrammarEntity(3307, "حروف الجر: di / ke / dari", "Preposisi",
+            "ثلاثة حروف تحدد المكان والحركة: di للمكان الثابت، ke للاتجاه إليه، " +
+            "dari للمصدر الذي جئت منه.",
+            "di = في  •  ke = إلى  •  dari = من",
+            "Saya di rumah. = أنا في البيت.\n" +
+            "Saya pergi ke pasar. = أذهب إلى السوق.\n" +
+            "Saya dari Yaman. = أنا من اليمن.", 0, "ID"),
+
+        GrammarEntity(3308, "البادئة meN-", "Awalan meN-",
+            "بادئة تُشتق منها أفعال من الجذور، ويتغيّر شكلها حسب أول حرف في " +
+            "الجذر — وهذا سبب اختلاف الشكل بين membeli و menulis و menyapu.",
+            "meN- + جذر، ويتبدّل الحرف الأول صوتياً",
+            "beli → membeli = يشتري\n" +
+            "tulis → menulis = يكتب\n" +
+            "pakai → memakai = يستعمل\n" +
+            "sapu → menyapu = يكنس", 1, "ID"),
+
+        GrammarEntity(3309, "المبني للمجهول di-", "Kalimat Pasif",
+            "تحويل الجملة من نشطة إلى مبنية للمجهول يتم باستبدال البادئة " +
+            "meN- بالبادئة di-، وتقديم المفعول ليصبح مبتدأ.",
+            "di- + جذر (+ oleh + الفاعل)",
+            "Saya membeli buku. = أنا أشتري كتاباً. (نشطة)\n" +
+            "Buku dibeli oleh saya. = الكتاب اشتُري بواسطتي. (مجهولة)", 1, "ID"),
+
+        GrammarEntity(3310, "أدوات الربط", "Kata Hubung",
+            "ربط الجمل يحوّل الكلام من جمل قصيرة مبعثرة إلى حديث طبيعي متصل.",
+            "dan = و  •  tetapi/tapi = لكن  •  karena = لأن  •  jadi = لذلك  •  kalau = إذا",
+            "Saya lapar, jadi saya makan. = أنا جائع، لذلك آكل.\n" +
+            "Saya tidak lapar, tetapi saya makan. = لست جائعاً، لكني آكل.\n" +
+            "Kalau hujan, saya di rumah. = إذا أمطرت، أبقى في البيت.", 1, "ID"),
     )
 
     /** كل المفردات الأساسية المضافة (إندونيسية + تركية). */
