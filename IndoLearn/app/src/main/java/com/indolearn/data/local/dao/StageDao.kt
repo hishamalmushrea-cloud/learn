@@ -23,4 +23,8 @@ interface StageDao {
 
     @Query("UPDATE stages SET isUnlocked = 1 WHERE id = :id")
     suspend fun unlockStage(id: Int)
+
+    /** يفتح كل المراحل — لا تقييد تدريجي (قرار المستخدم). */
+    @Query("UPDATE stages SET isUnlocked = 1 WHERE isUnlocked = 0")
+    suspend fun unlockAll()
 }

@@ -300,6 +300,25 @@ def main():
     if missing:
         failures.append(f"{missing} دروس بلا تفاصيل")
 
+    # المراحل المقفلة: طلب المستخدم أن يكون كل شيء مفتوحاً بلا تقييد.
+    # نتحقق من قيم البذر الحقيقية المستخرجة من LearnRepository.kt.
+    locked = con.execute(
+        "SELECT COUNT(*) FROM stages WHERE isUnlocked = 0"
+    ).fetchone()[0]
+    print(f"   {'✓' if locked == 0 else '✗'} مراحل مقفلة في البذر: {locked}")
+    if locked:
+        failures.append(f"{locked} مرحلة مقفلة — المستخدم طلب فتح كل شيء")
+
+    # محاكاة تثبيت قديم: صفوف مخزّنة بـ isUnlocked = 0 ثم unlockAll().
+    con.execute("UPDATE stages SET isUnlocked = 0")
+    con.execute("UPDATE stages SET isUnlocked = 1 WHERE isUnlocked = 0")
+    still = con.execute(
+        "SELECT COUNT(*) FROM stages WHERE isUnlocked = 0"
+    ).fetchone()[0]
+    print(f"   {'✓' if still == 0 else '✗'} بعد unlockAll() على تثبيت قديم: {still} مقفلة")
+    if still:
+        failures.append("unlockAll() لم يفتح التثبيتات القديمة")
+
     print("\n" + "=" * 66)
     if failures:
         print("شاشات ستبقى فارغة:")

@@ -58,6 +58,10 @@ class SeedManager @Inject constructor(
             if (done) return
             // الفحص داخل القفل: قد يكون منفّذ آخر أنهى البذر أثناء الانتظار.
             if (isComplete()) {
+                // التثبيتات القديمة تحمل صفوف مراحل بـ isUnlocked = 0 مخزّنة
+                // بالفعل؛ تغيير القيمة الافتراضية في الكود لا يمسّها.
+                // لذلك نفتحها هنا صراحةً عند كل إقلاع.
+                repository.unlockAllStages()
                 done = true
                 return
             }
@@ -66,6 +70,7 @@ class SeedManager @Inject constructor(
                 repository.seedInitialData()
             }
             repository.recomputeProgress(DEFAULT_LANGUAGE)
+            repository.unlockAllStages()
             done = true
         }
     }

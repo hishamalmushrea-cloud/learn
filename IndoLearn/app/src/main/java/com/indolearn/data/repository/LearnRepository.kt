@@ -67,28 +67,21 @@ class LearnRepository(private val db: AppDatabase) {
                 lastStudyDate = System.currentTimeMillis()
             )
         )
-        unlockReachedStages(langCode)
+        unlockAllStages()
     }
 
     /**
-     * يفتح المرحلة التالية عند إتمام نسبة كافية من الحالية.
+     * يفتح كل المراحل بلا شرط.
      *
-     * قبل الإصلاح: `unlockStage` مُعرَّفة بلا أي مستدعٍ، فكانت المراحل 2..5
-     * مقفلة إلى الأبد و11 درساً غير قابلة للوصول.
+     * بناءً على طلب صريح من المستخدم: لا تقييد تدريجي — كل الدروس
+     * والمراحل متاحة من اللحظة الأولى.
+     *
+     * تُستدعى عند كل إقلاع لا عند البذر فقط، لأن التثبيتات القديمة
+     * تحمل صفوفاً بـ `isUnlocked = 0` مخزّنة بالفعل في قاعدة البيانات،
+     * وتغيير القيمة الافتراضية في الكود وحده لا يمسّها.
+     * العملية جملة UPDATE واحدة (رخيصة) وخاملة التكرار (idempotent).
      */
-    suspend fun unlockReachedStages(langCode: String, threshold: Double = 0.7) {
-        val stages = db.stageDao().getAllStagesOnce(langCode).sortedBy { it.level }
-        for (stage in stages) {
-            val total = db.lessonDao().countByLevel(stage.level, langCode)
-            if (total == 0) continue
-            val done = db.lessonDao().countCompletedByLevel(stage.level, langCode)
-            if (done.toDouble() / total >= threshold) {
-                stages.firstOrNull { it.level == stage.level + 1 }
-                    ?.takeIf { !it.isUnlocked }
-                    ?.let { db.stageDao().unlockStage(it.id) }
-            }
-        }
-    }
+    suspend fun unlockAllStages() = db.stageDao().unlockAll()
 
     // Lesson details
     suspend fun getLessonById(id: Int) = db.lessonDao().getLessonById(id)
@@ -361,10 +354,10 @@ class LearnRepository(private val db: AppDatabase) {
         // === Full Curriculum Stages ===
         val stages = listOf(
             StageEntity(1, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "الحروف، النطق، التحيات، التعارف، الأرقام", 0, true),
-            StageEntity(2, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "ترتيب الجملة، النفي، السؤال، الصفات", 1, false),
-            StageEntity(3, "المرحلة 3 — المبتدئ المتقدم", "Tahap 3 - Pemula Lanjut", "الأزمنة، القدرة، المقارنة", 2, false),
-            StageEntity(4, "المرحلة 4 — البادئات واللواحق", "Tahap 4 - Awalan & Akhiran", "me-, ber-, di-, ter-, -kan, -i", 3, false),
-            StageEntity(5, "المرحلة 5 — المتوسط العملي", "Tahap 5 - Menengah Praktis", "محادثات، قراءة، كتابة، مواقف حقيقية", 4, false),
+            StageEntity(2, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "ترتيب الجملة، النفي، السؤال، الصفات", 1, true),
+            StageEntity(3, "المرحلة 3 — المبتدئ المتقدم", "Tahap 3 - Pemula Lanjut", "الأزمنة، القدرة، المقارنة", 2, true),
+            StageEntity(4, "المرحلة 4 — البادئات واللواحق", "Tahap 4 - Awalan & Akhiran", "me-, ber-, di-, ter-, -kan, -i", 3, true),
+            StageEntity(5, "المرحلة 5 — المتوسط العملي", "Tahap 5 - Menengah Praktis", "محادثات، قراءة، كتابة، مواقف حقيقية", 4, true),
         )
         db.stageDao().insertAll(stages)
 
@@ -782,7 +775,7 @@ class LearnRepository(private val db: AppDatabase) {
         // 1. Turkish Stages
         val turkishStages = listOf(
             StageEntity(2001, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "الأبجدية، الأرقام، الألوان، فصول السنة، أيام الأسبوع", 0, true, "TR"),
-            StageEntity(2002, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "الضمائر الشخصية والملكية، لاحقة الجمع، وتركيب الجملة", 1, false, "TR")
+            StageEntity(2002, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "الضمائر الشخصية والملكية، لاحقة الجمع، وتركيب الجملة", 1, true, "TR")
         )
         db.stageDao().insertAll(turkishStages)
 
