@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.indolearn.data.local.PreferencesManager
 import com.indolearn.data.local.entity.*
 import com.indolearn.data.repository.LearnRepository
+import com.indolearn.data.repository.SeedManager
 import com.indolearn.domain.coach.DailyCoach
 import com.indolearn.domain.coach.DailySession
 import com.indolearn.domain.coach.TaskType
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LearnViewModel @Inject constructor(
     private val repository: LearnRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val seedManager: SeedManager
 ) : ViewModel() {
 
     private val _currentLanguage = MutableStateFlow("ID")
@@ -84,12 +86,32 @@ class LearnViewModel @Inject constructor(
     val reviewQueue: StateFlow<List<VocabularyEntity>> = _reviewQueue.asStateFlow()
 
 
+    private val _isReady = MutableStateFlow(false)
+
+    /**
+     * هل انتهى تجهيز البيانات؟
+     *
+     * تفرّق الشاشات بين «جارٍ التحميل» و«لا توجد بيانات».
+     * قبل الإصلاح كانت كل شاشة تعرض دوّامة لمجرد أن القائمة فارغة،
+     * فتدور إلى الأبد إذا كان الجدول فارغاً فعلاً.
+     */
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
+
     init {
         // Collect current language preferences and bind reactive flows
         viewModelScope.launch {
+            // ⚠️ لا تقرأ قبل اكتمال البذر.
+            // كانت هذه الشاشات تقرأ فوراً بينما البذر يجري في HomeViewModel
+            // (أو لم يجرِ أصلاً)، فتقرأ جداول فارغة وتبقى الدوّامة تدور.
+            try {
+                seedManager.ensureSeeded()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             preferencesManager.selectedLanguage.collect { lang ->
                 _currentLanguage.value = lang
                 loadAllDataForLanguage(lang)
+                _isReady.value = true
             }
         }
 

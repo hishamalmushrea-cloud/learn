@@ -186,24 +186,14 @@ class LearnRepository(private val db: AppDatabase) {
     suspend fun deleteNote(note: NoteEntity) = db.noteDao().deleteNote(note)
 
     /**
-     * يبذر المحتوى **مرة واحدة فقط**.
+     * يبذر كل المحتوى.
      *
-     * ⚠️ العطل الذي أصلحه هذا الحارس (P0-2):
-     * كانت `seedInitialData()` تُستدعى من `HomeViewModel.init` بلا شرط،
-     * وكل عمليات الإدراج تستخدم `OnConflictStrategy.REPLACE`.
-     * فكان كل فتح للشاشة الرئيسية يُعيد كتابة ~450 صفاً ويمسح:
-     *   - `lessons.completed`  (الدروس المكتملة)
-     *   - `vocabulary.favorite` (المفضلة)
-     *   - `user_progress`       (التقدم بالكامل)
-     * أي أن تقدّم المستخدم كان يُدمَّر في كل تشغيل.
+     * ⚠️ لا تستدعِ هذه مباشرة من ViewModel.
+     * استخدم [com.indolearn.data.repository.SeedManager.ensureSeeded] فهو يضمن:
+     *   - التنفيذ مرة واحدة فقط (قفل يمنع السباق بين ViewModels متعددة),
+     *   - داخل معاملة واحدة (لا حالة "نصف مبذور"),
+     *   - وفحص اكتمال يشمل كل الجداول لا جدول الدروس وحده.
      */
-    suspend fun seedIfNeeded() {
-        if (db.lessonDao().countAny() > 0) return
-        seedInitialData()
-        recomputeProgress("ID")
-    }
-
-    /** يبذر البيانات. عام لأغراض الاختبار؛ الاستخدام العادي عبر [seedIfNeeded]. */
     suspend fun seedInitialData() {
         // Level 0 and Level 1 Lessons (Complete Curriculum)
         val lessons = listOf(

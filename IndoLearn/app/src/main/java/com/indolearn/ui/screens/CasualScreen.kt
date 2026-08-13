@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.indolearn.utils.TtsManager
+import com.indolearn.ui.components.EmptyOrLoading
 import com.indolearn.viewmodel.LearnViewModel
 
 /**
@@ -33,6 +34,7 @@ import com.indolearn.viewmodel.LearnViewModel
 @Composable
 fun CasualScreen(navController: NavController, viewModel: LearnViewModel) {
     val expressions = viewModel.casual.collectAsState().value
+    val isReady = viewModel.isReady.collectAsState().value
     val lang = viewModel.currentLanguage.collectAsState().value
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
@@ -95,9 +97,7 @@ fun CasualScreen(navController: NavController, viewModel: LearnViewModel) {
             }
 
             if (expressions.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                EmptyOrLoading(isReady, "لا توجد تعبيرات بعد", "أعد فتح التطبيق. إن استمرت المشكلة فامسح بيانات التطبيق.")
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),

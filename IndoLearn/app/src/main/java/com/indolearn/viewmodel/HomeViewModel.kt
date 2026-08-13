@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.indolearn.data.local.PreferencesManager
 import com.indolearn.data.local.entity.UserProgressEntity
 import com.indolearn.data.repository.LearnRepository
+import com.indolearn.data.repository.SeedManager
 import com.indolearn.domain.srs.MasteryState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ data class MasteryBreakdown(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: LearnRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val seedManager: SeedManager
 ) : ViewModel() {
 
     private val _progress = MutableStateFlow(UserProgressEntity())
@@ -48,10 +50,9 @@ class HomeViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             try {
-                // `seedIfNeeded` بدل `seedInitialData`:
-                // الأخيرة كانت تُعيد كتابة كل البيانات في كل تشغيل
-                // فتمسح الدروس المكتملة والمفضلة والتقدم.
-                repository.seedIfNeeded()
+                // بذر ذرّي مضمون مرة واحدة (انظر SeedManager).
+                seedManager.ensureSeeded()
+                repository.recomputeProgress(_currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

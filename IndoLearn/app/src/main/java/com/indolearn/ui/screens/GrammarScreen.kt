@@ -16,12 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.indolearn.ui.theme.*
+import com.indolearn.ui.components.EmptyOrLoading
 import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GrammarScreen(navController: NavController, viewModel: LearnViewModel) {
     val grammarRules = viewModel.grammar.collectAsState().value
+    val isReady = viewModel.isReady.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -41,11 +43,8 @@ fun GrammarScreen(navController: NavController, viewModel: LearnViewModel) {
         }
     ) { padding ->
         if (grammarRules.isEmpty()) {
-            Box(
-                Modifier.fillMaxSize().padding(padding),
-                contentAlignment = androidx.compose.ui.Alignment.Center
-            ) { CircularProgressIndicator() }
-        } else {
+                EmptyOrLoading(isReady, "لا توجد قواعد في هذا المستوى", "القواعد التفصيلية متاحة داخل الدروس والمكتبة المرجعية.")
+            } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()

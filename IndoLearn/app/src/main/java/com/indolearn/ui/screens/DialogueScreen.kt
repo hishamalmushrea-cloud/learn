@@ -20,12 +20,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.indolearn.data.local.entity.DialogueEntity
 import com.indolearn.utils.TtsManager
+import com.indolearn.ui.components.EmptyOrLoading
 import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogueScreen(navController: NavController, viewModel: LearnViewModel) {
     val dialogues = viewModel.dialogues.collectAsState().value
+    val isReady = viewModel.isReady.collectAsState().value
     val currentLanguage = viewModel.currentLanguage.collectAsState().value
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
@@ -63,12 +65,7 @@ fun DialogueScreen(navController: NavController, viewModel: LearnViewModel) {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (dialogues.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                EmptyOrLoading(isReady, "لا توجد محادثات بعد", "أعد فتح التطبيق. إن استمرت المشكلة فامسح بيانات التطبيق.")
             } else {
                 // Dialogue Selector Tabs
                 ScrollableTabRow(

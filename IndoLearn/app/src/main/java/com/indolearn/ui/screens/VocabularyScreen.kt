@@ -26,12 +26,14 @@ import androidx.navigation.NavController
 import com.indolearn.ui.theme.*
 import com.indolearn.utils.TtsManager
 import com.indolearn.utils.VerbDetailsHelper
+import com.indolearn.ui.components.EmptyOrLoading
 import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VocabularyScreen(navController: NavController, viewModel: LearnViewModel) {
     val words = viewModel.vocabulary.collectAsState().value
+    val isReady = viewModel.isReady.collectAsState().value
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
     // إطلاق محرك النطق عند مغادرة الشاشة.
@@ -84,9 +86,7 @@ fun VocabularyScreen(navController: NavController, viewModel: LearnViewModel) {
             }
 
             if (filteredWords.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                EmptyOrLoading(isReady, "لا توجد كلمات مطابقة", "جرّب تغيير البحث أو الفئة.")
             } else {
                 LazyColumn(
                     modifier = Modifier.padding(horizontal = 16.dp),

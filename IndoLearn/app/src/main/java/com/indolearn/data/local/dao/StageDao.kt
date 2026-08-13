@@ -15,6 +15,9 @@ interface StageDao {
     @Query("SELECT * FROM stages WHERE languageCode = :langCode ORDER BY id")
     suspend fun getAllStagesOnce(langCode: String): List<StageEntity>
 
+    @Query("SELECT COUNT(*) FROM stages")
+    suspend fun countAny(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(stages: List<StageEntity>)
 

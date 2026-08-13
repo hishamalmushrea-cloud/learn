@@ -22,12 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.indolearn.ui.theme.*
+import com.indolearn.ui.components.EmptyOrLoading
 import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LessonsScreen(navController: NavController, viewModel: LearnViewModel, level: Int = 0) {
     val lessons = viewModel.lessons.collectAsState().value
+    val isReady = viewModel.isReady.collectAsState().value
     val completedCount = lessons.count { it.completed }
     val totalCount = lessons.size
 
@@ -80,9 +82,7 @@ fun LessonsScreen(navController: NavController, viewModel: LearnViewModel, level
             }
 
             if (lessons.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                EmptyOrLoading(isReady, "لا توجد دروس في هذه المرحلة", "هذه المرحلة قيد الإعداد. جرّب مرحلة أخرى من «المنهج الكامل».")
             } else {
                 LazyColumn(
                     modifier = Modifier.padding(horizontal = 16.dp),

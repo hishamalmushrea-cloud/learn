@@ -11,7 +11,8 @@
 #   4. سلامة بيانات المحتوى (مفاتيح، روابط، وسم اللغة، صحة الأسئلة).
 #   5. نقاء اللغة (عدم تسرب كلمات بين الإندونيسية والتركية والعربية).
 #   6. تشغيل فعلي لمحلل Markdown على ملفات الموسوعة الـ27.
-#   7. تشغيل فعلي لاختبارات محرك التعلم (20 اختباراً) عبر kotlinc + JDK.
+#   7. تشغيل فعلي لاختبار SeedManager (البذر مرة واحدة، ذرّي، بلا سباق).
+#   8. تشغيل فعلي لاختبارات محرك التعلم (20 اختباراً) عبر kotlinc + JDK.
 #
 # ما لا تتحقق منه: تجميع Compose/Room/Hilt، وتوليد كود Room، واختبارات الأجهزة.
 
@@ -38,17 +39,27 @@ python3 tools/validate_refs.py || fail=1
 step "4/6 سلامة بيانات المحتوى"
 python3 tools/validate_seed.py || fail=1
 
+step "4b/8 محاكاة قاعدة البيانات (هل تصل البيانات للشاشات؟)"
+python3 tools/simulate_db.py || fail=1
+
 step "5/6 نقاء اللغة"
 python3 tools/validate_language.py || fail=1
 
-step "6/7 اختبار محلل Markdown على ملفات الموسوعة (تنفيذ فعلي)"
+step "6/8 اختبار محلل Markdown على ملفات الموسوعة (تنفيذ فعلي)"
 if [ -x "/tmp/jvenv/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java" ] || command -v java >/dev/null 2>&1; then
   ./tools/run_markdown_spec.sh || fail=1
 else
   echo "⚠ تخطٍّ: JDK غير متوفر (تخطٍّ صريح، لا يُحتسب نجاحاً)"
 fi
 
-step "7/7 اختبارات محرك التعلم (تنفيذ فعلي)"
+step "7/8 اختبار SeedManager (تنفيذ فعلي)"
+if [ -x "/tmp/jvenv/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java" ] || command -v java >/dev/null 2>&1; then
+  ./tools/run_seed_spec.sh || fail=1
+else
+  echo "⚠ تخطٍّ: JDK غير متوفر (تخطٍّ صريح، لا يُحتسب نجاحاً)"
+fi
+
+step "8/8 اختبارات محرك التعلم (تنفيذ فعلي)"
 if command -v java >/dev/null 2>&1 || [ -x "/tmp/jvenv/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java" ]; then
   ./tools/run_engine_spec.sh || fail=1
 else

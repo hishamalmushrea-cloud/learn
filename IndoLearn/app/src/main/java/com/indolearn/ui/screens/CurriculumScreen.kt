@@ -17,12 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.indolearn.ui.components.EmptyOrLoading
 import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
     val stages = viewModel.stages.collectAsState().value
+    val isReady = viewModel.isReady.collectAsState().value
     val lessonCounts = viewModel.lessonCounts.collectAsState().value
 
     Scaffold(
@@ -75,9 +77,7 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
             }
 
             if (stages.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                EmptyOrLoading(isReady, "لا توجد مراحل بعد", "أعد فتح التطبيق. إن استمرت المشكلة فامسح بيانات التطبيق.")
             } else {
                 LazyColumn(
                     modifier = Modifier.padding(horizontal = 16.dp),
