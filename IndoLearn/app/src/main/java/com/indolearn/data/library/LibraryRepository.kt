@@ -30,15 +30,31 @@ sealed interface MdBlock {
  * القراءة تتم على [Dispatchers.IO] لأن قراءة الأصول عمل قرصي
  * ولا يجوز تنفيذه على الخيط الرئيسي (سبب شائع لتجمّد الواجهة).
  */
-class LibraryRepository(context: Context) {
+class LibraryRepository(context: Context, languageCode: String) {
 
     // نحتفظ بسياق التطبيق لا بسياق الـ Activity، تفادياً لتسريب الـ Activity
     // إذا عاش هذا الكائن أطول من الشاشة.
     private val appContext: Context = context.applicationContext
 
-    private val dir = "encyclopedia"
+    /**
+     * مجلد المكتبة يتبع اللغة المختارة:
+     *   library/id  ← موسوعة indolang  (27 ملفاً)
+     *   library/tr  ← موسوعة turklang  (6 ملفات)
+     * بدون هذا الفصل كان متعلم التركية يرى مرجعاً إندونيسياً.
+     */
+    private val dir = "library/" + if (languageCode.equals("TR", true)) "tr" else "id"
 
-    /** عناوين لطيفة بدل أسماء الملفات المُرقَّمة. */
+    /** رموز الملفات التركية (أسماؤها ليست مُرقَّمة). */
+    private val turkishEmojis = mapOf(
+        "Turkish_Mastery_Encyclopedia" to "📘",
+        "pazar_dukkan_musteri" to "🛒",
+        "satici_kartlar_ve_cevaplar" to "🏪",
+        "bank_diyaloglar" to "🎭",
+        "bank_cumleler_ve_almak" to "💬",
+        "12_hafta_A0_A1" to "📅"
+    )
+
+    /** عناوين لطيفة بدل أسماء الملفات المُرقَّمة (الإندونيسية). */
     private val emojis = mapOf(
         "00" to "🧭", "01" to "🗺️", "02" to "📐", "03" to "🔊", "04" to "👤",
         "05" to "📘", "06" to "🧩", "07" to "🏃", "08" to "🎨", "09" to "📚",
@@ -57,7 +73,8 @@ class LibraryRepository(context: Context) {
             val head = runCatching { readHead(name) }.getOrDefault("" to "")
             LibraryDoc(
                 fileName = name,
-                emoji = emojis[name.take(2)] ?: "📄",
+                emoji = turkishEmojis[name.removeSuffix(".md")]
+                    ?: emojis[name.take(2)] ?: "📄",
                 title = head.first.ifBlank { prettyName(name) },
                 summary = head.second
             )

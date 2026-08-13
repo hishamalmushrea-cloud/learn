@@ -980,6 +980,18 @@ class LearnRepository(private val db: AppDatabase) {
         db.dialogueDao().insertAll(turkishDialogues)
 
         // ==========================================================
+        // محتوى موسوعة turklang (مستورد آلياً — انظر TurkLangContent.kt)
+        //
+        // 127 تعبيراً و27 سؤالاً و49 حواراً واقعياً، مستخرجة من منهج
+        // عربي شامل للتركية. النص الكامل (6 ملفات) في assets/library/tr/.
+        //
+        // معرّفاتها تبدأ من 7000 (الإندونيسية 5000) لتجنّب أي تعارض.
+        // ==========================================================
+        db.casualDao().insertAll(TurkLangContent.expressions)
+        db.trainingDao().insertAll(TurkLangContent.quizzes)
+        db.casualDao().insertScenarios(TurkLangContent.scenarios)
+
+        // ==========================================================
         // 7. Turkish practice content
         //
         // سبب الإضافة: كانت التركية تحتوي على دروس ومفردات فقط،

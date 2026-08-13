@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import com.indolearn.data.library.LibraryDoc
 import com.indolearn.data.library.LibraryRepository
 import com.indolearn.data.library.MdBlock
+import com.indolearn.viewmodel.LearnViewModel
 
 /**
  * المكتبة المرجعية — موسوعة تعلّم الإندونيسية.
@@ -38,15 +39,19 @@ import com.indolearn.data.library.MdBlock
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(navController: NavController) {
+fun LibraryScreen(navController: NavController, viewModel: LearnViewModel) {
     val context = LocalContext.current
-    val repo = remember { LibraryRepository(context) }
+    val lang = viewModel.currentLanguage.collectAsState().value
+    // إعادة الإنشاء عند تبديل اللغة حتى يتغير مجلد المكتبة فعلياً
+    val repo = remember(lang) { LibraryRepository(context, lang) }
     var docs by remember { mutableStateOf<List<LibraryDoc>>(emptyList()) }
     var openDoc by remember { mutableStateOf<LibraryDoc?>(null) }
     var query by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(lang) {
+        loading = true
+        openDoc = null
         docs = repo.listDocs()
         loading = false
     }
@@ -61,7 +66,12 @@ fun LibraryScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(openDoc?.title ?: "📚 المكتبة المرجعية") },
+                title = {
+                    Text(
+                        openDoc?.title
+                            ?: if (lang == "TR") "📚 مكتبة التركية" else "📚 مكتبة الإندونيسية"
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (openDoc != null) openDoc = null else navController.popBackStack()

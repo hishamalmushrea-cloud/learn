@@ -139,9 +139,14 @@ GENERATED = os.path.join(
 
 # نفحص المحتوى المُولَّد من موسوعة indolang مع المحتوى المكتوب يدوياً معاً،
 # وإلا مرّت أخطاء المستورد (مفاتيح مكررة، إجابة خارج الخيارات) بلا رقابة.
+_GEN_TR = os.path.join(
+    ROOT, "IndoLearn", "app", "src", "main", "java", "com", "indolearn",
+    "data", "repository", "TurkLangContent.kt",
+)
 _sources = [open(REPO, encoding="utf-8").read()]
-if os.path.exists(GENERATED):
-    _sources.append(open(GENERATED, encoding="utf-8").read())
+for _g in (GENERATED, _GEN_TR):
+    if os.path.exists(_g):
+        _sources.append(open(_g, encoding="utf-8").read())
 REPO_SRC = strip_comments("\n".join(_sources))
 
 

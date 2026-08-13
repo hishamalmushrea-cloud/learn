@@ -99,18 +99,28 @@ private fun check(name: String, cond: Boolean, detail: String = "") {
 }
 
 fun main(args: Array<String>) {
-    val dir = File(args.firstOrNull() ?: "IndoLearn/app/src/main/assets/encyclopedia")
+    val root = File(args.firstOrNull() ?: "IndoLearn/app/src/main/assets/library")
     println("=".repeat(66))
     println("Markdown parser spec — real encyclopedia files")
     println("=".repeat(66))
 
-    val files = dir.listFiles { f: File -> f.name.endsWith(".md") }?.sortedBy { it.name }
-    if (files.isNullOrEmpty()) {
-        println("✗ no markdown files found in ${dir.absolutePath}")
+    // المكتبة صارت مقسّمة حسب اللغة: library/id و library/tr
+    val langDirs = root.listFiles { f: File -> f.isDirectory }?.sortedBy { it.name }.orEmpty()
+    val files = langDirs.flatMap { d ->
+        d.listFiles { f: File -> f.name.endsWith(".md") }?.sortedBy { it.name }?.toList().orEmpty()
+    }
+    if (files.isEmpty()) {
+        println("✗ no markdown files found under ${root.absolutePath}")
         kotlin.system.exitProcess(1)
     }
 
-    println("\n[files] ${files.size} documents")
+    println("\n[files] ${files.size} documents in ${langDirs.size} language folders")
+    check("both language folders present", langDirs.size == 2,
+        langDirs.joinToString { it.name })
+    for (d in langDirs) {
+        val n = d.listFiles { f: File -> f.name.endsWith(".md") }?.size ?: 0
+        check("library/${d.name} is not empty", n > 0, "$n files")
+    }
     var totalBlocks = 0
     var totalTables = 0
     var totalRows = 0
@@ -131,8 +141,8 @@ fun main(args: Array<String>) {
     }
 
     check("every document parses into blocks", emptyDocs == 0, "$emptyDocs empty")
-    check("tables were detected", totalTables > 80, "found $totalTables")
-    check("table rows extracted", totalRows > 800, "found $totalRows")
+    check("tables were detected", totalTables > 110, "found $totalTables")
+    check("table rows extracted", totalRows > 1200, "found $totalRows")
     check("no row wider than its header", raggedTables == 0, "$raggedTables ragged")
 
     // كل ملف يجب أن يبدأ بعنوان — نستخدمه كاسم في قائمة المكتبة
@@ -167,6 +177,21 @@ fun main(args: Array<String>) {
     check("horizontal rules are not paragraphs", dividerAsText == 0, "$dividerAsText")
 
     // فحص محدد: جدول التحيات يجب أن يُقرأ بدقة
+    // فحص تركي محدد: بنك الحوارات يجب أن يُقرأ سليماً
+    val tr = files.firstOrNull { it.name.startsWith("bank_diyaloglar") }
+    if (tr != null) {
+        val b = parseMarkdown(tr.readText())
+        val titles = b.filterIsInstance<MdBlock.Heading>().filter { it.level == 2 }
+        check("turkish dialogue bank has 50 dialogues", titles.size == 50, "${titles.size}")
+    }
+    val enc = files.firstOrNull { it.name.startsWith("Turkish_Mastery") }
+    if (enc != null) {
+        val t = parseMarkdown(enc.readText()).filterIsInstance<MdBlock.Table>()
+        check("turkish encyclopedia has tables", t.size > 15, "${t.size}")
+        check("turkish tables are well formed",
+            t.all { tb -> tb.rows.all { it.size <= tb.header.size } })
+    }
+
     val greet = files.firstOrNull { it.name.startsWith("10-") }
     if (greet != null) {
         val t = parseMarkdown(greet.readText()).filterIsInstance<MdBlock.Table>()

@@ -11,4 +11,4 @@ echo "==> compiling markdown spec"
 kotlinc "$ROOT/tools/MarkdownSpec.kt" -include-runtime -d "$OUT" 2>&1 \
   | grep -iv 'warning\|restricted\|deprecated\|sun\.misc\|consider reporting\|native-access' || true
 echo "==> running"
-exec java -jar "$OUT" "$ROOT/IndoLearn/app/src/main/assets/encyclopedia"
+exec java -jar "$OUT" "$ROOT/IndoLearn/app/src/main/assets/library"
