@@ -236,7 +236,7 @@ class LearnRepository(private val db: AppDatabase) {
         val vocab = listOf(
             VocabularyEntity(1, "halo", "halo", "ها لو", "مرحبا", "Halo, apa kabar?", "مرحبا، كيف حالك؟", "تحيات", 0, true),
             VocabularyEntity(2, "terima kasih", "terima kasih", "تيريما كاسيه", "شكراً", "Terima kasih banyak.", "شكراً جزيلاً.", "تحيات", 0, true),
-            VocabularyEntity(3, "saya", "saya", "سايا", "أنا", "Saya dari Yaman.", "أنا من اليمن.", "تعارف", 0, true),
+            VocabularyEntity(3, "saya", "saya", "سايا", "أنا (رسمي)", "Saya dari Yaman.", "أنا من اليمن.", "ضمائر", 0, true),
             VocabularyEntity(4, "makan", "makan", "ماكان", "يأكل", "Saya makan nasi.", "أنا آكل الأرز.", "أفعال", 0, true),
             VocabularyEntity(5, "minum", "minum", "مينوم", "يشرب", "Saya minum air.", "أنا أشرب الماء.", "أفعال", 0, true),
             VocabularyEntity(6, "tidur", "tidur", "تيدور", "ينام", "Saya mau tidur.", "أريد أن أنام.", "أفعال", 0, true),
@@ -944,6 +944,12 @@ class LearnRepository(private val db: AppDatabase) {
         )
         db.vocabularyDao().insertAll(turkishVocab)
 
+        // المفردات الأساسية المفقودة (أيام، أرقام، ضمائر، ألوان، مال،
+        // اتجاهات، جسم، صحة، ملابس) للغتين — انظر CoreVocabulary.kt
+        // كشف tools/audit_content.py أن 72% من المفردات كانت أفعالاً
+        // بينما لا يوجد سوى رقمين وضميرين ولا يوم واحد من أيام الأسبوع.
+        db.vocabularyDao().insertAll(CoreVocabulary.all)
+
         // 5. Turkish Grammar Rules (Expanded with turk_duzenlenmis.md)
         val turkishGrammar = listOf(
             GrammarEntity(2001, "بنية الجملة التركية (SOV)", "Cümle Yapısı", "ترتيب الجملة: فاعل + مفعول به + فعل. الفعل يأتي دائماً في نهاية الجملة خلافاً للإندونيسية.", "S + O + V", "Ben kitap okuyorum. (أنا أقرأ كتاباً)", 0, "TR"),
@@ -971,6 +977,8 @@ class LearnRepository(private val db: AppDatabase) {
         // معرّفاتها تبدأ من 7000 (الإندونيسية 5000) لتجنّب أي تعارض.
         // ==========================================================
         db.casualDao().insertAll(TurkLangContent.expressions)
+        // عبارات التعارف التركية — كانت مفقودة تماماً (انظر CoreVocabulary.kt)
+        db.casualDao().insertAll(CoreVocabulary.turkishIntroductions)
         db.trainingDao().insertAll(TurkLangContent.quizzes)
         db.casualDao().insertScenarios(TurkLangContent.scenarios)
 

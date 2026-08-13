@@ -20,6 +20,7 @@
 import os
 import re
 import sys
+import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from simulate_db import SOURCES, extract, kotlin_value, strip_comments  # noqa: E402
@@ -54,12 +55,23 @@ def is_verb_gloss(ar):
 # التركية إلصاقية: المصدر ينتهي بـ -mak/-mek وتُحذف اللاحقة عند التصريف،
 # وقد يلين الحرف الأخير للجذر (t→d): gitmek → gidiyorum.
 # لذلك المطابقة الحرفية للكلمة داخل المثال تعطي إنذارات كاذبة.
+def _norm(text):
+    """توحيد النص قبل المطابقة.
+
+    فخّ يونيكودي حقيقي: الحرف التركي 'İ' (I بنقطة) عند تحويله لحروف صغيرة
+    في بايثون يصبح 'i' + نقطة عائمة (U+0307)، فتفشل مطابقة 'iki' داخل
+    'İki ekmek'. نحذف العلامات المركّبة بعد التفكيك لتصحيح ذلك.
+    """
+    t = unicodedata.normalize("NFD", text.lower())
+    return "".join(ch for ch in t if not unicodedata.combining(ch))
+
+
 SOFTEN = {"t": "d", "k": "ğ", "p": "b", "ç": "c"}
 
 
 def _stems(word, lang):
     """يولّد الجذور المحتملة لكلمة، حسب صرف اللغة."""
-    w = word.strip().lower()
+    w = _norm(word.strip())
     out = {w}
     if lang == "TR":
         for suf in ("mak", "mek"):
@@ -82,7 +94,14 @@ def _stems(word, lang):
 
 def _example_contains(word, example, lang):
     """هل يظهر الجذر داخل المثال؟ يقبل التصريف واللواحق."""
-    words_in_ex = re.findall(r"[\w\u00c0-\u024f]+", example.lower())
+    example = _norm(example)
+    word = _norm(word)
+    words_in_ex = re.findall(r"[\w\u00c0-\u024f]+", example)
+    # الكلمات المكوّنة من حرف واحد (الضمير التركي "o" = هو/هي) تحتاج
+    # مطابقة ككلمة كاملة، وإلا لن تُطابق أبداً بشرط الطول.
+    if len(word) == 1:
+        return word in words_in_ex
+
     for stem in _stems(word, lang):
         if stem in example:
             return True
@@ -245,9 +264,11 @@ def main():
     # ---------- 6) تغطية الفئات الأساسية ----------
     print("\n[6] تغطية الفئات الأساسية للمتعلم المبتدئ")
     # الفئات التي لا يستطيع مبتدئ الاستغناء عنها.
-    ESSENTIAL = ["تحيات", "تعارف", "ضمائر", "أرقام", "سؤال", "نفي",
+    # "تعارف" ليست فئة مفردات: التعارف جُمَل كاملة (ما اسمك؟ من أين أنت؟)
+    # ومكانها الصحيح جدول العبارات اليومية — ويُفحص هناك في القسم [7].
+    ESSENTIAL = ["تحيات", "ضمائر", "أرقام", "سؤال", "نفي",
                  "أفعال", "صفات", "عائلة", "طعام", "أماكن", "وقت",
-                 "ألوان", "أيام", "اتجاهات", "جسم", "ملابس", "مال"]
+                 "ألوان", "أيام", "اتجاهات", "جسم", "مال"]
     for lang in ("ID", "TR"):
         have = {str(v.get("category", "")).strip()
                 for v in vocab if v.get("languageCode") == lang}
@@ -267,6 +288,16 @@ def main():
         print(f"        {n:>4}  {k!r}")
     no_usage = [c for c in casual if not str(c.get("usage", "")).strip()]
     rep("تعبير بلا شرح استخدام", no_usage)
+
+    # التعارف: يجب أن يوجد كجُمَل في كل لغة (لا ككلمات مفردة).
+    for lang in ("ID", "TR"):
+        intro = [c for c in casual
+                 if c.get("languageCode") == lang
+                 and "تعارف" in str(c.get("category", ""))]
+        mark = "✓" if intro else "✗"
+        print(f"   {mark} [{lang}] عبارات تعارف: {len(intro)}")
+        if not intro:
+            warnings.append(f"[{lang}] لا توجد عبارات تعارف")
 
     dup_expr = {}
     for c in casual:

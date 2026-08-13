@@ -24,6 +24,7 @@ SOURCES = [
     os.path.join(PKG, "data", "repository", "LearnRepository.kt"),
     os.path.join(PKG, "data", "repository", "IndoLangContent.kt"),
     os.path.join(PKG, "data", "repository", "TurkLangContent.kt"),
+    os.path.join(PKG, "data", "repository", "CoreVocabulary.kt"),
 ]
 
 # ترتيب حقول كل كيان كما هو في تعريف data class (مهم: الوسائط موضعية)
