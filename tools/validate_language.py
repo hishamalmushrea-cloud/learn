@@ -22,7 +22,17 @@ REPO = os.path.join(
     "data", "repository", "LearnRepository.kt",
 )
 
-src = open(REPO, encoding="utf-8").read()
+GENERATED = os.path.join(
+    ROOT, "IndoLearn", "app", "src", "main", "java", "com", "indolearn",
+    "data", "repository", "IndoLangContent.kt",
+)
+
+# نشمل المحتوى المستورد من indolang: هو أكثر مكان محتمل لتسرّب اللغات
+# لأنه مُولَّد آلياً من ملفات Markdown مختلطة اللغة.
+_parts = [open(REPO, encoding="utf-8").read()]
+if os.path.exists(GENERATED):
+    _parts.append(open(GENERATED, encoding="utf-8").read())
+src = "\n".join(_parts)
 
 ARABIC = re.compile(r"[\u0600-\u06FF]")
 TURKISH_ONLY = set("çğışöüÇĞİŞÖÜ")

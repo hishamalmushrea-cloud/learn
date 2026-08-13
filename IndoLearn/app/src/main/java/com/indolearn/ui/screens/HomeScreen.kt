@@ -48,6 +48,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         HomeMenuItem("📖", "الدروس", "تعلم خطوة بخطوة", "lessons", CardBlue, OnPrimaryContainerLight),
         HomeMenuItem("📝", "المفردات", "أهم الكلمات والأفعال", "vocabulary", CardGreen, OnSecondaryContainerLight),
         HomeMenuItem("📐", "القواعد", "قواعد اللغة والنحو", "grammar", CardPurple, OnPrimaryContainerLight),
+        HomeMenuItem("📚", "المكتبة المرجعية", "موسوعة كاملة للإندونيسية", "library", CardBlue, OnPrimaryContainerLight),
         HomeMenuItem("🗣️", "اللغة اليومية", "تعبيرات الشارع الواقعية", "casual", CardOrange, OnTertiaryContainerLight),
     )
 

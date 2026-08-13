@@ -116,5 +116,9 @@ fun AppNavigation(navController: NavHostController) {
         composable("encyclopedia") { 
             EncyclopediaScreen(navController) 
         }
+        // المكتبة المرجعية: موسوعة تعلّم الإندونيسية (27 ملفاً، أوفلاين)
+        composable("library") {
+            LibraryScreen(navController)
+        }
     }
 }

@@ -328,6 +328,18 @@ class LearnRepository(private val db: AppDatabase) {
         )
         db.casualDao().insertAll(casual)
 
+        // ==========================================================
+        // محتوى موسوعة indolang (مستورد آلياً — انظر IndoLangContent.kt)
+        //
+        // 190 عبارة يومية و63 سؤال سجل لغوي، مستخرجة من منهج عربي شامل
+        // للإندونيسية. النص الكامل للموسوعة (27 ملفاً) محفوظ في
+        // assets/encyclopedia/ ويُعرض في شاشة المكتبة المرجعية.
+        //
+        // معرّفاتها تبدأ من 5000 لتجنّب التعارض مع المحتوى الموجود.
+        // ==========================================================
+        db.casualDao().insertAll(IndoLangContent.expressions)
+        db.trainingDao().insertAll(IndoLangContent.registerQuizzes)
+
         val scenarios = listOf(
             DailyScenarioEntity(1, "Market Negotiation", "تفاوض في السوق", 
                 "Penjual: Ke sini dong! Lihat-lihat dulu.\nPembeli: Iya, saya lihat-lihat dulu.\nPenjual: Mau yang mana?\nPembeli: Yang ini berapa?\nPenjual: Murah banget ini, cuma 50 ribu!",
