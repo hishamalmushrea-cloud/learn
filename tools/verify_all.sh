@@ -27,39 +27,45 @@ step() {
   echo "══════════════════════════════════════════════════════════════"
 }
 
-step "1/6 الفحص البنيوي لملفات Kotlin"
+step "1/11 الفحص البنيوي لملفات Kotlin"
 python3 tools/validate_structure.py IndoLearn/app/src/main/java || fail=1
 
-step "2/6 عدد وسائط بواني الكيانات"
+step "2/11 عدد وسائط بواني الكيانات"
 python3 tools/validate_arity.py || fail=1
 
-step "3/6 المراجع المتقاطعة (DAO / Repository / ViewModel / Navigation)"
+step "3/11 المراجع المتقاطعة (DAO / Repository / ViewModel / Navigation)"
 python3 tools/validate_refs.py || fail=1
 
-step "4/6 سلامة بيانات المحتوى"
+step "4/11 سلامة بيانات المحتوى"
 python3 tools/validate_seed.py || fail=1
 
-step "4b/8 محاكاة قاعدة البيانات (هل تصل البيانات للشاشات؟)"
+step "5/11 محاكاة قاعدة البيانات (هل تصل البيانات للشاشات؟)"
 python3 tools/simulate_db.py || fail=1
 
-step "5/6 نقاء اللغة"
+step "6/11 نقاء اللغة"
 python3 tools/validate_language.py || fail=1
 
-step "6/8 اختبار محلل Markdown على ملفات الموسوعة (تنفيذ فعلي)"
+step "7/11 تدقيق المنهج (هل عنوان الدرس يطابق محتواه؟)"
+python3 tools/validate_curriculum.py || fail=1
+
+step "8/11 تدقيق المحتوى التعليمي (تصنيف، تكرار، أمثلة)"
+python3 tools/audit_content.py --strict || fail=1
+
+step "9/11 اختبار محلل Markdown على ملفات الموسوعة (تنفيذ فعلي)"
 if [ -x "/tmp/jvenv/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java" ] || command -v java >/dev/null 2>&1; then
   ./tools/run_markdown_spec.sh || fail=1
 else
   echo "⚠ تخطٍّ: JDK غير متوفر (تخطٍّ صريح، لا يُحتسب نجاحاً)"
 fi
 
-step "7/8 اختبار SeedManager (تنفيذ فعلي)"
+step "10/11 اختبار SeedManager (تنفيذ فعلي)"
 if [ -x "/tmp/jvenv/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java" ] || command -v java >/dev/null 2>&1; then
   ./tools/run_seed_spec.sh || fail=1
 else
   echo "⚠ تخطٍّ: JDK غير متوفر (تخطٍّ صريح، لا يُحتسب نجاحاً)"
 fi
 
-step "8/8 اختبارات محرك التعلم (تنفيذ فعلي)"
+step "11/11 اختبارات محرك التعلم (تنفيذ فعلي)"
 if command -v java >/dev/null 2>&1 || [ -x "/tmp/jvenv/lib/python3.11/site-packages/jdk4py/java-runtime/bin/java" ]; then
   ./tools/run_engine_spec.sh || fail=1
 else
