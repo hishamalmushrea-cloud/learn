@@ -2,13 +2,30 @@ package com.indolearn.data.repository
 
 import com.indolearn.data.local.AppDatabase
 import com.indolearn.data.local.entity.*
+import com.indolearn.domain.srs.Grade
+import com.indolearn.domain.srs.ItemKind
+import com.indolearn.domain.srs.ReviewState
+import com.indolearn.domain.srs.Sm2Scheduler
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 class LearnRepository(private val db: AppDatabase) {
 
     // Lessons
     fun getLessons(level: Int, langCode: String) = db.lessonDao().getLessonsByLevel(level, langCode)
-    suspend fun markLessonCompleted(id: Int) = db.lessonDao().markCompleted(id)
+
+    /**
+     * يُكمل الدرس ثم **يعيد احتساب التقدم فوراً**.
+     *
+     * قبل الإصلاح كان `markLessonCompleted` يحدّث عمود `completed` فقط،
+     * بينما `user_progress` لا يُحدَّث أبداً (صفر مستدعين لـ `updateProgress`)،
+     * فتبقى شاشة التقدم على 0 مهما أنجز المستخدم.
+     */
+    suspend fun markLessonCompleted(id: Int, langCode: String) {
+        db.lessonDao().markCompleted(id)
+        recomputeProgress(langCode)
+    }
 
     // Vocabulary
     fun getAllVocabulary(langCode: String) = db.vocabularyDao().getAllVocabulary(langCode)
@@ -28,31 +45,48 @@ class LearnRepository(private val db: AppDatabase) {
     fun getUserProgress() = db.progressDao().getProgress()
     suspend fun updateProgress(progress: UserProgressEntity) = db.progressDao().updateProgress(progress)
 
-    suspend fun checkAndUpdateStreak() {
-        val currentProgress = db.progressDao().getProgressSync() ?: UserProgressEntity()
-        val currentTime = System.currentTimeMillis()
-        val lastStudyDate = currentProgress.lastStudyDate
+    /**
+     * يعيد احتساب التقدم من الحقائق المخزّنة، لا من أرقام ثابتة.
+     *
+     * كانت `UserProgressEntity` تستخدم `totalLessons = 50` و`totalWords = 300`
+     * وهما رقمان **خاطئان** (الحقيقي 55 و197)، ولا يتغيران عند إضافة محتوى.
+     */
+    suspend fun recomputeProgress(langCode: String) {
+        val totalLessons = db.lessonDao().countAll(langCode)
+        val completed = db.lessonDao().countCompleted(langCode)
+        val totalWords = db.vocabularyDao().countAll(langCode)
+        val learned = db.reviewStateDao().countLearned(langCode)
 
-        val oneDayMillis = 24 * 60 * 60 * 1000L
-        val lastDay = lastStudyDate / oneDayMillis
-        val currentDay = currentTime / oneDayMillis
-        
-        var newStreak = currentProgress.streakDays
-        if (currentDay - lastDay == 1L) {
-            newStreak += 1
-        } else if (currentDay - lastDay > 1L) {
-            newStreak = 1
-        } else if (lastStudyDate == 0L) {
-            newStreak = 1
-        }
-        
-        if (lastStudyDate == 0L || currentDay > lastDay) {
-            db.progressDao().updateProgress(
-                currentProgress.copy(
-                    lastStudyDate = currentTime,
-                    streakDays = newStreak
-                )
+        val current = db.progressDao().getProgressOnce() ?: UserProgressEntity()
+        db.progressDao().updateProgress(
+            current.copy(
+                completedLessons = completed,
+                totalLessons = totalLessons,
+                learnedWords = learned,
+                totalWords = totalWords,
+                lastStudyDate = System.currentTimeMillis()
             )
+        )
+        unlockReachedStages(langCode)
+    }
+
+    /**
+     * يفتح المرحلة التالية عند إتمام نسبة كافية من الحالية.
+     *
+     * قبل الإصلاح: `unlockStage` مُعرَّفة بلا أي مستدعٍ، فكانت المراحل 2..5
+     * مقفلة إلى الأبد و11 درساً غير قابلة للوصول.
+     */
+    suspend fun unlockReachedStages(langCode: String, threshold: Double = 0.7) {
+        val stages = db.stageDao().getAllStagesOnce(langCode).sortedBy { it.level }
+        for (stage in stages) {
+            val total = db.lessonDao().countByLevel(stage.level, langCode)
+            if (total == 0) continue
+            val done = db.lessonDao().countCompletedByLevel(stage.level, langCode)
+            if (done.toDouble() / total >= threshold) {
+                stages.firstOrNull { it.level == stage.level + 1 }
+                    ?.takeIf { !it.isUnlocked }
+                    ?.let { db.stageDao().unlockStage(it.id) }
+            }
         }
     }
 
@@ -61,14 +95,115 @@ class LearnRepository(private val db: AppDatabase) {
     suspend fun getLessonDetail(id: Int) = db.lessonDetailDao().getLessonDetail(id)
 
     // Quizzes
-    suspend fun getRandomQuizzes(limit: Int) = db.trainingDao().getRandomQuizzes(limit)
+    suspend fun getRandomQuizzes(limit: Int, langCode: String) =
+        db.trainingDao().getRandomQuizzes(limit, langCode)
+
+    /** يحفظ نتيجة الاختبار — لم تكن تُحفظ إطلاقاً قبل الإصلاح. */
+    suspend fun saveQuizResult(lessonId: Int, score: Int, total: Int) {
+        val percentage = if (total == 0) 0 else (score * 100) / total
+        val best = db.quizResultDao().getBestResult(lessonId)
+        val isBest = best == null || percentage > best.percentage
+        if (isBest) db.quizResultDao().clearBestFlag(lessonId)
+        db.quizResultDao().insertResult(
+            QuizResultEntity(
+                lessonId = lessonId,
+                score = score,
+                totalQuestions = total,
+                percentage = percentage,
+                isBest = isBest
+            )
+        )
+    }
+
+    fun getQuizHistory(lessonId: Int) = db.quizResultDao().getResultsForLesson(lessonId)
+
+    // ---------- Spaced repetition ----------
+
+    /** كل حالات المراجعة للغة الحالية، كنماذج domain نقية. */
+    fun getReviewStates(langCode: String): Flow<List<ReviewState>> =
+        db.reviewStateDao().getAllForLanguage(langCode).map { rows -> rows.map { it.toDomain() } }
+
+    suspend fun getReviewStatesOnce(langCode: String): List<ReviewState> =
+        db.reviewStateDao().getAllForLanguageOnce(langCode).map { it.toDomain() }
+
+    /**
+     * يسجّل استرجاعاً واحداً ويعيد جدولة العنصر عبر محرك SM-2.
+     *
+     * هذه هي الحلقة المفقودة التي جعلت `FlashcardEntity` هيكلاً بلا وظيفة:
+     * كانت الحقول `interval` و`easeFactor` و`nextReview` موجودة بلا أي كود يكتب فيها.
+     */
+    suspend fun recordReview(
+        itemId: Int,
+        kind: ItemKind,
+        langCode: String,
+        grade: Grade,
+        now: Long = System.currentTimeMillis()
+    ): ReviewState {
+        val existing = db.reviewStateDao().find(itemId, kind.name, langCode)?.toDomain()
+            ?: ReviewState(itemId = itemId, kind = kind, languageCode = langCode)
+        val updated = Sm2Scheduler.schedule(existing, grade, now)
+        db.reviewStateDao().upsert(ReviewStateEntity.fromDomain(updated))
+        return updated
+    }
+
+    suspend fun countDueReviews(langCode: String, now: Long = System.currentTimeMillis()): Int =
+        db.reviewStateDao().countDue(langCode, now)
+
+    /** مُعرِّفات الدروس غير المكتملة بالترتيب — مدخل للمدرب اليومي. */
+    suspend fun getIncompleteLessonIds(langCode: String): List<Int> =
+        db.lessonDao().getIncomplete(langCode).map { it.id }
+
+    /**
+     * عدد الدروس في كل مستوى.
+     *
+     * تحتاجه شاشة المنهج لتقول الحقيقة: المراحل 3 و4 و5 معروضة للمستخدم
+     * لكنها **لا تحتوي على أي درس**. بدون هذا العدّ كان المستخدم يفتحها
+     * (بعد تفعيل نظام الفتح) فيجد شاشة فارغة بلا تفسير.
+     */
+    suspend fun getLessonCountsByLevel(langCode: String): Map<Int, Int> =
+        db.lessonDao().countGroupedByLevel(langCode).associate { it.level to it.total }
+
+    suspend fun getScenarioIds(langCode: String): List<Int> =
+        db.casualDao().getAllScenariosOnce(langCode).map { it.id }
+
+    /**
+     * يجلب المفردات بالمعرّفات مع الحفاظ على ترتيب الأولوية القادم من المدرب.
+     * (استعلام `IN` في SQL لا يضمن ترتيب المدخلات.)
+     */
+    suspend fun getVocabularyByIds(ids: List<Int>): List<VocabularyEntity> {
+        if (ids.isEmpty()) return emptyList()
+        val byId = db.vocabularyDao().getByIds(ids).associateBy { it.id }
+        return ids.mapNotNull { byId[it] }
+    }
+
+    // Scenarios / casual (language-aware)
+    fun getCasualExpressions(langCode: String) = db.casualDao().getAllExpressions(langCode)
+    fun getScenarios(langCode: String) = db.casualDao().getAllScenarios(langCode)
 
     // Notebook Notes
     fun getAllNotes() = db.noteDao().getAllNotes()
     suspend fun saveNote(note: NoteEntity) = db.noteDao().insertNote(note)
     suspend fun deleteNote(note: NoteEntity) = db.noteDao().deleteNote(note)
 
-    // Seed initial data (called once)
+    /**
+     * يبذر المحتوى **مرة واحدة فقط**.
+     *
+     * ⚠️ العطل الذي أصلحه هذا الحارس (P0-2):
+     * كانت `seedInitialData()` تُستدعى من `HomeViewModel.init` بلا شرط،
+     * وكل عمليات الإدراج تستخدم `OnConflictStrategy.REPLACE`.
+     * فكان كل فتح للشاشة الرئيسية يُعيد كتابة ~450 صفاً ويمسح:
+     *   - `lessons.completed`  (الدروس المكتملة)
+     *   - `vocabulary.favorite` (المفضلة)
+     *   - `user_progress`       (التقدم بالكامل)
+     * أي أن تقدّم المستخدم كان يُدمَّر في كل تشغيل.
+     */
+    suspend fun seedIfNeeded() {
+        if (db.lessonDao().countAny() > 0) return
+        seedInitialData()
+        recomputeProgress("ID")
+    }
+
+    /** يبذر البيانات. عام لأغراض الاختبار؛ الاستخدام العادي عبر [seedIfNeeded]. */
     suspend fun seedInitialData() {
         // Level 0 and Level 1 Lessons (Complete Curriculum)
         val lessons = listOf(
@@ -192,6 +327,18 @@ class LearnRepository(private val db: AppDatabase) {
             CasualExpressionEntity(40, "Bener", "بينير", "صحيح", "🔵 يومي", "تأكيد", null, "عام", 0),
         )
         db.casualDao().insertAll(casual)
+
+        // ==========================================================
+        // محتوى موسوعة indolang (مستورد آلياً — انظر IndoLangContent.kt)
+        //
+        // 190 عبارة يومية و63 سؤال سجل لغوي، مستخرجة من منهج عربي شامل
+        // للإندونيسية. النص الكامل للموسوعة (27 ملفاً) محفوظ في
+        // assets/encyclopedia/ ويُعرض في شاشة المكتبة المرجعية.
+        //
+        // معرّفاتها تبدأ من 5000 لتجنّب التعارض مع المحتوى الموجود.
+        // ==========================================================
+        db.casualDao().insertAll(IndoLangContent.expressions)
+        db.trainingDao().insertAll(IndoLangContent.registerQuizzes)
 
         val scenarios = listOf(
             DailyScenarioEntity(1, "Market Negotiation", "تفاوض في السوق", 
@@ -348,7 +495,9 @@ class LearnRepository(private val db: AppDatabase) {
 
             // Unit 25 - Market
             TrainingItemEntity(114, "SITUATION", "أنت في السوق وتريد معرفة السعر", "Berapa harganya?", "Mau apa?,Berapa harganya?,Bisa kurang?,Santai aja", "Berapa harganya? = كم سعره؟", "سوق"),
-            TrainingItemEntity(115, "MULTIPLE_CHOICE", "Bisa kurang? = ?", "هل يمكن تخفيض السعر؟", "كم السعر؟,هل يمكن تخفيض؟,هل تريد؟,رخيص", "Bisa kurang? = Can it be cheaper?", "سوق"),
+            // كانت الإجابة الصحيحة "هل يمكن تخفيض السعر؟" غير موجودة ضمن الخيارات
+            // (الخيار كان "هل يمكن تخفيض؟") فيستحيل على المستخدم الإجابة صحيحاً.
+            TrainingItemEntity(115, "MULTIPLE_CHOICE", "Bisa kurang? = ?", "هل يمكن تخفيض السعر؟", "كم السعر؟,هل يمكن تخفيض السعر؟,هل تريد؟,رخيص", "Bisa kurang? = Can it be cheaper?", "سوق"),
         )
         db.trainingDao().insertAll(stage2Quizzes)
 
@@ -495,13 +644,9 @@ class LearnRepository(private val db: AppDatabase) {
 
         // === REAL VOCABULARY FOR STAGE 1 ===
         val vocabStage1 = listOf(
-            VocabularyEntity(100, "halo", "halo", "ها لو", "مرحبا", "Halo, apa kabar?", "مرحبا، كيف حالك؟", "تحيات", 0, true),
             VocabularyEntity(101, "selamat pagi", "selamat pagi", "سلا مات با جي", "صباح الخير", "Selamat pagi, Pak.", "صباح الخير يا سيدي.", "تحيات", 0, true),
-            VocabularyEntity(102, "saya", "saya", "سايا", "أنا", "Saya dari Yaman.", "أنا من اليمن.", "ضمائر", 0, true),
             VocabularyEntity(103, "aku", "aku", "أكو", "أنا (يومي)", "Aku lapar.", "أنا جوعان.", "ضمائر", 0, false),
             VocabularyEntity(104, "kamu", "kamu", "كامو", "أنت", "Kamu dari mana?", "من أين أنت؟", "ضمائر", 0, true),
-            VocabularyEntity(105, "makan", "makan", "ماكان", "يأكل", "Saya makan nasi.", "أنا آكل الأرز.", "أفعال", 0, true),
-            VocabularyEntity(106, "minum", "minum", "مينوم", "يشرب", "Saya minum air.", "أنا أشرب الماء.", "أفعال", 0, true),
             VocabularyEntity(107, "tidak", "tidak", "تيداك", "لا", "Saya tidak tahu.", "أنا لا أعرف.", "نفي", 0, true),
             VocabularyEntity(108, "bukan", "bukan", "بوكان", "ليس", "Ini bukan buku saya.", "هذا ليس كتابي.", "نفي", 0, true),
             VocabularyEntity(109, "apa", "apa", "أبا", "ماذا", "Apa ini?", "ما هذا؟", "سؤال", 0, true),
@@ -514,7 +659,6 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(116, "kecil", "kecil", "كيتشيل", "صغير", "Buku kecil.", "كتاب صغير.", "صفات", 0, true),
             VocabularyEntity(117, "pergi", "pergi", "بيرجي", "يذهب", "Saya pergi ke pasar.", "أنا أذهب إلى السوق.", "أفعال", 0, true),
             VocabularyEntity(118, "pulang", "pulang", "بولانج", "يعود", "Saya pulang jam lima.", "أعود في الساعة الخامسة.", "أفعال", 0, true),
-            VocabularyEntity(119, "tidur", "tidur", "تيدور", "ينام", "Saya mau tidur.", "أريد أن أنام.", "أفعال", 0, true),
             VocabularyEntity(120, "duduk", "duduk", "دودوك", "يجلس", "Silakan duduk.", "تفضل بالجلوس.", "أفعال", 0, true),
             VocabularyEntity(121, "bicara", "bicara", "بيتشرا", "يتكلم", "Saya bisa bicara bahasa Indonesia.", "أستطيع التحدث بالإندونيسية.", "أفعال", 0, true),
             VocabularyEntity(122, "beli", "beli", "بيلي", "يشتري", "Saya mau beli ini.", "أريد أن أشتري هذا.", "أفعال", 0, true),
@@ -534,17 +678,8 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(136, "kursi", "kursi", "كورسي", "كرسي", "Silakan duduk di kursi.", "تفضل بالجلوس على الكرسي.", "أشياء", 0, true),
             VocabularyEntity(137, "telepon", "telepon", "تيليبون", "هاتف", "Telepon saya baru.", "هاتفي جديد.", "أشياء", 0, true),
             VocabularyEntity(138, "kamar", "kamar", "كامار", "غرفة", "Kamar saya bersih.", "غرفتي نظيفة.", "أشياء", 0, true),
-            VocabularyEntity(139, "makan", "makan", "ماكان", "يأكل", "Saya mau makan.", "أريد أن أأكل.", "أفعال", 0, true),
-            VocabularyEntity(140, "minum", "minum", "مينوم", "يشرب", "Saya minum teh.", "أنا أشرب الشاي.", "أفعال", 0, true),
-            VocabularyEntity(141, "pergi", "pergi", "بيرجي", "يذهب", "Saya pergi ke pasar.", "أنا أذهب إلى السوق.", "أفعال", 0, true),
-            VocabularyEntity(142, "pulang", "pulang", "بولانج", "يعود", "Saya pulang jam enam.", "أعود في الساعة السادسة.", "أفعال", 0, true),
-            VocabularyEntity(143, "tidur", "tidur", "تيدور", "ينام", "Saya mau tidur.", "أريد أن أنام.", "أفعال", 0, true),
             VocabularyEntity(144, "kerja", "kerja", "كيرجا", "يعمل", "Saya kerja di kantor.", "أعمل في المكتب.", "أفعال", 0, true),
             VocabularyEntity(145, "belajar", "belajar", "بيلاجار", "يتعلم", "Saya belajar bahasa Indonesia.", "أنا أتعلم الإندونيسية.", "أفعال", 0, true),
-            VocabularyEntity(146, "tahu", "tahu", "تاهو", "يعرف", "Saya tidak tahu.", "أنا لا أعرف.", "أفعال", 0, true),
-            VocabularyEntity(147, "suka", "suka", "سوكا", "يحب", "Saya suka nasi goreng.", "أنا أحب الناسي غورينغ.", "أفعال", 0, true),
-            VocabularyEntity(148, "bisa", "bisa", "بيسا", "يستطيع", "Saya bisa bahasa Arab.", "أستطيع التحدث بالعربية.", "أفعال", 0, true),
-            VocabularyEntity(149, "rumah", "rumah", "روماه", "بيت", "Rumah saya besar.", "بيتي كبير.", "أماكن", 0, true),
             VocabularyEntity(150, "pasar", "pasar", "باسار", "سوق", "Saya pergi ke pasar.", "أنا أذهب إلى السوق.", "أماكن", 0, true),
             VocabularyEntity(151, "kantor", "kantor", "كانتور", "مكتب", "Dia kerja di kantor.", "هو يعمل في المكتب.", "أماكن", 0, true),
             VocabularyEntity(152, "sekolah", "sekolah", "سكولاه", "مدرسة", "Anak saya di sekolah.", "ابني في المدرسة.", "أماكن", 0, true),
@@ -552,9 +687,6 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(154, "air", "air", "آير", "ماء", "Saya minum air.", "أنا أشرب الماء.", "طعام", 0, true),
             VocabularyEntity(155, "kopi", "kopi", "كوبي", "قهوة", "Saya suka kopi.", "أنا أحب القهوة.", "طعام", 0, true),
             VocabularyEntity(156, "teh", "teh", "تيه", "شاي", "Saya minum teh.", "أنا أشرب الشاي.", "طعام", 0, true),
-            VocabularyEntity(157, "besar", "besar", "بسار", "كبير", "Rumah ini besar.", "هذا البيت كبير.", "صفات", 0, true),
-            VocabularyEntity(158, "kecil", "kecil", "كيتشيل", "صغير", "Buku kecil.", "كتاب صغير.", "صفات", 0, true),
-            VocabularyEntity(159, "baru", "baru", "بارو", "جديد", "Telepon baru.", "هاتف جديد.", "صفات", 0, true),
             VocabularyEntity(160, "lama", "lama", "لاما", "قديم", "Buku lama.", "كتاب قديم.", "صفات", 0, true),
             VocabularyEntity(161, "murah", "murah", "موراه", "رخيص", "Ini murah.", "هذا رخيص.", "صفات", 0, true),
             VocabularyEntity(162, "mahal", "mahal", "ماهال", "غالي", "Harganya mahal.", "سعره غالي.", "صفات", 0, true),
@@ -565,24 +697,14 @@ class LearnRepository(private val db: AppDatabase) {
 
         // Seed 100 Verbs
         val hundredVerbs = listOf(
-            VocabularyEntity(1001, "makan", "makan", "ما-كان", "يأكل", "Saya makan nasi.", "أنا آكل أرزاً.", "أفعال", 0, true),
-            VocabularyEntity(1002, "minum", "minum", "مي-نوم", "يشرب", "Saya minum air.", "أنا أشرب ماءً.", "أفعال", 0, true),
-            VocabularyEntity(1003, "tidur", "tidur", "تي-دور", "ينام", "Saya mau tidur.", "أريد أن أنام.", "أفعال", 0, true),
             VocabularyEntity(1004, "bangun", "bangun", "بان-غون", "يستيقظ", "Saya bangun pagi.", "أستيقظ صباحاً.", "أفعال", 0, true),
-            VocabularyEntity(1005, "pergi", "pergi", "بير-غي", "يذهب", "Kami pergi ke sekolah.", "نذهب إلى المدرسة.", "أفعال", 0, true),
-            VocabularyEntity(1006, "pulang", "pulang", "بو-لانغ", "يعود إلى البيت", "Saya pulang jam lima.", "أعود إلى البيت الساعة الخامسة.", "أفعال", 0, true),
             VocabularyEntity(1007, "datang", "datang", "دا-تانغ", "يأتي", "Teman saya datang.", "صديقي يأتي.", "أفعال", 0, true),
             VocabularyEntity(1008, "lihat", "lihat", "لي-هات", "يرى / ينظر", "Saya lihat burung.", "أرى طائرًا.", "أفعال", 0, true),
             VocabularyEntity(1009, "dengar", "dengar", "دين-غار", "يسمع", "Saya dengar radio.", "أستمع إلى الراديو.", "أفعال", 0, true),
-            VocabularyEntity(1010, "bicara", "bicara", "بي-تشا-را", "يتكلم", "Saya bicara bahasa Indonesia.", "أتحدث الإندونيسية.", "أفعال", 0, true),
             VocabularyEntity(1011, "baca", "baca", "با-تشا", "يقرأ", "Saya baca buku.", "أقرا كتابًا.", "أفعال", 0, true),
             VocabularyEntity(1012, "tulis", "tulis", "تو-ليس", "يكتب", "Saya tulis surat.", "أكتب رسالة.", "أفعال", 0, true),
-            VocabularyEntity(1013, "belajar", "belajar", "بي-لا-جار", "يتعلم", "Saya belajar bahasa Arab.", "أتعلم اللغة العربية.", "أفعال", 0, true),
             VocabularyEntity(1014, "mengajar", "mengajar", "مين-غا-جار", "يعلّم", "Guru mengajar murid.", "المعلم يعلّم تلميذًا.", "أفعال", 0, true),
-            VocabularyEntity(1015, "kerja", "kerja", "كير-جا", "يعمل", "Ayah kerja di kantor.", "أبي يعمل في مكتب.", "أفعال", 0, true),
             VocabularyEntity(1016, "main", "main", "ما-إين", "يلعب", "Anak-anak main bola.", "الأطفال يلعبون الكرة.", "أفعال", 0, true),
-            VocabularyEntity(1017, "beli", "beli", "بي-لي", "يشتري", "Saya mau beli ini.", "أريد شراء هذا.", "أفعال", 0, true),
-            VocabularyEntity(1018, "jual", "jual", "جو-ال", "يبيع", "Pedagang jual buah.", "التاجر يبيع فاكهة.", "أفعال", 0, true),
             VocabularyEntity(1019, "bayar", "bayar", "با-يار", "يدفع", "Saya bayar harga.", "أدفع الثمن.", "أفعال", 0, true),
             VocabularyEntity(1020, "terima", "terima", "تي-ري-ما", "يستلم / يقبل", "Saya terima hadiah.", "أستلم هدية.", "أفعال", 0, true),
             VocabularyEntity(1021, "beri", "beri", "بي-ري", "يعطي", "Saya beri kamu bunga.", "أعطيك زهرة.", "أفعال", 0, true),
@@ -592,7 +714,6 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(1025, "tunggu", "tunggu", "تونغ-غو", "ينتظر", "Saya tunggu kamu.", "أنا أنتظرك.", "أفعال", 0, true),
             VocabularyEntity(1026, "cari", "cari", "تشا-ري", "يبحث عن", "Saya cari kunci.", "أبحث عن المفتاح.", "أفعال", 0, true),
             VocabularyEntity(1027, "temukan", "temukan", "تي-مو-كان", "يجد", "Saya temukan dompet.", "أجد محفظة.", "أفعال", 0, true),
-            VocabularyEntity(1028, "duduk", "duduk", "دو-دوك", "يجلس", "Mari duduk di sini.", "دعنا نجلس هنا.", "أفعال", 0, true),
             VocabularyEntity(1029, "berdiri", "berdiri", "بير-دي-ري", "يقف", "Murid berdiri.", "التلميذ يقف.", "أفعال", 0, true),
             VocabularyEntity(1030, "jalan", "jalan", "جا-لان", "يمشي / طريق", "Saya jalan ke pasar.", "أمشي إلى السوق.", "أفعال", 0, true),
             VocabularyEntity(1031, "lari", "lari", "لا-ري", "يركض", "Dia lari cepat.", "هو يركض بسرعة.", "أفعال", 0, true),
@@ -639,14 +760,12 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(1072, "merasa", "merasa", "مي-را-سا", "يشعر", "Saya merasa senang.", "أشعر بالسعادة.", "أفعال", 1, true),
             VocabularyEntity(1073, "harap", "harap", "ها-راب", "يأمل", "Saya harap kamu datang.", "آمل أن تأتي.", "أفعال", 1, true),
             VocabularyEntity(1074, "khawatir", "khawatir", "خا-وا-تير", "يقلق", "Jangan khawatir.", "لا تقلق.", "أفعال", 1, true),
-            VocabularyEntity(1075, "suka", "suka", "سو-كا", "يحب / يعجبه", "Saya suka kopi.", "أحب القهوة.", "أفعال", 0, true),
             VocabularyEntity(1076, "benci", "benci", "بين-تشي", "يكره", "Dia benci kebohongan.", "يكره الكذب.", "أفعال", 1, true),
             VocabularyEntity(1077, "cinta", "cinta", "تشين-تا", "يحب (عاطفياً)", "Aku cinta kamu.", "أنا أحبك.", "أفعال", 0, true),
             VocabularyEntity(1078, "sayang", "sayang", "سا-يانغ", "يحب / يهتم بـ", "Ibu sayang anak.", "الأم تحب ولدها.", "أفعال", 1, true),
             VocabularyEntity(1079, "butuh", "butuh", "بو-توه", "يحتاج", "Saya butuh istirahat.", "أحتاج إلى راحة.", "أفعال", 0, true),
             VocabularyEntity(1080, "punya", "punya", "بو-نيا", "يملك", "Saya punya mobil.", "أملك سيارة.", "أفعال", 0, true),
             VocabularyEntity(1081, "mau", "mau", "ماو", "يريد", "Saya mau makan.", "أريد أن آكل.", "أفعال", 0, true),
-            VocabularyEntity(1082, "bisa", "bisa", "بي-سا", "يستطيع", "Saya bisa berenang.", "أستطيع السباحة.", "أفعال", 0, true),
             VocabularyEntity(1083, "boleh", "boleh", "بو-ليه", "يُسمح له", "Boleh saya masuk?", "هل يُسمح لي بالدخول؟", "أفعال", 0, true),
             VocabularyEntity(1084, "harus", "harus", "ها-روس", "يجب", "Kamu harus belajar.", "يجب أن تتعلم.", "أفعال", 0, true),
             VocabularyEntity(1085, "perhatikan", "perhatikan", "بير-ها-تي-كان", "ينتبه إلى", "Perhatikan guru!", "انتبه إلى المعلم!", "أفعال", 1, true),
@@ -677,18 +796,30 @@ class LearnRepository(private val db: AppDatabase) {
         )
         db.stageDao().insertAll(turkishStages)
 
-        // 2. Turkish Lessons
+        // 2. Turkish Lessons (Fully Expanded 18-Lesson Curriculum - Zeynep Masri Standard)
         val turkishLessons = listOf(
             LessonEntity(201, 0, "الدرس الأول: الأبجدية التركية", "Türk Alfabesi", "تعلم الحروف الصوتية والساكنة بالتفصيل", "content201", false, "TR"),
-            LessonEntity(202, 0, "الدرس الثاني: الأرقام التركية", "Sayılar", "الأرقام من 0 إلى 100", "content202", false, "TR"),
-            LessonEntity(203, 0, "الدرس الثالث: الأعداد الترتيبية", "Sıra Sayıları", "ترتيب الأشياء واللواحق التابعة للتوافق الصوتي", "content203", false, "TR"),
-            LessonEntity(204, 0, "الدرس الرابع: الألوان الأساسية", "Renkler", "الألوان وتصنيفاتها وصياغتها", "content204", false, "TR"),
+            LessonEntity(202, 0, "الدرس الثاني: الأرقام التركية", "Sayılar", "الأرقام من 0 إلى 100 وكيفية صياغتها", "content202", false, "TR"),
+            LessonEntity(203, 0, "الدرس الثالث: الأعداد الترتيبية", "Sıra Sayıları", "ترتيب الأشياء واللواحق الصوتية بالتوافق", "content203", false, "TR"),
+            LessonEntity(204, 0, "الدرس الرابع: الألوان الأساسية", "Renkler", "الألوان وتصنيفاتها وصياغتها النعتية", "content204", false, "TR"),
             LessonEntity(205, 1, "الدرس الخامس: الضمائر الشخصية", "Şahıs Zamirleri", "الضمائر الشخصية الستة وقاعدة غياب الجنس", "content205", false, "TR"),
-            LessonEntity(206, 1, "الدرس السادس: لاحقة الجمع", "Çoğul Eki Kuralları", "قاعدة الجمع الثنائي بالتوافق الصوتي", "content206", false, "TR")
+            LessonEntity(206, 1, "الدرس السادس: لاحقة الجمع", "Çoğul Eki Kuralları", "قاعدة الجمع الثنائي بالتوافق الصوتي", "content206", false, "TR"),
+            LessonEntity(207, 0, "الدرس السابع: التحيات واللقاء", "Selamlaşma", "كيف تحيي الأشخاص وتسأل عن حالهم", "content207", false, "TR"),
+            LessonEntity(208, 0, "الدرس الثامن: أيام الأسبوع والفصول", "Günler & Mevsimler", "الأيام وفصول السنة بالتوافق الصوتي", "content208", false, "TR"),
+            LessonEntity(209, 1, "الدرس التاسع: أداة السؤال بهل", "Soru Eki", "قاعدة السؤال بهل الرباعية التوافق", "content209", false, "TR"),
+            LessonEntity(210, 1, "الدرس العاشر: الملكية الأساسية", "İyelik Zamirleri", "صياغة الملكية بواسطة اللواحق الطرفية", "content210", false, "TR"),
+            LessonEntity(211, 1, "الدرس الحادي عشر: الجملة الاسمية", "İsim Cümlesi", "كيف تصيغ خبر المبتدأ باللواحق الشخصية", "content211", false, "TR"),
+            LessonEntity(212, 1, "الدرس الثاني عشر: حروف الجر والاتجاه", "Durum Ekleri", "حالات الجر والصدور والاقامة في الأسماء", "content212", false, "TR"),
+            LessonEntity(213, 1, "الدرس الثالث عشر: الأفعال والمصدر", "Fiiller & Mastar", "جذور الأفعال ومفهوم المصدر والنهي", "content213", false, "TR"),
+            LessonEntity(214, 1, "الدرس الرابع عشر: الحاضر المستمر", "Şimdiki Zaman", "صياغة الفعل في الحاضر المستمر والحدث الجاري", "content214", false, "TR"),
+            LessonEntity(215, 1, "الدرس الخامس عشر: نفي الحاضر", "Şimdiki Zaman Olumsuz", "كيف تنفي حدوث الفعل في الزمن الحاضر", "content215", false, "TR"),
+            LessonEntity(216, 1, "الدرس السادس عشر: سؤال الحاضر", "Şimdiki Zaman Soru", "كيف تسأل في الزمن الحاضر المستمر", "content216", false, "TR"),
+            LessonEntity(217, 1, "الدرس السابع عشر: الماضي الشهودي", "Belirli Geçmiş Zaman", "صياغة الأفعال في الماضي المحقق ولواحقها", "content217", false, "TR"),
+            LessonEntity(218, 1, "الدرس الثامن عشر: المراجعة الشاملة", "Genel Tekrar", "مراجعة وتلخيص كامل لقواعد المستويين", "content218", false, "TR")
         )
         db.lessonDao().insertAll(turkishLessons)
 
-        // 3. Turkish Lesson Details
+        // 3. Turkish Lesson Details (Complete 18 Details matches parent)
         val turkishLessonDetails = listOf(
             LessonDetailEntity(201, 201, "ستتعلم الأبجدية التركية المكونة من 29 حرفاً ونطقها السليم.",
                 "الحروف الصوتية الـ 8 هي أساس نطق اللغة وتقسم لثقيلة (a, ı, o, u) وخفيفة (e, i, ö, ü).",
@@ -705,22 +836,89 @@ class LearnRepository(private val db: AppDatabase) {
                 "1. = Birinci\n2. = İkinci\n3. = Üçüncü\n4. = Dördüncü\n5. = Beşinci",
                 "إذا انتهى الرقم بحرف صوتي، نحذف الحرف الأول من اللاحقة: iki + nci = ikinci.", "تستخدم بكثرة لقراءة العناوين والتواريخ.", "Formal & Casual: sama"),
 
+            // ملاحظة: كان هذا الصف يمرر 7 وسائط لبانٍ يتطلب 8 — خطأ تجميع فعلي
+            // موجود في الكود المُسلَّم. أُضيف حقل commonMistakes المفقود.
             LessonDetailEntity(204, 204, "ستتعلم الألوان الأساسية باللغة التركية.",
                 "Mavi = أزرق\nKırmızı = أحمر\nYeşil = أخضر\nSarı = أصفر\nSiyah = أسود\nBeyaz = أبيض\nTuruncu = برتقالي",
-                "صفة اللون تأتي دائماً قبل الاسم الموصوف: kırmızı araba = السيارة الحمراء.", "ألوان جميلة ومفيدة يومياً.", "تأتي الصفة قبل الاسم كما في الإنجليزية والفرنسية.", "Formal & Casual: sama"),
+                "صفة اللون تأتي دائماً قبل الاسم الموصوف: kırmızı araba = السيارة الحمراء.",
+                "تأتي الصفة قبل الاسم كما في الإنجليزية والفرنسية.",
+                "خطأ شائع: قول 'araba kırmızı' بترتيب عربي. الصحيح 'kırmızı araba'.",
+                "Formal & Casual: sama"),
 
+            // ملاحظة: كان هذا الصف أيضاً يمرر 7 وسائط بدل 8 — خطأ تجميع فعلي.
             LessonDetailEntity(205, 205, "ستتعلم الضمائر الشخصية الستة في اللغة التركية.",
                 "Ben = أنا\nSen = أنت/أنتِ\nO = هو/هي\nBiz = نحن\nSiz = أنتم/أنتن\nOnlar = هم/هن",
-                "لا يوجد جنس تذكير وتأنيث في اللغة التركية، الضمير O يصلح للغائب مطلقاً.", "تستخدم بكثرة في المحادثة اليومية.", "الضمير O يمثل أيضاً اسم الإشارة 'ذلك للبعيد جداً'.", "Formal & Casual: sama"),
+                "لا يوجد جنس تذكير وتأنيث في اللغة التركية، الضمير O يصلح للغائب مطلقاً.",
+                "الضمير O يمثل أيضاً اسم الإشارة 'ذلك للبعيد جداً'.",
+                "خطأ شائع: البحث عن ضمير مؤنث مقابل 'هي'. لا وجود له — O تكفي.",
+                "Formal & Casual: sama"),
 
             LessonDetailEntity(206, 206, "ستتعلم كيفية جمع الأسماء التركية باستخدام قاعدة التوافق الثنائي.",
                 "نضيف اللاحقة -lar للأحرف الثقيلة (a, ı, o, u) ونضيف -ler للأحرف الخفيفة (e, i, ö, ü).",
                 "Kitap -> Kitaplar (كتب)\nEv -> Evler (بيوت)\nAraba -> Arabalar (سيارات)",
-                "آخر حرف صوتي في الكلمة يحدد شكل الجمع تماماً: e(خفيف) -> ler، a(ثقيل) -> lar.", "هذه هي القاعدة الذهبية في الصرف التركي.", "Formal & Casual: sama")
+                "آخر حرف صوتي في الكلمة يحدد شكل الجمع تماماً: e(خفيف) -> ler، a(ثقيل) -> lar.", "هذه هي القاعدة الذهبية في الصرف التركي.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(207, 207, "ستتعلم كيفية إلقاء التحية ومصطلحات اللقاء بالتركية.",
+                "Merhaba = مرحباً\nNasılsın? = كيف حالك؟\nGünaydın = صباح الخير\nİyi günler = نهارك سعيد\nHoşça kal = وداعاً\nGüle güle = مع السلامة",
+                "Hoş geldin = أهلاً بك • Hoş bulduk = أهلاً بك (رد الزائر)", "تستخدم هذه التحيات يومياً وفي جميع المناسبات الرسمية والودية.", "لا تخلط بين Hoşça kal للمغادر و Güle güle للمستقبل.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(208, 208, "ستتعلم أيام الأسبوع وفصول السنة بالتوافق الصوتي.",
+                "أيام الأسبوع السبعة وفصول السنة الأربعة بالتركية ولواحقها المريحة.",
+                "İlkbahar = الربيع • Yaz = الصيف • Sonbahar = الخريف • Kış = الشتاء", "gün = يوم • hafta = أسبوع • mevsim = فصل", "Pazartesi هو أول أيام الأسبوع في تركيا.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(209, 209, "ستتعلم قاعدة السؤال بهل الرباعية التوافق.",
+                "نستخدم اللاحقة (mı, mi, mu, mü) للسؤال بهل بناءً على آخر حرف صوتي في الخبر.",
+                "Bu okul mu? = هل هذه مدرسة؟\nBu ev mi? = هل هذا بيت؟\nBu kitap mı? = هل هذا كتاب؟",
+                "a, ı -> mı • e, i -> mi • o, u -> mu • ö, ü -> mü", "أداة السؤال تكتب منفصلة دائماً عن الاسم وتتبع قاعدة التوافق الصوتي.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(210, 210, "ستتعلم صياغة الملكية عبر اللواحق الملتصقة بالأسماء.",
+                "ضمائر الملكية واللواحق التابعة لها (Benim evim = بيتي).",
+                "Benim evim • Senin evin • Onun evi • Bizim evimiz • Sizin eviniz • Onların evleri",
+                "إذا انتهى الاسم بحرف علة تضاف لواحق مختصرة: araba -> arabam (سيارتي).", "الملكية الطبيعية في التركية تحتاج اللاحقة الطرفية دائماً.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(211, 211, "ستتعلم صياغة الخبر والجملة الاسمية بالضمائر واللواحق الشخصية.",
+                "كيف تخبر عن حالتك بالضمائر الشخصية (أنا طالب = öğrenciyim).",
+                "Ben öğrenciyim • Sen öğrencisin • O öğrenci • Biz öğrenciyiz • Siz öğrencisiniz • Onlar öğrenciler",
+                "تضاف حرف الوصل y عند التقاء حرفين صوتيين: öğrenci + im = öğrenciyim.", "الخبر يتبع التوافق الصوتي الرباعي باللواحق الشخصية.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(212, 212, "ستتعلم حالات الاسم الأربعة الأساسية لربط الاتجاه والجر والاقامة.",
+                "حالات الجر والصدور والاقامة والمفعولية به بالتوافق الصوتي.",
+                "Okula gidiyorum (إلى المدرسة) • Evde kalıyorum (في البيت) • Okuldan geliyorum (من المدرسة) • Kitabı okuyorum (أقرأ الكتاب)",
+                "إلى: -e/-a • في: -de/-da • من: -den/-dan • المفعول به: -i/-ı/-u/-ü", "يتأثر حرف d ويتحول لـ t بعد الأحرف الصامتة الشديدة (Fıstıkçı Şahap).", "Formal & Casual: sama"),
+
+            LessonDetailEntity(213, 213, "ستتعلم مفهوم الفعل وجذر الفعل والصياغة المصدرية والنهي.",
+                "المصدر ينتهي بـ -mak / -mek وجذر الفعل يمثل صيغة الأمر المباشرة.",
+                "Gelmek = المجيء • Gel = تعال (جذر) • Gitmek = الذهاب • Git = اذهب (جذر)",
+                "للنهي تضاف لاحقة النفي -ma / -me بعد الجذر مباشرة: Gelme = لا تأتِ • Gitme = لا تذهب.", "جذر الفعل هو أساس تصريف الأزمنة جميعها.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(214, 214, "ستتعلم صياغة الزمن الحاضر المستمر للحدث الجاري حالياً.",
+                "تضاف لاحقة الزمن الحاضر -iyor / -ıyor / -uyor / -üyor بعد الجذر مباشرة تليها لاحقة الفاعل الشخصية.",
+                "Ben geliyorum = أنا آتٍ • Sen geliyorsun = أنت آتٍ • O geliyor = هو آتٍ",
+                "gel (جذر) + iyor (زمن) + um (فاعل أنا) = geliyorum.", "الفعل يتبع التوافق الصوتي الرباعي بدقة.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(215, 215, "ستتعلم نفي الفعل في الزمن الحاضر المستمر بسهولة.",
+                "ينفى الفعل بوضع لاحقة النفي الضيقة (mı, mi, mu, mü) بعد الجذر وقبل لاحقة الزمن -iyor.",
+                "Gelmiyorum = أنا لا آتي • Gitmiyorsun = أنت لا تذهب • Okumuyor = هو لا يقرأ",
+                "gel (جذر) + mi (نفي) + yor (زمن) + um (فاعل) = gelmiyorum.", "أداة النفي تمنع التقاء الأحرف الصوتية العريضة.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(216, 216, "ستتعلم صياغة السؤال بهل بداخل الزمن الحاضر المستمر.",
+                "يصاغ السؤال بوضع أداة السؤال mu منفصلة بعد الفعل وتحمل اللاحقة الشخصية للفاعل.",
+                "Gidiyor musun? = هل أنت ذاهب؟ • Geliyor musunuz? = هل أنتم آتون؟ • Okuyor mu? = هل هو يقرأ؟",
+                "gidiyor (فعل مستمر) + mu (سؤال) + sun (أنت) = gidiyor musun?.", "الضمير الشخصي للفاعل يلتصق دائماً بأداة السؤال المكتوبة منفصلة.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(217, 217, "ستتعلم صياغة الفعل في الزمن الماضي الشهودي المحقق والمثبت.",
+                "الماضي الشهودي يصاغ بإضافة اللاحقة -di / -dı / -du / -dü بعد الجذر مباشرة تليها اللاحقة الشخصية المختصرة.",
+                "Gittim = ذهبتُ • Gittin = ذهبتَ • Gitti = ذهب/ذهبت • Gittik = ذهبنا • Gittiniz = ذهبتم • Gittiler = ذهبوا",
+                "git (جذر) + ti (زمن ماضي) + m (أنا) = gittim. (تحول d إلى t للتوافق مع t الشديدة).", "الماضي الشهودي يفيد بحدوث الفعل ومعاينته شخصياً.", "Formal & Casual: sama"),
+
+            LessonDetailEntity(218, 218, "مراجعة شاملة وتلخيص مكثف لكافة القواعد والأنماط التأسيسية التي تعلمتها.",
+                "مراجعة عامة للأبجدية، الأرقام، الجمع، السؤال، الملكية، الحالات النحوية، تصريف الأفعال والأزمنة.",
+                "Ben öğrenciyim • Benim evim • Okula gidiyorum • Geliyorum • Gittim",
+                "الطلاقة تنشأ من الاسترجاع المتباعد والتطبيق العملي للجمل والقوالب التأسيسية.", "استمر في ممارسة الألعاب والتدوين لترسيخ اللغة.", "Formal & Casual: mixed")
         )
         db.lessonDetailDao().insertAll(turkishLessonDetails)
 
-        // 4. Turkish Vocabulary
+        // 4. Turkish Vocabulary (Expanded with turk_duzenlenmis.md)
         val turkishVocab = listOf(
             VocabularyEntity(2001, "olmak", "olmak", "أول-ماك", "يكون / يصبح", "Şimdi hasta oluyorum.", "الآن أنا أصبح مريضاً.", "أفعال", 0, true, false, "TR"),
             VocabularyEntity(2002, "yapmak", "yapmak", "ياب-ماك", "يفعل / يصنع", "Ödev yapıyorum.", "أنا أفعل الواجب.", "أفعال", 0, true, false, "TR"),
@@ -729,19 +927,49 @@ class LearnRepository(private val db: AppDatabase) {
             VocabularyEntity(2005, "vermek", "vermek", "فير-ميك", "يعطي", "Sana kalem veriyorum.", "أنا أعطيك قلماً.", "أفعال", 0, true, false, "TR"),
             VocabularyEntity(2006, "sevmek", "sevmek", "سيف-ميك", "يحب", "Seni çok seviyorum.", "أنا أحبك كثيراً.", "أفعال", 0, true, false, "TR"),
             VocabularyEntity(2007, "istemek", "istemek", "إيس-تي-ميك", "يريد", "Su istiyorum.", "أنا أريد ماءً.", "أفعال", 0, true, false, "TR"),
-            VocabularyEntity(2008, "pazartesi", "pazartesi", "با-زار-تي-سي", "الاثنين", "Hari Pazartesi.", "اليوم هو الاثنين.", "أيام", 0, true, false, "TR"),
-            VocabularyEntity(2009, "salı", "salı", "سا-لي", "الثلاثاء", "Hari Salı.", "اليوم هو الثلاثاء.", "أيام", 0, true, false, "TR"),
-            VocabularyEntity(2010, "çarşamba", "çarşamba", "تشار-شام-با", "الأربعاء", "Hari Çarşamba.", "اليوم هو الأربعاء.", "أيام", 0, true, false, "TR"),
+            
+            // Days of the week
+            VocabularyEntity(2008, "pazartesi", "pazartesi", "با-زار-تي-سي", "الاثنين", "Bugün pazartesi.", "اليوم هو الاثنين.", "أيام", 0, true, false, "TR"),
+            VocabularyEntity(2009, "salı", "salı", "سا-لي", "الثلاثاء", "Bugün salı.", "اليوم هو الثلاثاء.", "أيام", 0, true, false, "TR"),
+            VocabularyEntity(2010, "çarşamba", "çarşamba", "تشار-شام-با", "الأربعاء", "Bugün çarşamba.", "اليوم هو الأربعاء.", "أيام", 0, true, false, "TR"),
+            
+            // Colors
             VocabularyEntity(2011, "mavi", "mavi", "ما-في", "أزرق", "Mavi deniz.", "البحر الأزرق.", "ألوان", 0, true, false, "TR"),
-            VocabularyEntity(2012, "kırmızı", "kırmızı", "كير-مي-زي", "أمر", "Kırmızı araba.", "السيارة الحمراء.", "ألوان", 0, true, false, "TR"),
-            VocabularyEntity(2013, "yeşil", "yeşil", "يي-شيل", "أخضر", "Yeşil elma.", "التفاحة الخضراء.", "ألوان", 0, true, false, "TR")
+            VocabularyEntity(2012, "kırmızı", "kırmızı", "كير-مي-زي", "أحمر", "Kırmızı araba.", "السيارة الحمراء.", "ألوان", 0, true, false, "TR"),
+            VocabularyEntity(2013, "yeşil", "yeşil", "يي-شيل", "أخضر", "Yeşil elma.", "التفاحة الخضراء.", "ألوان", 0, true, false, "TR"),
+            
+            // Family (New from turk_duzenlenmis.md)
+            VocabularyEntity(2014, "anne", "anne", "أن-نيه", "أم", "Benim annem çok iyi.", "أمي طيبة جداً.", "عائلة", 0, true, false, "TR"),
+            VocabularyEntity(2015, "baba", "baba", "با-با", "أب", "Benim babam öğretmen.", "أبي معلم.", "عائلة", 0, true, false, "TR"),
+            VocabularyEntity(2016, "kardeş", "kardeş", "كار-ديش", "أخ / أخت", "Benim bir kardeşim var.", "لدي أخ واحد.", "عائلة", 0, true, false, "TR"),
+            
+            // House (New from turk_duzenlenmis.md)
+            VocabularyEntity(2017, "ev", "ev", "إيف", "بيت / منزل", "Bu ev çok büyük.", "هذا البيت كبير جداً.", "أماكن", 0, true, false, "TR"),
+            VocabularyEntity(2018, "kapı", "kapı", "كا-بي", "باب", "Kapıyı kapat lütfen.", "أغلق الباب من فضلك.", "أشياء", 0, true, false, "TR"),
+            VocabularyEntity(2019, "masa", "masa", "ما-سا", "طاولة", "Kitap masada.", "الكتاب على الطاولة.", "أشياء", 0, true, false, "TR"),
+            
+            // Food & Drink (New from turk_duzenlenmis.md)
+            VocabularyEntity(2020, "su", "su", "سو", "ماء", "Bir su lütfen.", "ماء من فضلك.", "طعام", 0, true, false, "TR"),
+            VocabularyEntity(2021, "ekmek", "ekmek", "إيك-ميك", "خبز", "Sıcak ekmek.", "خبز ساخن.", "طعام", 0, true, false, "TR"),
+            VocabularyEntity(2022, "çay", "çay", "تشاي", "شاي", "Çay istiyorum.", "أريد شاياً.", "طعام", 0, true, false, "TR"),
+            
+            // Adjectives (New from turk_duzenlenmis.md)
+            VocabularyEntity(2023, "iyi", "iyi", "إي-يي", "جيد / بخير", "Ben iyiyim.", "أنا بخير.", "صفات", 0, true, false, "TR"),
+            VocabularyEntity(2024, "büyük", "büyük", "بو-يوك", "كبير", "Bu araba büyük.", "هذه السيارة كبيرة.", "صفات", 0, true, false, "TR"),
+            VocabularyEntity(2025, "ucuz", "ucuz", "أو-جوز", "رخيص", "Bu ucuz bir kitap.", "هذا كتاب رخيص.", "صفات", 0, true, false, "TR"),
+            VocabularyEntity(2026, "pahalı", "pahalı", "با-ها-لي", "غالي", "Bu çok pahalı.", "هذا غالي جداً.", "صفات", 0, true, false, "TR")
         )
         db.vocabularyDao().insertAll(turkishVocab)
 
-        // 5. Turkish Grammar Rules
+        // 5. Turkish Grammar Rules (Expanded with turk_duzenlenmis.md)
         val turkishGrammar = listOf(
             GrammarEntity(2001, "بنية الجملة التركية (SOV)", "Cümle Yapısı", "ترتيب الجملة: فاعل + مفعول به + فعل. الفعل يأتي دائماً في نهاية الجملة خلافاً للإندونيسية.", "S + O + V", "Ben kitap okuyorum. (أنا أقرأ كتاباً)", 0, "TR"),
-            GrammarEntity(2002, "قاعدة الجمع الثنائي", "Çoğul Eki Kuralları", "لاحقة الجمع تكون -lar للأحرف الصوتية الثقيلة (a, ı, o, u) وتكون -ler للأحرف الصوتية الخفيفة (e, i, ö, ü).", "lar / ler", "Arabalar (السيارات) / Evler (البيوت)", 1, "TR")
+            GrammarEntity(2002, "قاعدة الجمع الثنائي", "Çoğul Eki Kuralları", "لاحقة الجمع تكون -lar للأحرف الصوتية الثقيلة (a, ı, o, u) وتكون -ler للأحرف الصوتية الخفيفة (e, i, ö, ü).", "lar / ler", "Arabalar (السيارات) / Evler (البيوت)", 1, "TR"),
+            
+            // New from turk_duzenlenmis.md
+            GrammarEntity(2003, "الجملة الاسمية (ضمير الفاعل والخبر)", "İsim Cümlesi", "تصاغ الجملة الاسمية بإضافة لاحقة الضمير في نهاية الصفة أو الخبر (مثال: أنا طالب -> öğrenciyim).", "ım / sin / yim", "Ben öğrenciyim (أنا طالب) • Sen öğrencisin (أنت طالب)", 0, "TR"),
+            GrammarEntity(2004, "ضمائر الملكية التركية", "İyelik Zamirleri", "الملكية الطبيعية في التركية تحتاج إلى صفة ملكية قبل الاسم ملحوقة بلاحقة ملكية مطابقة في نهاية الاسم.", "benim ... -im / senin ... -in", "Benim evim (بيتي) • Senin evin (بيتك)", 1, "TR"),
+            GrammarEntity(2005, "حالات الاسم الأربعة (الجر والمفعولية)", "İsmin Halleri", "تتغير نهايات الأسماء التركية عند الجر: إلى (-e/-a)، في (-de/-da)، من (-den/-dan)، والمفعول المحدد (-i/-ı).", "e / de / den / i", "Okula gidiyorum (أذهب إلى المدرسة) • Evde kalıyorum (أقيم في البيت)", 1, "TR")
         )
         db.grammarDao().insertAll(turkishGrammar)
 
@@ -750,5 +978,233 @@ class LearnRepository(private val db: AppDatabase) {
             DialogueEntity(2001, "التعارف بالتركية", "Tanışma", "A: Merhaba, benim adım Ahmet. Senin adın ne?\nB: Merhaba Ahmet, benim adım Zeynep. Memnun oldum.\nA: Ben de memnun oldum. Nasılsın?\nB: İyiyim, teşekkür ederim. Sen nasılsın?\nA: Ben de iyiyim, sağ ol.", 0, "TR")
         )
         db.dialogueDao().insertAll(turkishDialogues)
+
+        // ==========================================================
+        // محتوى موسوعة turklang (مستورد آلياً — انظر TurkLangContent.kt)
+        //
+        // 127 تعبيراً و27 سؤالاً و49 حواراً واقعياً، مستخرجة من منهج
+        // عربي شامل للتركية. النص الكامل (6 ملفات) في assets/library/tr/.
+        //
+        // معرّفاتها تبدأ من 7000 (الإندونيسية 5000) لتجنّب أي تعارض.
+        // ==========================================================
+        db.casualDao().insertAll(TurkLangContent.expressions)
+        db.trainingDao().insertAll(TurkLangContent.quizzes)
+        db.casualDao().insertScenarios(TurkLangContent.scenarios)
+
+        // ==========================================================
+        // 7. Turkish practice content
+        //
+        // سبب الإضافة: كانت التركية تحتوي على دروس ومفردات فقط،
+        // بلا أي تعبيرات يومية أو سيناريوهات أو أسئلة تدريب.
+        // فكان متعلم التركية يفتح "اللغة اليومية" و"اختبار سريع"
+        // فيحصل على محتوى إندونيسي (بعد إضافة الترشيح باللغة كان سيحصل على فراغ).
+        //
+        // المحتوى تركي طبيعي، وليس ترجمة حرفية للمحتوى الإندونيسي
+        // (مطلب صريح: التركية تحتاج منهجاً يناسب طبيعتها).
+        // ==========================================================
+
+        val turkishCasual = listOf(
+            // تحية وتعارف
+            CasualExpressionEntity(3001, "Merhaba", "ميرحابا", "مرحباً", "🟢 رسمي", "تحية عامة في أي وقت", null, "تحيات", 0, "TR"),
+            CasualExpressionEntity(3002, "Selam", "سيلام", "سلام / أهلاً", "🔵 يومي", "تحية بين الأصدقاء والزملاء", "Merhaba", "تحيات", 0, "TR"),
+            CasualExpressionEntity(3003, "Naber?", "نابر", "ما الأخبار؟", "🟠 عامي", "بين الأصدقاء المقربين فقط", "Nasılsın?", "أصدقاء", 0, "TR"),
+            CasualExpressionEntity(3004, "Nasılsın?", "ناسيلسين", "كيف حالك؟", "🔵 يومي", "سؤال عن الحال (مفرد)", "Nasılsınız?", "تحيات", 0, "TR"),
+            CasualExpressionEntity(3005, "İyiyim, sağ ol", "إييييم، ساغ أول", "بخير، شكراً", "🔵 يومي", "رد على السؤال عن الحال", "İyiyim, teşekkür ederim", "تحيات", 0, "TR"),
+            CasualExpressionEntity(3006, "Görüşürüz", "غوروشوروز", "إلى اللقاء", "🔵 يومي", "عند الوداع", null, "تحيات", 0, "TR"),
+            CasualExpressionEntity(3007, "Hoş geldiniz", "هوش غيلدينيز", "أهلاً وسهلاً", "🟢 رسمي", "ترحيب بالضيف", null, "تحيات", 0, "TR"),
+            CasualExpressionEntity(3008, "Hoş bulduk", "هوش بولدوك", "أهلاً بك (رد)", "🟢 رسمي", "الرد الثابت على Hoş geldiniz", null, "تحيات", 0, "TR"),
+
+            // شكر واعتذار
+            CasualExpressionEntity(3009, "Teşekkür ederim", "تيشيككور إيديريم", "شكراً لك", "🟢 رسمي", "شكر مهذب", null, "تعبيرات ودية", 0, "TR"),
+            CasualExpressionEntity(3010, "Sağ ol", "ساغ أول", "شكراً", "🔵 يومي", "شكر سريع بين الأصدقاء", "Teşekkür ederim", "تعبيرات ودية", 0, "TR"),
+            CasualExpressionEntity(3011, "Rica ederim", "ريجا إيديريم", "العفو", "🟢 رسمي", "الرد على الشكر", null, "تعبيرات ودية", 0, "TR"),
+            CasualExpressionEntity(3012, "Özür dilerim", "أوزور ديليريم", "أعتذر", "🟢 رسمي", "اعتذار عن خطأ", null, "تعبيرات ودية", 0, "TR"),
+            CasualExpressionEntity(3013, "Pardon", "باردون", "عفواً / معذرة", "🔵 يومي", "للمرور أو لفت الانتباه", null, "شارع", 0, "TR"),
+            CasualExpressionEntity(3014, "Önemli değil", "أونيملي ديّيل", "لا يهم / لا بأس", "🔵 يومي", "رد على الاعتذار", null, "تعبيرات ودية", 0, "TR"),
+
+            // السوق والتسوق — الأهم عملياً
+            CasualExpressionEntity(3015, "Bu ne kadar?", "بو نه قدر", "كم سعر هذا؟", "🔵 يومي", "السؤال عن السعر", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3016, "Çok pahalı!", "تشوك باهالي", "غالٍ جداً!", "🔵 يومي", "بداية التفاوض", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3017, "Biraz indirim yapar mısınız?", "بيراز إينديريم يابار مِسينيز", "هل تعمل لي خصماً قليلاً؟", "🟢 رسمي", "طلب خصم بأدب", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3018, "Son fiyat ne?", "سون فييات نه", "ما آخر سعر؟", "🔵 يومي", "إنهاء التفاوض", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3019, "Bunu alıyorum", "بونو آلييوروم", "سآخذ هذا", "🔵 يومي", "قرار الشراء", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3020, "Sadece bakıyorum", "ساديجه باكييوروم", "أنا أتفرج فقط", "🔵 يومي", "رد مهذب على البائع", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3021, "Kartla ödeyebilir miyim?", "كارتلا أوديه‌بيلير مييم", "هل أستطيع الدفع بالبطاقة؟", "🟢 رسمي", "عند الدفع", null, "سوق", 0, "TR"),
+            CasualExpressionEntity(3022, "Poşet alabilir miyim?", "بوشيت آلابيلير مييم", "هل يمكنني أخذ كيس؟", "🔵 يومي", "عند الدفع", null, "سوق", 0, "TR"),
+
+            // المطعم
+            CasualExpressionEntity(3023, "Hesap lütfen", "حساب لوتفن", "الحساب من فضلك", "🔵 يومي", "طلب الفاتورة", null, "مطعم", 0, "TR"),
+            CasualExpressionEntity(3024, "Afiyet olsun", "عافيت أولسون", "بالهناء والشفاء", "🔵 يومي", "تقال قبل/بعد الأكل", null, "مطعم", 0, "TR"),
+            CasualExpressionEntity(3025, "Bir çay lütfen", "بير تشاي لوتفن", "شاي واحد من فضلك", "🔵 يومي", "طلب مشروب", null, "مطعم", 0, "TR"),
+            CasualExpressionEntity(3026, "Menüye bakabilir miyim?", "مينويه باكابيلير مييم", "هل يمكنني رؤية القائمة؟", "🟢 رسمي", "بداية الطلب", null, "مطعم", 0, "TR"),
+
+            // الشارع والاتجاهات
+            CasualExpressionEntity(3027, "Nerede?", "نيريده", "أين؟", "🔵 يومي", "سؤال عن مكان", null, "شارع", 0, "TR"),
+            CasualExpressionEntity(3028, "Nasıl gidebilirim?", "ناسيل غيدبيليريم", "كيف أذهب؟", "🟢 رسمي", "طلب إرشاد", null, "شارع", 0, "TR"),
+            CasualExpressionEntity(3029, "Sağa dön", "ساغا دون", "انعطف يميناً", "🔵 يومي", "إرشاد", null, "شارع", 0, "TR"),
+            CasualExpressionEntity(3030, "Sola dön", "سولا دون", "انعطف يساراً", "🔵 يومي", "إرشاد", null, "شارع", 0, "TR"),
+            CasualExpressionEntity(3031, "Düz git", "دوز غيت", "امشِ مستقيماً", "🔵 يومي", "إرشاد", null, "شارع", 0, "TR"),
+            CasualExpressionEntity(3032, "Yardım eder misiniz?", "ياردم إيدير ميسينيز", "هل تساعدني؟", "🟢 رسمي", "طلب مساعدة", null, "شارع", 0, "TR"),
+
+            // ردود وتفاعل يومي
+            CasualExpressionEntity(3033, "Tamam", "تمام", "حسناً", "🔵 يومي", "موافقة", null, "عام", 0, "TR"),
+            CasualExpressionEntity(3034, "Olur", "أولور", "يصير / ممكن", "🔵 يومي", "قبول اقتراح", null, "عام", 0, "TR"),
+            CasualExpressionEntity(3035, "Tabii ki", "طبيعي كي", "بالتأكيد", "🔵 يومي", "تأكيد قوي", null, "عام", 0, "TR"),
+            CasualExpressionEntity(3036, "Bilmiyorum", "بيلمييوروم", "لا أعرف", "🔵 يومي", "رد صادق", null, "عام", 0, "TR"),
+            CasualExpressionEntity(3037, "Anlamadım", "آنلامادم", "لم أفهم", "🔵 يومي", "مهمة جداً للمبتدئ", null, "عام", 0, "TR"),
+            CasualExpressionEntity(3038, "Yavaş konuşur musunuz?", "ياواش كونوشور موسونوز", "هل تتكلم ببطء؟", "🟢 رسمي", "أهم جملة للمبتدئ", null, "عام", 0, "TR"),
+            CasualExpressionEntity(3039, "Gerçekten mi?", "غيرتشكتن مي", "حقاً؟", "🔵 يومي", "تعجب", null, "أصدقاء", 0, "TR"),
+            CasualExpressionEntity(3040, "Maalesef", "معاليسف", "للأسف", "🟢 رسمي", "رفض مهذب", null, "عام", 0, "TR")
+        )
+        db.casualDao().insertAll(turkishCasual)
+
+        val turkishScenarios = listOf(
+            DailyScenarioEntity(
+                3001, "At the Market", "في السوق",
+                "Satıcı: Buyurun, hoş geldiniz!\n" +
+                    "Müşteri: Merhaba. Bu kaç lira?\n" +
+                    "Satıcı: Elli lira.\n" +
+                    "Müşteri: Çok pahalı. Biraz indirim yapar mısınız?\n" +
+                    "Satıcı: Kırk lira, son fiyat.\n" +
+                    "Müşteri: Tamam, bunu alıyorum.",
+                "البائع: تفضل، أهلاً وسهلاً!\n" +
+                    "الزبون: مرحباً. كم سعر هذا؟\n" +
+                    "البائع: خمسون ليرة.\n" +
+                    "الزبون: غالٍ جداً. هل تعمل خصماً قليلاً؟\n" +
+                    "البائع: أربعون ليرة، آخر سعر.\n" +
+                    "الزبون: حسناً، سآخذ هذا.",
+                0, "سوق", "TR"
+            ),
+            DailyScenarioEntity(
+                3002, "At the Restaurant", "في المطعم",
+                "Garson: Hoş geldiniz. Ne alırsınız?\n" +
+                    "Müşteri: Menüye bakabilir miyim?\n" +
+                    "Garson: Tabii ki, buyurun.\n" +
+                    "Müşteri: Bir çorba ve bir çay lütfen.\n" +
+                    "Garson: Afiyet olsun.\n" +
+                    "Müşteri: Teşekkür ederim. Hesap lütfen.",
+                "النادل: أهلاً وسهلاً. ماذا تطلب؟\n" +
+                    "الزبون: هل يمكنني رؤية القائمة؟\n" +
+                    "النادل: بالتأكيد، تفضل.\n" +
+                    "الزبون: شوربة وشاي من فضلك.\n" +
+                    "النادل: بالهناء والشفاء.\n" +
+                    "الزبون: شكراً لك. الحساب من فضلك.",
+                0, "مطعم", "TR"
+            ),
+            DailyScenarioEntity(
+                3003, "Asking Directions", "السؤال عن الطريق",
+                "Ahmet: Pardon, yardım eder misiniz?\n" +
+                    "Yerli: Tabii, buyurun.\n" +
+                    "Ahmet: Metro istasyonu nerede?\n" +
+                    "Yerli: Düz git, sonra sağa dön. Beş dakika.\n" +
+                    "Ahmet: Yavaş konuşur musunuz? Anlamadım.\n" +
+                    "Yerli: Düz... sonra... sağa. Tamam mı?\n" +
+                    "Ahmet: Şimdi anladım. Çok teşekkür ederim!",
+                "أحمد: عفواً، هل تساعدني؟\n" +
+                    "أحد السكان: بالتأكيد، تفضل.\n" +
+                    "أحمد: أين محطة المترو؟\n" +
+                    "أحد السكان: امشِ مستقيماً، ثم انعطف يميناً. خمس دقائق.\n" +
+                    "أحمد: هل تتكلم ببطء؟ لم أفهم.\n" +
+                    "أحد السكان: مستقيم... ثم... يمين. حسناً؟\n" +
+                    "أحمد: فهمت الآن. شكراً جزيلاً!",
+                0, "شارع", "TR"
+            ),
+            DailyScenarioEntity(
+                3004, "Meeting Someone", "التعارف",
+                "Zeynep: Merhaba! Ben Zeynep. Siz?\n" +
+                    "Ahmet: Merhaba, benim adım Ahmet. Memnun oldum.\n" +
+                    "Zeynep: Ben de memnun oldum. Nerelisiniz?\n" +
+                    "Ahmet: Yemenliyim. Ama şimdi İstanbul'da yaşıyorum.\n" +
+                    "Zeynep: Türkçeniz çok güzel!\n" +
+                    "Ahmet: Sağ olun, hâlâ öğreniyorum.",
+                "زينب: مرحباً! أنا زينب. وأنت؟\n" +
+                    "أحمد: مرحباً، اسمي أحمد. تشرفنا.\n" +
+                    "زينب: تشرفنا أيضاً. من أين أنت؟\n" +
+                    "أحمد: أنا يمني. لكنني أعيش الآن في إسطنبول.\n" +
+                    "زينب: تركيتك جميلة جداً!\n" +
+                    "أحمد: شكراً لك، ما زلت أتعلم.",
+                0, "تعارف", "TR"
+            )
+        )
+        db.casualDao().insertScenarios(turkishScenarios)
+
+        val turkishTraining = listOf(
+            // التوافق الصوتي — حجر الأساس في التركية
+            TrainingItemEntity(3001, "MULTIPLE_CHOICE", "جمع kitap (كتاب) هو:", "kitaplar",
+                "kitapler,kitaplar,kitablar,kitaplari",
+                "a حرف صوتي ثقيل ⇒ لاحقة الجمع -lar", "قواعد", "TR"),
+            TrainingItemEntity(3002, "MULTIPLE_CHOICE", "جمع ev (بيت) هو:", "evler",
+                "evlar,evler,evleri,evlerler",
+                "e حرف صوتي خفيف ⇒ لاحقة الجمع -ler", "قواعد", "TR"),
+            TrainingItemEntity(3003, "MULTIPLE_CHOICE", "ترتيب الجملة التركية هو:", "فاعل + مفعول + فعل",
+                "فاعل + فعل + مفعول,فاعل + مفعول + فعل,فعل + فاعل + مفعول,مفعول + فعل + فاعل",
+                "التركية SOV — الفعل في نهاية الجملة دائماً، بعكس الإندونيسية", "قواعد", "TR"),
+            TrainingItemEntity(3004, "TRANSLATE", "أنا أذهب إلى المدرسة", "Okula gidiyorum", "",
+                "okul + a (إلى) + gid + iyor (حاضر مستمر) + um (أنا)", "قواعد", "TR"),
+            TrainingItemEntity(3005, "MULTIPLE_CHOICE", "'في البيت' بالتركية:", "evde",
+                "eve,evde,evden,evi",
+                "-de/-da = في (الإقامة) • -e/-a = إلى • -den/-dan = من", "قواعد", "TR"),
+            TrainingItemEntity(3006, "MULTIPLE_CHOICE", "نفي geliyorum (أنا آتٍ):", "gelmiyorum",
+                "gelmiyorum,gelmeyorum,gelmiyor,gelmezim",
+                "gel + mi (نفي) + yor (زمن) + um (فاعل)", "قواعد", "TR"),
+            TrainingItemEntity(3007, "ORDER_WORDS", "Ben / okuyorum / kitap", "Ben kitap okuyorum", "",
+                "الفعل يأتي أخيراً في التركية (SOV)", "قواعد", "TR"),
+            TrainingItemEntity(3008, "MULTIPLE_CHOICE", "'بيتي' بالتركية:", "benim evim",
+                "benim ev,benim evim,ev benim,evim benim",
+                "الملكية تحتاج طرفين: benim (صفة ملكية) + ev-im (لاحقة ملكية)", "قواعد", "TR"),
+
+            // اللغة اليومية العملية
+            TrainingItemEntity(3009, "SITUATION", "أنت في السوق وتريد معرفة السعر", "Bu ne kadar?",
+                "Bu ne kadar?,Nasılsın?,Hesap lütfen,Görüşürüz",
+                "Bu ne kadar? = كم سعر هذا؟", "سوق", "TR"),
+            TrainingItemEntity(3010, "SITUATION", "لم تفهم ما قاله المتحدث — ماذا تقول؟", "Anlamadım",
+                "Anlamadım,Teşekkür ederim,Afiyet olsun,Hoş geldiniz",
+                "Anlamadım = لم أفهم. من أهم الجمل للمبتدئ", "عام", "TR"),
+            TrainingItemEntity(3011, "SITUATION", "تريد من المتحدث أن يبطئ", "Yavaş konuşur musunuz?",
+                "Yavaş konuşur musunuz?,Nerede?,Sağ ol,Olur",
+                "أهم جملة عملية في أول شهر من التعلم", "عام", "TR"),
+            TrainingItemEntity(3012, "TRANSLATE", "الحساب من فضلك", "Hesap lütfen", "",
+                "تُستخدم في كل المطاعم والمقاهي", "مطعم", "TR"),
+            TrainingItemEntity(3013, "MULTIPLE_CHOICE", "الرد الثابت على 'Hoş geldiniz':", "Hoş bulduk",
+                "Teşekkürler,Hoş bulduk,Merhaba,Görüşürüz",
+                "زوج ثابت في الثقافة التركية — لا يُترجم حرفياً", "تحيات", "TR"),
+            TrainingItemEntity(3014, "MULTIPLE_CHOICE", "'Naber?' مناسبة مع:", "صديق مقرب",
+                "مديرك في العمل,شخص كبير في السن,صديق مقرب,موظف رسمي",
+                "Naber? عامية جداً — استخدم Nasılsınız? في المواقف الرسمية", "أصدقاء", "TR"),
+            TrainingItemEntity(3015, "TRANSLATE", "كيف أذهب؟", "Nasıl gidebilirim?", "",
+                "جملة أساسية للسفر والتنقل", "شارع", "TR"),
+            TrainingItemEntity(3016, "MULTIPLE_CHOICE", "'أنا طالب' بالتركية:", "Ben öğrenciyim",
+                "Ben öğrenci,Ben öğrenciyim,Ben öğrencisin,Öğrenci ben",
+                "لا يوجد فعل 'يكون' منفصل — يُلحق باللاحقة -yim", "قواعد", "TR")
+        )
+        db.trainingDao().insertAll(turkishTraining)
+    }
+    
+    suspend fun checkAndUpdateStreak() {
+        val currentProgress = db.progressDao().getProgressSync() ?: UserProgressEntity()
+        val currentTime = System.currentTimeMillis()
+        val lastStudyDate = currentProgress.lastStudyDate
+
+        val oneDayMillis = 24 * 60 * 60 * 1000L
+        val lastDay = lastStudyDate / oneDayMillis
+        val currentDay = currentTime / oneDayMillis
+        
+        var newStreak = currentProgress.streakDays
+        if (currentDay - lastDay == 1L) {
+            newStreak += 1
+        } else if (currentDay - lastDay > 1L) {
+            newStreak = 1
+        } else if (lastStudyDate == 0L) {
+            newStreak = 1
+        }
+        
+        if (lastStudyDate == 0L || currentDay > lastDay) {
+            db.progressDao().updateProgress(
+                currentProgress.copy(
+                    lastStudyDate = currentTime,
+                    streakDays = newStreak
+                )
+            )
+        }
     }
 }

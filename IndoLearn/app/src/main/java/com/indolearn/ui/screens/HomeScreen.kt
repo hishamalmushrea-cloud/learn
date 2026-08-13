@@ -45,26 +45,31 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
     // Ultra-premium cohesive background-colored items
     val learnItems = listOf(
-        HomeMenuItem("📖", "الدروس", "تعلم خطوة بخطوة", "lessons", CardBlue, OnCardBlue),
-        HomeMenuItem("📝", "المفردات", "أهم الكلمات والأفعال", "vocabulary", CardGreen, OnCardGreen),
-        HomeMenuItem("📐", "القواعد", "قواعد اللغة والنحو", "grammar", CardPurple, OnCardPurple),
-        HomeMenuItem("🗣️", "اللغة اليومية", "تعبيرات الشارع الواقعية", "casual", CardOrange, OnCardOrange),
+        HomeMenuItem("📖", "الدروس", "تعلم خطوة بخطوة", "lessons", CardBlue, OnPrimaryContainerLight),
+        HomeMenuItem("📝", "المفردات", "أهم الكلمات والأفعال", "vocabulary", CardGreen, OnSecondaryContainerLight),
+        HomeMenuItem("📐", "القواعد", "قواعد اللغة والنحو", "grammar", CardPurple, OnPrimaryContainerLight),
+        HomeMenuItem("📚", "المكتبة المرجعية", "موسوعة كاملة للغة التي تتعلمها", "library", CardBlue, OnPrimaryContainerLight),
+        HomeMenuItem("🗣️", "اللغة اليومية", "تعبيرات الشارع الواقعية", "casual", CardOrange, OnTertiaryContainerLight),
     )
 
     val practiceItems = listOf(
-        HomeMenuItem("🃏", "البطاقات", "راجع بالبطاقات ثلاثية الأبعاد", "flashcards", CardPink, OnCardPink),
-        HomeMenuItem("🧪", "اختبار سريع", "اختبر مستواك وحصيلتك", "quiz", CardOrange, OnCardOrange),
-        HomeMenuItem("🔄", "مراجعة اليوم", "كرر وثبت ما تعلمته", "review", CardBlue, OnCardBlue),
-        HomeMenuItem("⭐", "المفضلة", "كلماتك المحفوظة", "favorites", CardGreen, OnCardGreen),
+        HomeMenuItem("🃏", "البطاقات", "راجع بالبطاقات ثلاثية الأبعاد", "flashcards", CardPink, OnTertiaryContainerLight),
+        HomeMenuItem("🧪", "اختبار سريع", "اختبر مستواك وحصيلتك", "quiz", CardOrange, OnTertiaryContainerLight),
+        HomeMenuItem("🔄", "مراجعة اليوم", "كرر وثبت ما تعلمته", "review", CardBlue, OnPrimaryContainerLight),
+        HomeMenuItem("⭐", "المفضلة", "كلماتك المحفوظة", "favorites", CardGreen, OnSecondaryContainerLight),
+        // كانت شاشة "تقدمي" مُعرَّفة في AppNavigation بلا أي مسار يصل إليها.
+        HomeMenuItem("📊", "تقدمي", "إحصاءات إتقانك الحقيقية", "progress", CardPurple, OnPrimaryContainerLight),
     )
 
     val otherItems = listOf(
-        HomeMenuItem("🎯", "المنهج الكامل", "خريطة طريق التعلم", "curriculum", CardPurple, OnCardPurple),
-        HomeMenuItem("🎓", "مدرب اليومية", "سيناريوهات وألعاب تفاعلية", "casual_interactive", CardPink, OnCardPink),
-        HomeMenuItem("🗣️", "محادثات ناطقة", "حوارات ثنائية مسموعة", "dialogue", CardOrange, OnCardOrange),
-        HomeMenuItem("📓", "دفتر أفكاري", "مذكراتك اللغوية والشخصية", "notebook", CardBlue, OnCardBlue),
-        HomeMenuItem("🔍", "البحث", "ابحث عن معاني الكلمات", "search", CardGreen, OnCardGreen),
-        HomeMenuItem("💼", "ريادة الأعمال", "تأسيس وإدارة المشاريع", "riyada_guide", CardPurple, OnCardPurple),
+        HomeMenuItem("🎯", "المنهج الكامل", "خريطة طريق التعلم", "curriculum", CardPurple, OnPrimaryContainerLight),
+        HomeMenuItem("🎓", "مدرب اليومية", "سيناريوهات وألعاب تفاعلية", "casual_interactive", CardPink, OnTertiaryContainerLight),
+        HomeMenuItem("🗣️", "محادثات ناطقة", "حوارات ثنائية مسموعة", "dialogue", CardOrange, OnTertiaryContainerLight),
+        HomeMenuItem("📓", "دفتر أفكاري", "مذكراتك اللغوية والشخصية", "notebook", CardBlue, OnPrimaryContainerLight),
+        HomeMenuItem("🔍", "البحث", "ابحث عن معاني الكلمات", "search", CardGreen, OnSecondaryContainerLight),
+        HomeMenuItem("💼", "ريادة الأعمال", "تأسيس وإدارة المشاريع", "riyada_guide", CardPurple, OnPrimaryContainerLight),
+        // كانت الموسوعة (405 أسطر محتوى) غير قابلة للوصول إطلاقاً.
+        HomeMenuItem("🌍", "الموسوعة", "معلومات ثقافية ومرجعية", "encyclopedia", CardOrange, OnTertiaryContainerLight),
     )
 
     Column(
@@ -90,83 +95,61 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 .padding(horizontal = 24.dp, vertical = 20.dp)
         ) {
             Column {
-                    // Gamification & Switcher Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                // Gamification & Switcher Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Language Switcher Button with Glassmorphic Style
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.22f)),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable {
+                                val nextLang = if (currentLanguage == "TR") "ID" else "TR"
+                                viewModel.switchLanguage(nextLang)
+                            }
+                            .border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
                     ) {
-                        // Language Switcher Button with Glassmorphic Style
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.22f)),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable {
-                                    val nextLang = if (currentLanguage == "TR") "ID" else "TR"
-                                    viewModel.switchLanguage(nextLang)
-                                }
-                                .border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = if (currentLanguage == "TR") "🇹🇷 التركية" else "🇮🇩 الإندونيسية",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text("🔄", fontSize = 12.sp)
-                            }
-                        }
-
-                        // Level Badge
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)),
-                            modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("🎓", fontSize = 16.sp)
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    "المستوى ${progress.currentLevel + 1}",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-
-                        // Streak Badge
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)),
-                            modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(Icons.Default.Star, contentDescription = "Streak", tint = GoldBadge, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(6.dp))
-                                val daysText = if (progress.streakDays == 1) "يوم واحد" else if (progress.streakDays == 2) "يومان" else "${progress.streakDays} أيام"
-                                Text(
-                                    daysText,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = if (currentLanguage == "TR") "🇹🇷 التركية" else "🇮🇩 الإندونيسية",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("🔄", fontSize = 12.sp)
                         }
                     }
+
+                    // Streak Badge
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)),
+                        modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = "Streak", tint = GoldBadge, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "3 أيام",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -263,15 +246,15 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                         text = "مرشد التعلم وصندوق القوالب",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        color = OnTertiaryContainerLight
                     )
                     Text(
                         text = "ابنِ جملك التفاعلية واكتشف أخطاء العرب الشائعة بقالب علمي",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
+                        color = OnTertiaryContainerLight.copy(alpha = 0.75f)
                     )
                 }
-                Text("›", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                Text("›", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = OnTertiaryContainerLight)
             }
         }
 

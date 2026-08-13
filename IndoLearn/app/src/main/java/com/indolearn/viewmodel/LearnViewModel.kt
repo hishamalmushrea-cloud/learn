@@ -5,6 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.indolearn.data.local.PreferencesManager
 import com.indolearn.data.local.entity.*
 import com.indolearn.data.repository.LearnRepository
+import com.indolearn.domain.coach.DailyCoach
+import com.indolearn.domain.coach.DailySession
+import com.indolearn.domain.coach.TaskType
+import com.indolearn.domain.srs.Grade
+import com.indolearn.domain.srs.ItemKind
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +49,14 @@ class LearnViewModel @Inject constructor(
     private val _stages = MutableStateFlow<List<StageEntity>>(emptyList())
     val stages: StateFlow<List<StageEntity>> = _stages.asStateFlow()
 
+    private val _lessonCounts = MutableStateFlow<Map<Int, Int>>(emptyMap())
+
+    /** عدد الدروس لكل مستوى — تستخدمه شاشة المنهج لعرض المراحل الفارغة بصدق. */
+    val lessonCounts: StateFlow<Map<Int, Int>> = _lessonCounts.asStateFlow()
+
+    private val _scenarios = MutableStateFlow<List<DailyScenarioEntity>>(emptyList())
+    val scenarios: StateFlow<List<DailyScenarioEntity>> = _scenarios.asStateFlow()
+
     private val _notes = MutableStateFlow<List<NoteEntity>>(emptyList())
     val notes: StateFlow<List<NoteEntity>> = _notes.asStateFlow()
 
@@ -53,6 +66,23 @@ class LearnViewModel @Inject constructor(
     private var favoritesJob: Job? = null
     private var dialoguesJob: Job? = null
     private var stagesJob: Job? = null
+    private var casualJob: Job? = null
+    private var scenariosJob: Job? = null
+
+    // ⚠️ يجب أن تُعرَّف هذه الحقول **قبل** كتلة init.
+    // كتلة init تستدعي loadAllDataForLanguage التي تكتب فيها، وفي Kotlin
+    // تُهيّأ الخصائص بترتيب ظهورها؛ لو بقيت أسفل init لكانت null وقت الاستخدام
+    // وأدت إلى NullPointerException عند أول تشغيل.
+    private val _session = MutableStateFlow<DailySession?>(null)
+
+    /** جلسة اليوم المبنية على بيانات المستخدم الحقيقية. */
+    val session: StateFlow<DailySession?> = _session.asStateFlow()
+
+    private val _reviewQueue = MutableStateFlow<List<VocabularyEntity>>(emptyList())
+
+    /** قائمة العناصر المستحقة فعلاً للمراجعة الآن. */
+    val reviewQueue: StateFlow<List<VocabularyEntity>> = _reviewQueue.asStateFlow()
+
 
     init {
         // Collect current language preferences and bind reactive flows
@@ -71,6 +101,12 @@ class LearnViewModel @Inject constructor(
     }
 
     fun loadAllDataForLanguage(lang: String) {
+        // تفريغ الحالة المشتقة من اللغة السابقة فوراً.
+        // بدون ذلك يرى المستخدم — للحظة بعد تبديل اللغة — بطاقات مراجعة
+        // وجلسة يومية تخص اللغة القديمة، وقد يقيّم عنصراً بلغة خاطئة.
+        _session.value = null
+        _reviewQueue.value = emptyList()
+
         lessonsJob?.cancel()
         lessonsJob = viewModelScope.launch {
             repository.getLessons(0, lang).catch { e -> e.printStackTrace() }
@@ -106,6 +142,30 @@ class LearnViewModel @Inject constructor(
             repository.getAllStages(lang).catch { e -> e.printStackTrace() }
                 .collect { _stages.value = it }
         }
+
+        // التعبيرات اليومية والسيناريوهات — كانت غير مربوطة إطلاقاً،
+        // فكانت CasualScreen تعرض قائمة ثابتة داخل الكود بدل بيانات القاعدة.
+        casualJob?.cancel()
+        casualJob = viewModelScope.launch {
+            repository.getCasualExpressions(lang).catch { e -> e.printStackTrace() }
+                .collect { _casual.value = it }
+        }
+
+        scenariosJob?.cancel()
+        scenariosJob = viewModelScope.launch {
+            repository.getScenarios(lang).catch { e -> e.printStackTrace() }
+                .collect { _scenarios.value = it }
+        }
+
+        viewModelScope.launch {
+            try {
+                _lessonCounts.value = repository.getLessonCountsByLevel(lang)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        refreshDailySession()
     }
 
     fun switchLanguage(lang: String) {
@@ -125,7 +185,7 @@ class LearnViewModel @Inject constructor(
     fun markLessonDone(id: Int) {
         viewModelScope.launch {
             try {
-                repository.markLessonCompleted(id)
+                repository.markLessonCompleted(id, _currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -162,7 +222,7 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getRandomQuizzes(limit: Int = 10): List<TrainingItemEntity> {
         return try {
-            repository.getRandomQuizzes(limit)
+            repository.getRandomQuizzes(limit, _currentLanguage.value)
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -187,5 +247,71 @@ class LearnViewModel @Inject constructor(
                 e.printStackTrace()
             }
         }
+    }
+
+    // ================= Spaced repetition & daily coach =================
+
+    /**
+     * يبني جلسة اليوم.
+     *
+     * قبل الإصلاح كانت `ReviewScreen` تعرض النص الثابت
+     * "5 كلمات + 2 قواعد + 1 محادثة" — رقم مختلق غير مرتبط بأي بيانات.
+     */
+    fun refreshDailySession() {
+        viewModelScope.launch {
+            try {
+                val lang = _currentLanguage.value
+                val states = repository.getReviewStatesOnce(lang)
+                val incomplete = repository.getIncompleteLessonIds(lang)
+                val scenarios = repository.getScenarioIds(lang)
+                val built = DailyCoach.buildSession(
+                    states = states,
+                    availableNewLessonIds = incomplete,
+                    availableScenarioIds = scenarios,
+                    now = System.currentTimeMillis()
+                )
+                _session.value = built
+
+                val dueIds = built.tasks
+                    .filter { it.type != TaskType.NEW_LESSON && it.type != TaskType.SCENARIO_PRACTICE }
+                    .flatMap { it.itemIds }
+                _reviewQueue.value = if (dueIds.isEmpty()) {
+                    // لا توجد مراجعات مستحقة ⇒ قدّم عناصر جديدة لم تُدرس بعد.
+                    val seen = states.map { it.itemId }.toSet()
+                    _vocabulary.value.filter { it.id !in seen }.take(NEW_ITEMS_PER_SESSION)
+                } else {
+                    repository.getVocabularyByIds(dueIds)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /** يسجّل تقييم المستخدم لبطاقة ويعيد جدولتها عبر محرك SM-2. */
+    fun gradeItem(itemId: Int, grade: Grade, kind: ItemKind = ItemKind.WORD) {
+        viewModelScope.launch {
+            try {
+                repository.recordReview(itemId, kind, _currentLanguage.value, grade)
+                repository.recomputeProgress(_currentLanguage.value)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /** يحفظ نتيجة الاختبار — لم تكن تُحفظ إطلاقاً قبل الإصلاح. */
+    fun saveQuizResult(lessonId: Int, score: Int, total: Int) {
+        viewModelScope.launch {
+            try {
+                repository.saveQuizResult(lessonId, score, total)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private companion object {
+        const val NEW_ITEMS_PER_SESSION = 10
     }
 }

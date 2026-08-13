@@ -61,6 +61,7 @@ val ErrorDark = Color(0xFFF87171)
 val OnErrorDark = Color(0xFF7F1D1D)
 val ErrorContainerDark = Color(0xFF991B1B)
 
+
 // === CUSTOM ACCENT COLORS (Adaptive) ===
 val GoldBadge: Color
     @Composable get() = if (isSystemInDarkTheme()) Color(0xFFFBBF24) else Color(0xFFF59E0B)
@@ -100,3 +101,4 @@ val OnCardPurple: Color
 
 val OnCardPink: Color
     @Composable get() = if (isSystemInDarkTheme()) Color(0xFFFCE7F3) else Color(0xFF9D174D)
+

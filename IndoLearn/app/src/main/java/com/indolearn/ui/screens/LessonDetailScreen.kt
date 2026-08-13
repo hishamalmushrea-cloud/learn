@@ -25,6 +25,10 @@ fun LessonDetailScreen(
 ) {
     val context = LocalContext.current
     val tts = remember { TtsManager(context) }
+    // إطلاق محرك النطق عند مغادرة الشاشة.
+    // بدونه يبقى TextToSpeech حياً بعد إغلاق الشاشة (تسريب موارد)،
+    // ويتراكم مع كل زيارة للشاشة.
+    DisposableEffect(Unit) { onDispose { tts.shutdown() } }
     val currentLanguage = viewModel.currentLanguage.collectAsState().value
 
     var lesson by remember { mutableStateOf<LessonEntity?>(null) }

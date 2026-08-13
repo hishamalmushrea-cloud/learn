@@ -86,7 +86,7 @@ fun AppNavigation(navController: NavHostController) {
             val learnViewModel: LearnViewModel = hiltViewModel()
             DialogueScreen(navController, learnViewModel) 
         }
-        composable("grammar_detail") { GrammarDetailScreen(navController) }
+
         composable("favorites") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
             FavoritesScreen(navController, learnViewModel) 
@@ -123,6 +123,14 @@ fun AppNavigation(navController: NavHostController) {
             val riyadaViewModel: com.indolearn.viewmodel.RiyadaViewModel = hiltViewModel()
             val sectionId = backStackEntry.arguments?.getString("sectionId") ?: "learning"
             com.indolearn.ui.screens.RiyadaDetailScreen(navController, riyadaViewModel, sectionId)
+        }
+        composable("encyclopedia") { 
+            EncyclopediaScreen(navController) 
+        }
+        // المكتبة المرجعية: موسوعة تعلّم الإندونيسية (27 ملفاً، أوفلاين)
+        composable("library") {
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            LibraryScreen(navController, learnViewModel)
         }
     }
 }

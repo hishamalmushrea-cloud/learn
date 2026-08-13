@@ -13,8 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.airbnb.lottie.compose.*
 import com.indolearn.R
 import com.indolearn.viewmodel.OnboardingViewModel
 import kotlinx.coroutines.delay
@@ -38,20 +38,17 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            val composition by rememberLottieComposition(
-                LottieCompositionSpec.Url("https://assets3.lottiefiles.com/packages/lf20_q5pk6p1k.json") // Language learning animation placeholder
-            )
-            val progress by animateLottieCompositionAsState(
-                composition,
-                iterations = LottieConstants.IterateForever,
-            )
-
+            // كان هنا رسم متحرك يُحمَّل من الإنترنت
+            // (assets3.lottiefiles.com). التطبيق يُفترض أنه يعمل أوفلاين 100%،
+            // وكانت **أول شاشة** يراها المستخدم تفشل بلا اتصال.
+            // استُبدل برسم محلي بسيط لا يحتاج شبكة.
             if (step == 0) {
-                LottieAnimation(
-                    composition = composition,
-                    progress = { progress },
-                    modifier = Modifier.size(250.dp)
-                )
+                Box(
+                    modifier = Modifier.size(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🗣️", fontSize = 120.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
