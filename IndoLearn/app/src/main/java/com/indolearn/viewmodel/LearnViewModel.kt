@@ -75,6 +75,16 @@ class LearnViewModel @Inject constructor(
     // كتلة init تستدعي loadAllDataForLanguage التي تكتب فيها، وفي Kotlin
     // تُهيّأ الخصائص بترتيب ظهورها؛ لو بقيت أسفل init لكانت null وقت الاستخدام
     // وأدت إلى NullPointerException عند أول تشغيل.
+    /**
+     * هل فشل بناء جلسة اليوم؟
+     *
+     * بدون هذه الحالة كان الاستثناء يُبتلع في `catch` فتبقى `_session`
+     * فارغة، وشاشة المراجعة تعرض دوّامة **إلى الأبد** بلا أي تفسير —
+     * نفس صنف العطل الذي أبلغ عنه المستخدم في شاشات المحتوى.
+     */
+    private val _sessionFailed = MutableStateFlow(false)
+    val sessionFailed: StateFlow<Boolean> = _sessionFailed.asStateFlow()
+
     private val _session = MutableStateFlow<DailySession?>(null)
 
     /** جلسة اليوم المبنية على بيانات المستخدم الحقيقية. */
@@ -282,6 +292,7 @@ class LearnViewModel @Inject constructor(
     fun refreshDailySession() {
         viewModelScope.launch {
             try {
+                _sessionFailed.value = false
                 val lang = _currentLanguage.value
                 val states = repository.getReviewStatesOnce(lang)
                 val incomplete = repository.getIncompleteLessonIds(lang)
@@ -305,7 +316,10 @@ class LearnViewModel @Inject constructor(
                     repository.getVocabularyByIds(dueIds)
                 }
             } catch (e: Exception) {
+                // لا نبتلع الفشل صامتين: نُعلم الواجهة كي تعرض رسالة
+                // وزر إعادة محاولة بدل دوّامة أبدية.
                 e.printStackTrace()
+                _sessionFailed.value = true
             }
         }
     }

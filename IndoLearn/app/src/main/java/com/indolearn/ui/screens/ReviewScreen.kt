@@ -31,6 +31,7 @@ import com.indolearn.viewmodel.LearnViewModel
 @Composable
 fun ReviewScreen(navController: NavController, viewModel: LearnViewModel) {
     val session = viewModel.session.collectAsState().value
+    val sessionFailed = viewModel.sessionFailed.collectAsState().value
 
     LaunchedEffect(Unit) { viewModel.refreshDailySession() }
 
@@ -55,7 +56,34 @@ fun ReviewScreen(navController: NavController, viewModel: LearnViewModel) {
             Box(
                 Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+            ) {
+                if (sessionFailed) {
+                    // فشل بناء الجلسة: نقول ذلك صراحةً ونتيح إعادة المحاولة،
+                    // بدل ترك دوّامة تدور إلى الأبد بلا تفسير.
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        Text("⚠️", fontSize = 44.sp)
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "تعذّر تجهيز جلسة اليوم",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "حدث خطأ أثناء قراءة بيانات مراجعتك.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { viewModel.refreshDailySession() }) {
+                            Text("إعادة المحاولة")
+                        }
+                    }
+                } else {
+                    CircularProgressIndicator()
+                }
+            }
             return@Scaffold
         }
 
