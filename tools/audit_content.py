@@ -310,6 +310,52 @@ def main():
     if dcasual:
         warnings.append(f"تعبيرات مكررة: {len(dcasual)}")
 
+    # ---------- 7b) التمارين: تكرار وتصنيف ----------
+    print("\n[7b] التمارين")
+    TRAIN_F = ["id", "type", "question", "correctAnswer", "options",
+               "explanation", "category", "languageCode"]
+    training = rows_of(src, "TrainingItemEntity", TRAIN_F, {"languageCode": "ID"})
+    print(f"   إجمالي التمارين: {len(training)}")
+
+    # تكرار تام: نفس السؤال ونفس الإجابة داخل نفس التصنيف = حشو بلا فائدة.
+    # (التكرار بين تصنيف الموضوع و«امتحان» مقصود: المراجعة تعيد السؤال.)
+    same_cat = {}
+    for t in training:
+        k = (t.get("languageCode"), str(t.get("question", "")).strip(),
+             str(t.get("correctAnswer", "")).strip(),
+             str(t.get("category", "")).strip())
+        same_cat.setdefault(k, []).append(t)
+    pure_dup = {k: v for k, v in same_cat.items() if len(v) > 1}
+    print(f"   {'✗' if pure_dup else '✓'} تمرين مكرر داخل نفس التصنيف: {len(pure_dup)}")
+    for k, v in list(pure_dup.items())[:6]:
+        print(f"        - [{k[0]}] ids={[x['id'] for x in v]} «{k[1][:44]}»")
+    if pure_dup:
+        blockers.append(f"تمارين مكررة داخل نفس التصنيف: {len(pure_dup)}")
+
+    # سؤال بلا خيارات في نوع يتطلب خيارات
+    needs_opts = [t for t in training
+                  if str(t.get("type", "")) in ("MULTIPLE_CHOICE", "SITUATION")
+                  and not str(t.get("options", "")).strip()]
+    rep("تمرين اختيار بلا خيارات", needs_opts, blocker=True)
+
+    # الإجابة الصحيحة يجب أن تكون ضمن الخيارات المعروضة
+    answer_missing = []
+    for t in training:
+        opts = str(t.get("options", "")).strip()
+        ans = str(t.get("correctAnswer", "")).strip()
+        if not opts or not ans:
+            continue
+        choices = [o.strip() for o in opts.split(",")]
+        if ans not in choices:
+            answer_missing.append(t)
+    print(f"   {'✗' if answer_missing else '✓'} الإجابة الصحيحة ليست ضمن الخيارات: "
+          f"{len(answer_missing)}")
+    for t in answer_missing[:6]:
+        print(f"        - [{t.get('languageCode')}#{t.get('id')}] "
+              f"«{str(t.get('question'))[:40]}» ⇒ {t.get('correctAnswer')}")
+    if answer_missing:
+        blockers.append(f"إجابة صحيحة خارج الخيارات: {len(answer_missing)}")
+
     # ---------- 8) القواعد ----------
     print("\n[8] القواعد")
     for lang in ("ID", "TR"):

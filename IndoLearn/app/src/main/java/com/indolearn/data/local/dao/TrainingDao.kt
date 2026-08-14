@@ -13,11 +13,27 @@ interface TrainingDao {
     fun getTrainingByCategory(category: String, langCode: String): Flow<List<TrainingItemEntity>>
 
     /**
-     * أسئلة عشوائية **للغة الحالية فقط**.
+     * أسئلة عشوائية **للغة الحالية فقط**، بلا تكرار.
+     *
      * قبل الإصلاح لم يكن الاستعلام يرشّح باللغة، فكان متعلم التركية
      * يحصل على أسئلة إندونيسية في "اختبار سريع".
+     *
+     * وإصلاح ثانٍ: بعض الأسئلة مكررة عمداً بين تصنيف الموضوع
+     * وتصنيف «امتحان» (سؤال المراجعة يعيد سؤال الدرس). بدون
+     * GROUP BY كان الاختبار العشوائي قد يعرض **نفس السؤال مرتين**
+     * في الجلسة الواحدة. نأخذ الآن نسخة واحدة لكل (سؤال، إجابة).
      */
-    @Query("SELECT * FROM training_items WHERE languageCode = :langCode ORDER BY RANDOM() LIMIT :limit")
+    @Query(
+        """
+        SELECT * FROM training_items
+        WHERE id IN (
+            SELECT MIN(id) FROM training_items
+            WHERE languageCode = :langCode
+            GROUP BY question, correctAnswer
+        )
+        ORDER BY RANDOM() LIMIT :limit
+        """
+    )
     suspend fun getRandomQuizzes(limit: Int, langCode: String): List<TrainingItemEntity>
 
     @Query("SELECT COUNT(*) FROM training_items")

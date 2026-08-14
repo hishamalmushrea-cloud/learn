@@ -239,8 +239,9 @@ object CoreVocabulary {
             "Bu doğru değil.", "هذا ليس صحيحاً.", "نفي", 0, true, false, "TR"),
         VocabularyEntity(3136, "yok", "yok", "يوك", "لا يوجد",
             "Param yok.", "ليس معي نقود.", "نفي", 0, true, false, "TR"),
+        // var نقيض yok لا نوع منه؛ يُصنَّف «وجود» لا «نفي».
         VocabularyEntity(3137, "var", "var", "فار", "يوجد",
-            "Odanız var mı?", "هل لديكم غرفة؟", "نفي", 0, true, false, "TR"),
+            "Odanız var mı?", "هل لديكم غرفة؟", "وجود", 0, true, false, "TR"),
         // مال واتجاهات
         VocabularyEntity(3140, "para", "para", "پارا", "نقود",
             "Param yok.", "ليس معي نقود.", "مال", 0, true, false, "TR"),

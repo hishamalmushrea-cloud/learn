@@ -62,7 +62,16 @@ for m in re.finditer(r"db\.(\w+)\(\)\.(\w+)\(", repo_src):
         errors.append(f"LearnRepository: {accessors[acc]}.{meth}() غير معرَّفة")
 
 # ---- 2. repository methods used by viewmodels ----
-repo_funs = set(re.findall(r"fun (\w+)\(", repo_src))
+# المشروع صار يضم أكثر من مستودع (LearnRepository, RiyadaRepository, ...).
+# كان الفحص يقرأ LearnRepository وحده، فيبلّغ خطأً كاذباً عن كل ViewModel
+# يحقن مستودعاً آخر. نجمع الدوال من كل ملفات data/repository.
+repo_funs = set()
+_repo_dir = os.path.join(SRC, "data/repository")
+if os.path.isdir(_repo_dir):
+    for _f in sorted(os.listdir(_repo_dir)):
+        if _f.endswith(".kt"):
+            repo_funs |= set(re.findall(
+                r"fun (\w+)\(", read(os.path.join(_repo_dir, _f))))
 
 # ---- 3. viewmodel members (only the *ViewModel classes, not helper data classes) ----
 vm_members = defaultdict(set)

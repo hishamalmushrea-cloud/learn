@@ -479,7 +479,6 @@ class LearnRepository(private val db: AppDatabase) {
             TrainingItemEntity(113, "TRANSLATE", "رخيص جداً!", "Murah banget!", "", "banget = sangat (يومي)", "يومي"),
 
             // Unit 25 - Market
-            TrainingItemEntity(114, "SITUATION", "أنت في السوق وتريد معرفة السعر", "Berapa harganya?", "Mau apa?,Berapa harganya?,Bisa kurang?,Santai aja", "Berapa harganya? = كم سعره؟", "سوق"),
             // كانت الإجابة الصحيحة "هل يمكن تخفيض السعر؟" غير موجودة ضمن الخيارات
             // (الخيار كان "هل يمكن تخفيض؟") فيستحيل على المستخدم الإجابة صحيحاً.
             TrainingItemEntity(115, "MULTIPLE_CHOICE", "Bisa kurang? = ?", "هل يمكن تخفيض السعر؟", "كم السعر؟,هل يمكن تخفيض السعر؟,هل تريد؟,رخيص", "Bisa kurang? = Can it be cheaper?", "سوق"),
