@@ -20,6 +20,9 @@ interface TrainingDao {
     @Query("SELECT * FROM training_items WHERE languageCode = :langCode ORDER BY RANDOM() LIMIT :limit")
     suspend fun getRandomQuizzes(limit: Int, langCode: String): List<TrainingItemEntity>
 
+    @Query("SELECT COUNT(*) FROM training_items")
+    suspend fun countAny(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<TrainingItemEntity>)
 }

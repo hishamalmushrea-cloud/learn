@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.indolearn.data.local.entity.MIXED_QUIZ_LESSON_ID
 import com.indolearn.data.local.entity.TrainingItemEntity
 import com.indolearn.ui.theme.*
 import com.indolearn.viewmodel.LearnViewModel
@@ -209,7 +210,11 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                             } else {
                                 // حفظ النتيجة — لم تكن تُحفظ إطلاقاً قبل الإصلاح،
                                 // فتضيع بمجرد مغادرة الشاشة (لا تاريخ ولا أفضل نتيجة).
-                                viewModel.saveQuizResult(0, score, questions.size)
+                                // هذا اختبار مختلط لا يخص درساً بعينه، لذلك
+                                // يُحفظ تحت معرّف مخصص لا يصطدم بأي درس.
+                                viewModel.saveQuizResult(
+                                    MIXED_QUIZ_LESSON_ID, score, questions.size
+                                )
                                 showResult = true
                             }
                         },

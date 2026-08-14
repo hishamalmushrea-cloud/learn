@@ -16,6 +16,9 @@ interface CasualDao {
     @Query("SELECT * FROM casual_expressions WHERE languageCode = :langCode ORDER BY id")
     fun getAllExpressions(langCode: String): Flow<List<CasualExpressionEntity>>
 
+    @Query("SELECT COUNT(*) FROM casual_expressions")
+    suspend fun countAny(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(expressions: List<CasualExpressionEntity>)
 

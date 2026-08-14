@@ -60,7 +60,6 @@ fun LessonDetailScreen(
     }
 
     var currentSpeed by remember { mutableStateOf(1.0f) }
-    var showQuiz by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         // Header
@@ -80,10 +79,17 @@ fun LessonDetailScreen(
             }
         }
 
-        LinearProgressIndicator(
-            progress = { 0.5f },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-        )
+        // كان هنا شريط تقدم ثابت عند 0.5f — رقم كاذب لا يعكس شيئاً،
+        // يوهم المتعلم أنه أنجز نصف الدرس فور فتحه.
+        // الحالة الحقيقية الوحيدة المتاحة هنا هي: أُكمل الدرس أم لا.
+        if (lesson?.completed == true) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("✅ أكملت هذا الدرس", style = MaterialTheme.typography.labelLarge)
+            }
+        }
 
         LazyColumn(
             modifier = Modifier

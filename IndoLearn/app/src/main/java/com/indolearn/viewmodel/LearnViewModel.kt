@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.indolearn.data.local.PreferencesManager
 import com.indolearn.data.local.entity.*
 import com.indolearn.data.repository.LearnRepository
+import com.indolearn.data.repository.SeedManager
 import com.indolearn.domain.coach.DailyCoach
 import com.indolearn.domain.coach.DailySession
 import com.indolearn.domain.coach.TaskType
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LearnViewModel @Inject constructor(
     private val repository: LearnRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val seedManager: SeedManager
 ) : ViewModel() {
 
     private val _currentLanguage = MutableStateFlow("ID")
@@ -73,6 +75,16 @@ class LearnViewModel @Inject constructor(
     // كتلة init تستدعي loadAllDataForLanguage التي تكتب فيها، وفي Kotlin
     // تُهيّأ الخصائص بترتيب ظهورها؛ لو بقيت أسفل init لكانت null وقت الاستخدام
     // وأدت إلى NullPointerException عند أول تشغيل.
+    /**
+     * هل فشل بناء جلسة اليوم؟
+     *
+     * بدون هذه الحالة كان الاستثناء يُبتلع في `catch` فتبقى `_session`
+     * فارغة، وشاشة المراجعة تعرض دوّامة **إلى الأبد** بلا أي تفسير —
+     * نفس صنف العطل الذي أبلغ عنه المستخدم في شاشات المحتوى.
+     */
+    private val _sessionFailed = MutableStateFlow(false)
+    val sessionFailed: StateFlow<Boolean> = _sessionFailed.asStateFlow()
+
     private val _session = MutableStateFlow<DailySession?>(null)
 
     /** جلسة اليوم المبنية على بيانات المستخدم الحقيقية. */
@@ -84,12 +96,32 @@ class LearnViewModel @Inject constructor(
     val reviewQueue: StateFlow<List<VocabularyEntity>> = _reviewQueue.asStateFlow()
 
 
+    private val _isReady = MutableStateFlow(false)
+
+    /**
+     * هل انتهى تجهيز البيانات؟
+     *
+     * تفرّق الشاشات بين «جارٍ التحميل» و«لا توجد بيانات».
+     * قبل الإصلاح كانت كل شاشة تعرض دوّامة لمجرد أن القائمة فارغة،
+     * فتدور إلى الأبد إذا كان الجدول فارغاً فعلاً.
+     */
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
+
     init {
         // Collect current language preferences and bind reactive flows
         viewModelScope.launch {
+            // ⚠️ لا تقرأ قبل اكتمال البذر.
+            // كانت هذه الشاشات تقرأ فوراً بينما البذر يجري في HomeViewModel
+            // (أو لم يجرِ أصلاً)، فتقرأ جداول فارغة وتبقى الدوّامة تدور.
+            try {
+                seedManager.ensureSeeded()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             preferencesManager.selectedLanguage.collect { lang ->
                 _currentLanguage.value = lang
                 loadAllDataForLanguage(lang)
+                _isReady.value = true
             }
         }
 
@@ -260,6 +292,7 @@ class LearnViewModel @Inject constructor(
     fun refreshDailySession() {
         viewModelScope.launch {
             try {
+                _sessionFailed.value = false
                 val lang = _currentLanguage.value
                 val states = repository.getReviewStatesOnce(lang)
                 val incomplete = repository.getIncompleteLessonIds(lang)
@@ -283,7 +316,10 @@ class LearnViewModel @Inject constructor(
                     repository.getVocabularyByIds(dueIds)
                 }
             } catch (e: Exception) {
+                // لا نبتلع الفشل صامتين: نُعلم الواجهة كي تعرض رسالة
+                // وزر إعادة محاولة بدل دوّامة أبدية.
                 e.printStackTrace()
+                _sessionFailed.value = true
             }
         }
     }

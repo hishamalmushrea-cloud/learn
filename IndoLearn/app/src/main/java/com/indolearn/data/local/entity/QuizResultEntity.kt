@@ -13,3 +13,13 @@ data class QuizResultEntity(
     val date: Long = System.currentTimeMillis(),
     val isBest: Boolean = false
 )
+
+/**
+ * معرّف وهمي لنتائج الاختبار المختلط (غير المرتبط بدرس بعينه).
+ *
+ * سبب وجوده: كانت شاشة الاختبار السريع تحفظ النتيجة بـ `lessonId = 0`،
+ * وهو رقم سحري يصطدم دلالياً بالدروس الحقيقية — واستعلام
+ * `getResultsForLesson(0)` كان سيخلط نتائج الاختبار العام بدرس ما.
+ * القيمة سالبة فلا يمكن أن تطابق أي معرّف درس حقيقي.
+ */
+const val MIXED_QUIZ_LESSON_ID: Int = -1

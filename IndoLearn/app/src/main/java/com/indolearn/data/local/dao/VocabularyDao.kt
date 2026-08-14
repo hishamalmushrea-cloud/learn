@@ -18,6 +18,9 @@ interface VocabularyDao {
     @Query("SELECT * FROM vocabulary WHERE favorite = 1 AND languageCode = :langCode")
     fun getFavorites(langCode: String): Flow<List<VocabularyEntity>>
 
+    @Query("SELECT COUNT(*) FROM vocabulary")
+    suspend fun countAny(): Int
+
     @Query("SELECT COUNT(*) FROM vocabulary WHERE languageCode = :langCode")
     suspend fun countAll(langCode: String): Int
 

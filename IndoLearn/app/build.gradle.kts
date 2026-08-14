@@ -42,11 +42,21 @@ android {
     buildFeatures {
         compose = true
     }
+    sourceSets {
+        // مخططات Room المُصدَّرة تُستخدم في اختبارات الترحيل
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+// `exportSchema = true` في AppDatabase يتطلب مساراً للتصدير،
+// وإلا حذّر Room (ويفشل البناء في الإعدادات الصارمة).
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {

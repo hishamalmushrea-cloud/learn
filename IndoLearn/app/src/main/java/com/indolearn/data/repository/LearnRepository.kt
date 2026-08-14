@@ -67,28 +67,21 @@ class LearnRepository(private val db: AppDatabase) {
                 lastStudyDate = System.currentTimeMillis()
             )
         )
-        unlockReachedStages(langCode)
+        unlockAllStages()
     }
 
     /**
-     * يفتح المرحلة التالية عند إتمام نسبة كافية من الحالية.
+     * يفتح كل المراحل بلا شرط.
      *
-     * قبل الإصلاح: `unlockStage` مُعرَّفة بلا أي مستدعٍ، فكانت المراحل 2..5
-     * مقفلة إلى الأبد و11 درساً غير قابلة للوصول.
+     * بناءً على طلب صريح من المستخدم: لا تقييد تدريجي — كل الدروس
+     * والمراحل متاحة من اللحظة الأولى.
+     *
+     * تُستدعى عند كل إقلاع لا عند البذر فقط، لأن التثبيتات القديمة
+     * تحمل صفوفاً بـ `isUnlocked = 0` مخزّنة بالفعل في قاعدة البيانات،
+     * وتغيير القيمة الافتراضية في الكود وحده لا يمسّها.
+     * العملية جملة UPDATE واحدة (رخيصة) وخاملة التكرار (idempotent).
      */
-    suspend fun unlockReachedStages(langCode: String, threshold: Double = 0.7) {
-        val stages = db.stageDao().getAllStagesOnce(langCode).sortedBy { it.level }
-        for (stage in stages) {
-            val total = db.lessonDao().countByLevel(stage.level, langCode)
-            if (total == 0) continue
-            val done = db.lessonDao().countCompletedByLevel(stage.level, langCode)
-            if (done.toDouble() / total >= threshold) {
-                stages.firstOrNull { it.level == stage.level + 1 }
-                    ?.takeIf { !it.isUnlocked }
-                    ?.let { db.stageDao().unlockStage(it.id) }
-            }
-        }
-    }
+    suspend fun unlockAllStages() = db.stageDao().unlockAll()
 
     // Lesson details
     suspend fun getLessonById(id: Int) = db.lessonDao().getLessonById(id)
@@ -186,46 +179,36 @@ class LearnRepository(private val db: AppDatabase) {
     suspend fun deleteNote(note: NoteEntity) = db.noteDao().deleteNote(note)
 
     /**
-     * يبذر المحتوى **مرة واحدة فقط**.
+     * يبذر كل المحتوى.
      *
-     * ⚠️ العطل الذي أصلحه هذا الحارس (P0-2):
-     * كانت `seedInitialData()` تُستدعى من `HomeViewModel.init` بلا شرط،
-     * وكل عمليات الإدراج تستخدم `OnConflictStrategy.REPLACE`.
-     * فكان كل فتح للشاشة الرئيسية يُعيد كتابة ~450 صفاً ويمسح:
-     *   - `lessons.completed`  (الدروس المكتملة)
-     *   - `vocabulary.favorite` (المفضلة)
-     *   - `user_progress`       (التقدم بالكامل)
-     * أي أن تقدّم المستخدم كان يُدمَّر في كل تشغيل.
+     * ⚠️ لا تستدعِ هذه مباشرة من ViewModel.
+     * استخدم [com.indolearn.data.repository.SeedManager.ensureSeeded] فهو يضمن:
+     *   - التنفيذ مرة واحدة فقط (قفل يمنع السباق بين ViewModels متعددة),
+     *   - داخل معاملة واحدة (لا حالة "نصف مبذور"),
+     *   - وفحص اكتمال يشمل كل الجداول لا جدول الدروس وحده.
      */
-    suspend fun seedIfNeeded() {
-        if (db.lessonDao().countAny() > 0) return
-        seedInitialData()
-        recomputeProgress("ID")
-    }
-
-    /** يبذر البيانات. عام لأغراض الاختبار؛ الاستخدام العادي عبر [seedIfNeeded]. */
     suspend fun seedInitialData() {
         // Level 0 and Level 1 Lessons (Complete Curriculum)
         val lessons = listOf(
             LessonEntity(1, 0, "التحيات", "Salam", "تعلم التحيات الأساسية", "content1", false),
-            LessonEntity(2, 0, "التعارف", "Perkenalan", "تقديم النفس", "content2", false),
-            LessonEntity(3, 0, "الأرقام 1-10", "Angka 1-10", "تعلم الأرقام", "content3", false),
-            LessonEntity(4, 0, "الأيام", "Hari", "أيام الأسبوع", "content4", false),
-            LessonEntity(5, 0, "الضمائر", "Kata Ganti", "أنا، أنت، هو...", "content5", false),
-            LessonEntity(6, 0, "الأفعال الأساسية", "Kata Kerja Dasar", "makan, minum, pergi...", "content6", false),
-            LessonEntity(7, 0, "النفي", "Negasi", "tidak, bukan...", "content7", false),
-            LessonEntity(8, 0, "السؤال", "Pertanyaan", "apa, siapa, di mana...", "content8", false),
-            LessonEntity(9, 0, "الأرقام المتقدمة", "Angka Lanjut", "sepuluh, dua puluh...", "content9", false),
-            LessonEntity(10, 0, "الوقت والتاريخ", "Waktu & Tanggal", "الساعة واليوم والمستقبل...", "content10", false),
+            LessonEntity(2, 0, "الضمائر", "Kata Ganti", "saya, aku, kamu, Anda...", "content2", false),
+            LessonEntity(3, 0, "تكوين الجملة", "Susunan Kalimat", "فاعل + فعل + مفعول", "content3", false),
+            LessonEntity(4, 0, "الأفعال الأساسية", "Kata Kerja Dasar", "makan, minum, pergi, mau, suka", "content4", false),
+            LessonEntity(5, 0, "النفي", "Negasi", "tidak, bukan, belum, jangan", "content5", false),
+            LessonEntity(6, 0, "السؤال", "Pertanyaan", "apa, siapa, di mana, berapa", "content6", false),
+            LessonEntity(7, 0, "الأرقام", "Angka", "satu, dua, tiga... seratus", "content7", false),
+            LessonEntity(8, 0, "الوقت والتاريخ", "Waktu & Tanggal", "jam berapa, hari ini, besok", "content8", false),
+            LessonEntity(9, 0, "الملكية", "Kepemilikan", "rumah saya, buku kamu", "content9", false),
+            LessonEntity(10, 0, "الصفات", "Kata Sifat", "besar, kecil, bagus, mahal", "content10", false),
             LessonEntity(11, 0, "الأفعال الأساسية 2", "Kata Kerja Dasar 2", "mau, suka, pulang...", "content11", false),
-            LessonEntity(12, 0, "الضمائر المتقدمة", "Kata Ganti Lanjut", "kami, kita, Anda...", "content12", false),
+            LessonEntity(12, 0, "الرغبة والتفضيل", "Mau & Suka", "mau, suka والتعبير عن الرغبة", "content12", false),
             LessonEntity(13, 0, "النفي المتقدم", "Negasi Lanjut", "belum, jangan...", "content13", false),
-            LessonEntity(14, 0, "أدوات الاستفهام 2", "Kata Tanya Lanjut", "kenapa, bagaimana...", "content14", false),
-            LessonEntity(15, 0, "الأرقام المتقدمة 2", "Angka Lanjut 2", "sepuluh, dua puluh...", "content15", false),
-            LessonEntity(16, 0, "الوقت والتاريخ 2", "Waktu Lanjut 2", "الساعة واليوم والمستقبل...", "content16", false),
-            LessonEntity(17, 0, "الملكية", "Kepemilikan", "rumah saya, buku kamu...", "content17", false),
+            LessonEntity(14, 0, "النهي: belum و jangan", "Belum & Jangan", "belum = لم بعد، jangan = لا تفعل", "content14", false),
+            LessonEntity(15, 0, "أدوات الاستفهام 2", "Kata Tanya Lanjut", "apa, siapa, di mana, kenapa, bagaimana", "content15", false),
+            LessonEntity(16, 0, "الأرقام المتقدمة", "Angka Lanjut", "من 1 إلى 100 والعشرات والمئات", "content16", false),
+            LessonEntity(17, 0, "الوقت والتاريخ 2", "Waktu Lanjut", "الساعة وأوقات اليوم", "content17", false),
             LessonEntity(18, 0, "الملكية 2", "Kepemilikan 2", "اختصارات الملكية...", "content18", false),
-            LessonEntity(19, 0, "الصفات", "Kata Sifat", "besar, kecil, bagus...", "content19", false),
+            LessonEntity(19, 0, "الصفات 2", "Kata Sifat 2", "قائمة موسّعة من الصفات المتقابلة", "content19", false),
             LessonEntity(20, 0, "حروف الجر", "Preposisi", "di, ke, dari...", "content20", false),
             LessonEntity(21, 0, "الأسرة", "Keluarga", "ayah, ibu, kakak...", "content21", false),
             LessonEntity(22, 0, "الأشياء اليومية", "Benda", "meja, kursi, buku...", "content22", false),
@@ -253,7 +236,7 @@ class LearnRepository(private val db: AppDatabase) {
         val vocab = listOf(
             VocabularyEntity(1, "halo", "halo", "ها لو", "مرحبا", "Halo, apa kabar?", "مرحبا، كيف حالك؟", "تحيات", 0, true),
             VocabularyEntity(2, "terima kasih", "terima kasih", "تيريما كاسيه", "شكراً", "Terima kasih banyak.", "شكراً جزيلاً.", "تحيات", 0, true),
-            VocabularyEntity(3, "saya", "saya", "سايا", "أنا", "Saya dari Yaman.", "أنا من اليمن.", "تعارف", 0, true),
+            VocabularyEntity(3, "saya", "saya", "سايا", "أنا (رسمي)", "Saya dari Yaman.", "أنا من اليمن.", "ضمائر", 0, true),
             VocabularyEntity(4, "makan", "makan", "ماكان", "يأكل", "Saya makan nasi.", "أنا آكل الأرز.", "أفعال", 0, true),
             VocabularyEntity(5, "minum", "minum", "مينوم", "يشرب", "Saya minum air.", "أنا أشرب الماء.", "أفعال", 0, true),
             VocabularyEntity(6, "tidur", "tidur", "تيدور", "ينام", "Saya mau tidur.", "أريد أن أنام.", "أفعال", 0, true),
@@ -265,6 +248,8 @@ class LearnRepository(private val db: AppDatabase) {
             GrammarEntity(1, "ترتيب الجملة", "Susunan Kalimat", "الفاعل + الفعل + المفعول", "S + V + O", "Saya makan nasi.", 0),
         )
         db.grammarDao().insertAll(grammar)
+        // قواعد الإندونيسية الأساسية — كانت قاعدة واحدة فقط مقابل 5 للتركية
+        db.grammarDao().insertAll(CoreVocabulary.indonesianGrammar)
 
         // Default progress
         db.progressDao().updateProgress(UserProgressEntity())
@@ -371,10 +356,10 @@ class LearnRepository(private val db: AppDatabase) {
         // === Full Curriculum Stages ===
         val stages = listOf(
             StageEntity(1, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "الحروف، النطق، التحيات، التعارف، الأرقام", 0, true),
-            StageEntity(2, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "ترتيب الجملة، النفي، السؤال، الصفات", 1, false),
-            StageEntity(3, "المرحلة 3 — المبتدئ المتقدم", "Tahap 3 - Pemula Lanjut", "الأزمنة، القدرة، المقارنة", 2, false),
-            StageEntity(4, "المرحلة 4 — البادئات واللواحق", "Tahap 4 - Awalan & Akhiran", "me-, ber-, di-, ter-, -kan, -i", 3, false),
-            StageEntity(5, "المرحلة 5 — المتوسط العملي", "Tahap 5 - Menengah Praktis", "محادثات، قراءة، كتابة، مواقف حقيقية", 4, false),
+            StageEntity(2, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "ترتيب الجملة، النفي، السؤال، الصفات", 1, true),
+            StageEntity(3, "المرحلة 3 — المبتدئ المتقدم", "Tahap 3 - Pemula Lanjut", "الأزمنة، القدرة، المقارنة", 2, true),
+            StageEntity(4, "المرحلة 4 — البادئات واللواحق", "Tahap 4 - Awalan & Akhiran", "me-, ber-, di-, ter-, -kan, -i", 3, true),
+            StageEntity(5, "المرحلة 5 — المتوسط العملي", "Tahap 5 - Menengah Praktis", "محادثات، قراءة، كتابة، مواقف حقيقية", 4, true),
         )
         db.stageDao().insertAll(stages)
 
@@ -792,7 +777,7 @@ class LearnRepository(private val db: AppDatabase) {
         // 1. Turkish Stages
         val turkishStages = listOf(
             StageEntity(2001, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "الأبجدية، الأرقام، الألوان، فصول السنة، أيام الأسبوع", 0, true, "TR"),
-            StageEntity(2002, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "الضمائر الشخصية والملكية، لاحقة الجمع، وتركيب الجملة", 1, false, "TR")
+            StageEntity(2002, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "الضمائر الشخصية والملكية، لاحقة الجمع، وتركيب الجملة", 1, true, "TR")
         )
         db.stageDao().insertAll(turkishStages)
 
@@ -863,8 +848,8 @@ class LearnRepository(private val db: AppDatabase) {
                 "Hoş geldin = أهلاً بك • Hoş bulduk = أهلاً بك (رد الزائر)", "تستخدم هذه التحيات يومياً وفي جميع المناسبات الرسمية والودية.", "لا تخلط بين Hoşça kal للمغادر و Güle güle للمستقبل.", "Formal & Casual: sama"),
 
             LessonDetailEntity(208, 208, "ستتعلم أيام الأسبوع وفصول السنة بالتوافق الصوتي.",
-                "أيام الأسبوع السبعة وفصول السنة الأربعة بالتركية ولواحقها المريحة.",
-                "İlkbahar = الربيع • Yaz = الصيف • Sonbahar = الخريف • Kış = الشتاء", "gün = يوم • hafta = أسبوع • mevsim = فصل", "Pazartesi هو أول أيام الأسبوع في تركيا.", "Formal & Casual: sama"),
+                "Pazartesi = الاثنين\nSalı = الثلاثاء\nÇarşamba = الأربعاء\nPerşembe = الخميس\nCuma = الجمعة\nCumartesi = السبت\nPazar = الأحد",
+                "İlkbahar = الربيع • Yaz = الصيف • Sonbahar = الخريف • Kış = الشتاء", "gün = يوم • hafta = أسبوع • mevsim = فصل • Bugün günlerden ne? = ما اليوم؟", "الأسبوع في تركيا يبدأ بـ Pazartesi. وتلاحظ أن Cumartesi = Cuma + ertesi (اليوم التالي للجمعة)، وPazartesi = Pazar + ertesi (اليوم التالي للأحد).", "Formal & Casual: sama"),
 
             LessonDetailEntity(209, 209, "ستتعلم قاعدة السؤال بهل الرباعية التوافق.",
                 "نستخدم اللاحقة (mı, mi, mu, mü) للسؤال بهل بناءً على آخر حرف صوتي في الخبر.",
@@ -961,6 +946,12 @@ class LearnRepository(private val db: AppDatabase) {
         )
         db.vocabularyDao().insertAll(turkishVocab)
 
+        // المفردات الأساسية المفقودة (أيام، أرقام، ضمائر، ألوان، مال،
+        // اتجاهات، جسم، صحة، ملابس) للغتين — انظر CoreVocabulary.kt
+        // كشف tools/audit_content.py أن 72% من المفردات كانت أفعالاً
+        // بينما لا يوجد سوى رقمين وضميرين ولا يوم واحد من أيام الأسبوع.
+        db.vocabularyDao().insertAll(CoreVocabulary.all)
+
         // 5. Turkish Grammar Rules (Expanded with turk_duzenlenmis.md)
         val turkishGrammar = listOf(
             GrammarEntity(2001, "بنية الجملة التركية (SOV)", "Cümle Yapısı", "ترتيب الجملة: فاعل + مفعول به + فعل. الفعل يأتي دائماً في نهاية الجملة خلافاً للإندونيسية.", "S + O + V", "Ben kitap okuyorum. (أنا أقرأ كتاباً)", 0, "TR"),
@@ -988,6 +979,8 @@ class LearnRepository(private val db: AppDatabase) {
         // معرّفاتها تبدأ من 7000 (الإندونيسية 5000) لتجنّب أي تعارض.
         // ==========================================================
         db.casualDao().insertAll(TurkLangContent.expressions)
+        // عبارات التعارف التركية — كانت مفقودة تماماً (انظر CoreVocabulary.kt)
+        db.casualDao().insertAll(CoreVocabulary.turkishIntroductions)
         db.trainingDao().insertAll(TurkLangContent.quizzes)
         db.casualDao().insertScenarios(TurkLangContent.scenarios)
 
