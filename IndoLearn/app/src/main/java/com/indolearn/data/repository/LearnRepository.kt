@@ -2,6 +2,7 @@ package com.indolearn.data.repository
 
 import com.indolearn.data.local.AppDatabase
 import com.indolearn.data.local.entity.*
+import com.indolearn.domain.progress.StudyStreak
 import com.indolearn.domain.srs.Grade
 import com.indolearn.domain.srs.ItemKind
 import com.indolearn.domain.srs.ReviewState
@@ -59,24 +60,21 @@ class LearnRepository(private val db: AppDatabase) {
         val learned = db.reviewStateDao().countLearned(langCode)
 
         val current = db.progressDao().getProgressOnce() ?: UserProgressEntity()
-        val now = System.currentTimeMillis()
-        val day = 86_400_000L
-        val today = now / day
-        val previousDay = if (current.lastStudyDate > 0) current.lastStudyDate / day else -1L
-        val nextStreak = when {
-            !recordStudy -> current.streakDays
-            previousDay == today -> maxOf(1, current.streakDays)
-            previousDay == today - 1 -> maxOf(1, current.streakDays + 1)
-            else -> 1
-        }
+        val streak = if (recordStudy) {
+            StudyStreak.record(
+                currentDays = current.streakDays,
+                lastStudyAt = current.lastStudyDate,
+                now = System.currentTimeMillis()
+            )
+        } else null
         db.progressDao().updateProgress(
             current.copy(
                 completedLessons = completed,
                 totalLessons = totalLessons,
                 learnedWords = learned,
                 totalWords = totalWords,
-                lastStudyDate = if (recordStudy) now else current.lastStudyDate,
-                streakDays = nextStreak
+                lastStudyDate = streak?.lastStudyAt ?: current.lastStudyDate,
+                streakDays = streak?.days ?: current.streakDays
             )
         )
         unlockAllStages()

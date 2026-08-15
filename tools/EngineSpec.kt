@@ -3,6 +3,7 @@ package tools
 import com.indolearn.domain.coach.CoachConfig
 import com.indolearn.domain.coach.DailyCoach
 import com.indolearn.domain.coach.TaskType
+import com.indolearn.domain.progress.StudyStreak
 import com.indolearn.domain.quiz.AnswerEvaluator
 import com.indolearn.domain.srs.Grade
 import com.indolearn.domain.srs.ItemKind
@@ -74,6 +75,22 @@ fun main() {
     }
     check("explicit answer alternatives are accepted") {
         assertTrue("alternative rejected", AnswerEvaluator.isCorrect("لا بأس", "لا مشكلة|لا بأس"))
+    }
+
+    println("\n[Progress] Study streak")
+
+    check("first real activity starts a one-day streak") {
+        assertEq(1, StudyStreak.record(0, 0, T0).days)
+    }
+    check("several activities on one day do not inflate streak") {
+        val first = StudyStreak.record(0, 0, T0)
+        assertEq(1, StudyStreak.record(first.days, first.lastStudyAt, T0 + 60_000).days)
+    }
+    check("activity on the following day increments streak") {
+        assertEq(5, StudyStreak.record(4, T0, T0 + DAY).days)
+    }
+    check("a missed day resets streak") {
+        assertEq(1, StudyStreak.record(9, T0, T0 + 2 * DAY).days)
     }
 
     println("\n[SRS] Spaced Repetition")
