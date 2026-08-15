@@ -26,7 +26,7 @@ fun MistakesScreen(navController: NavController, viewModel: LearnViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🧭 راجع أخطاءك (${mistakes.size})") },
+                title = { Text("📚 سجل الأخطاء والتصحيح (${mistakes.size})") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "رجوع")
@@ -60,11 +60,17 @@ fun MistakesScreen(navController: NavController, viewModel: LearnViewModel) {
             ) {
                 item {
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-                        Text(
-                            "لا تحفظ الجواب فقط: اقرأ سبب الخطأ، ثم قل الإجابة الصحيحة من الذاكرة قبل الانتقال.",
-                            Modifier.padding(16.dp),
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column(Modifier.padding(16.dp)) {
+                            Text(
+                                "لا تحفظ الجواب فقط: اقرأ سبب الخطأ، ثم قل الإجابة الصحيحة من الذاكرة قبل الانتقال.",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            Button(
+                                onClick = { navController.navigate("mistake_review") },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text("🎯 ابدأ نقاط اليوم المستحقة") }
+                        }
                     }
                 }
                 items(mistakes, key = { it.id }) { attempt ->

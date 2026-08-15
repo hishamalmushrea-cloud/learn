@@ -51,7 +51,7 @@ enum class Grade(val score: Int) {
 }
 
 /** نوع العنصر القابل للتعلم — يسمح بجدولة القواعد والجمل، لا الكلمات فقط. */
-enum class ItemKind { WORD, GRAMMAR, SENTENCE, EXPRESSION }
+enum class ItemKind { WORD, GRAMMAR, SENTENCE, EXPRESSION, QUESTION, LESSON, SCENARIO }
 
 /**
  * حالة المراجعة لعنصر واحد. غير قابلة للتغيير (immutable) —

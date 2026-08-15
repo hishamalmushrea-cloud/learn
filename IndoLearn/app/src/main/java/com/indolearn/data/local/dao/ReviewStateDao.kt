@@ -36,7 +36,10 @@ interface ReviewStateDao {
      * عدد العناصر التي "تعلّمها" المستخدم فعلاً.
      * التعريف: أُجيب عليها بنجاح مرة واحدة على الأقل — لا مجرد عرضها على الشاشة.
      */
-    @Query("SELECT COUNT(*) FROM review_states WHERE languageCode = :langCode AND correctReviews > 0")
+    @Query(
+        "SELECT COUNT(*) FROM review_states " +
+            "WHERE languageCode = :langCode AND kind = 'WORD' AND correctReviews > 0"
+    )
     suspend fun countLearned(langCode: String): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

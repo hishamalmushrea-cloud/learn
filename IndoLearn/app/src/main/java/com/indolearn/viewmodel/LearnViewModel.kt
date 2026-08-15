@@ -324,8 +324,9 @@ class LearnViewModel @Inject constructor(
                 _session.value = built
 
                 val dueIds = built.tasks
-                    .filter { it.type != TaskType.NEW_LESSON && it.type != TaskType.SCENARIO_PRACTICE }
-                    .flatMap { it.itemIds }
+                    .flatMap { it.items }
+                    .filter { it.kind == ItemKind.WORD }
+                    .map { it.id }
                 _reviewQueue.value = if (dueIds.isEmpty()) {
                     // لا توجد مراجعات مستحقة ⇒ قدّم عناصر جديدة لم تُدرس بعد.
                     val seen = states.map { it.itemId }.toSet()
@@ -384,6 +385,15 @@ class LearnViewModel @Inject constructor(
                 e.printStackTrace()
             }
         }
+    }
+
+    suspend fun getDueMistakeQuestions(limit: Int = 5): List<TrainingItemEntity> = try {
+        seedManager.ensureSeeded()
+        val language = preferencesManager.selectedLanguage.first()
+        repository.getDueMistakeQuestions(language, limit)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
     }
 
     /** يحفظ نتيجة الاختبار — لم تكن تُحفظ إطلاقاً قبل الإصلاح. */

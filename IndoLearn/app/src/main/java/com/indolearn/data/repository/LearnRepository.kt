@@ -1,8 +1,10 @@
 package com.indolearn.data.repository
 
+import androidx.room.withTransaction
 import com.indolearn.data.local.AppDatabase
 import com.indolearn.data.local.entity.*
 import com.indolearn.domain.progress.StudyStreak
+import com.indolearn.domain.quiz.QuestionReviewScheduler
 import com.indolearn.domain.srs.Grade
 import com.indolearn.domain.srs.ItemKind
 import com.indolearn.domain.srs.ReviewState
@@ -125,14 +127,48 @@ class LearnRepository(private val db: AppDatabase) {
     fun getQuizHistory(lessonId: Int) = db.quizResultDao().getResultsForLesson(lessonId)
 
     // Question-level history: feeds «راجع أخطاءك» instead of keeping only a total score.
-    suspend fun recordQuestionAttempt(attempt: QuestionAttemptEntity) =
-        db.questionAttemptDao().insert(attempt)
+    suspend fun recordQuestionAttempt(attempt: QuestionAttemptEntity) {
+        db.withTransaction {
+            db.questionAttemptDao().insert(attempt)
+            val existing = db.reviewStateDao()
+                .find(attempt.questionId, ItemKind.QUESTION.name, attempt.languageCode)
+                ?.toDomain()
+            // الإجابة الصحيحة من أول مرة لا تُنشئ دين مراجعة. بعد أول خطأ،
+            // كل نجاح/خطأ يعيد جدولة السؤال حتى يثبت فعلاً.
+            if (!attempt.isCorrect || existing != null) {
+                val current = existing
+                    ?: QuestionReviewScheduler.newState(attempt.questionId, attempt.languageCode)
+                val updated = QuestionReviewScheduler.schedule(
+                    state = current,
+                    correct = attempt.isCorrect,
+                    now = attempt.attemptedAt
+                )
+                db.reviewStateDao().upsert(ReviewStateEntity.fromDomain(updated))
+            }
+        }
+    }
 
     fun getRecentMistakes(langCode: String) =
         db.questionAttemptDao().observeRecentMistakes(langCode)
 
     suspend fun clearQuestionHistory(langCode: String) =
         db.questionAttemptDao().clearLanguageHistory(langCode)
+
+    suspend fun getDueMistakeQuestions(
+        langCode: String,
+        limit: Int = 5,
+        now: Long = System.currentTimeMillis()
+    ): List<TrainingItemEntity> {
+        val dueStates = db.reviewStateDao().getDue(langCode, now, 100)
+            .filter { it.kind == ItemKind.QUESTION.name }
+            .sortedWith(compareByDescending<ReviewStateEntity> { it.lapses }
+                .thenBy { if (it.totalReviews == 0) 0.0 else it.correctReviews.toDouble() / it.totalReviews })
+            .take(limit)
+        if (dueStates.isEmpty()) return emptyList()
+        val ids = dueStates.map { it.itemId }
+        val byId = db.trainingDao().getByIds(ids, langCode).associateBy { it.id }
+        return ids.mapNotNull(byId::get)
+    }
 
     // ---------- Spaced repetition ----------
 

@@ -199,6 +199,7 @@ private fun TaskCard(task: CoachTask, navController: NavController) {
     val (emoji, title, route) = when (task.type) {
         TaskType.RECOVER_FORGOTTEN -> Triple("🔴", "استرجاع ما نسيته", "flashcards")
         TaskType.DRILL_WEAK -> Triple("🟠", "تقوية نقاط الضعف", "flashcards")
+        TaskType.REVIEW_MISTAKES -> Triple("🎯", "نقاط تحتاج تثبيت", "mistake_review")
         TaskType.REVIEW_DUE -> Triple("🔵", "مراجعة مستحقة", "flashcards")
         TaskType.SCENARIO_PRACTICE -> Triple(
             "🎭",
