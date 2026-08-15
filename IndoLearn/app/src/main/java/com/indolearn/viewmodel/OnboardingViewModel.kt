@@ -26,8 +26,10 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun completeOnboarding() {
+    fun completeOnboarding(languageCode: String) {
         viewModelScope.launch {
+            // احفظ اللغة قبل إنهاء التهيئة كي لا تومض بيانات لغة أخرى في الرئيسية.
+            preferencesManager.setSelectedLanguage(languageCode)
             preferencesManager.setOnboardingComplete(true)
         }
     }

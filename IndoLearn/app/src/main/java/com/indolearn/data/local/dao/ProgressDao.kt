@@ -19,4 +19,7 @@ interface ProgressDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateProgress(progress: UserProgressEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun initializeIfMissing(progress: UserProgressEntity)
 }

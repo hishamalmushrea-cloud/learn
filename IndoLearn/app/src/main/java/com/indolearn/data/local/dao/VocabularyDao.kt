@@ -32,4 +32,10 @@ interface VocabularyDao {
 
     @Query("UPDATE vocabulary SET favorite = :fav WHERE id = :id")
     suspend fun toggleFavorite(id: Int, fav: Boolean)
+
+    @Query("SELECT id FROM vocabulary WHERE favorite = 1")
+    suspend fun getFavoriteIds(): List<Int>
+
+    @Query("UPDATE vocabulary SET favorite = 1 WHERE id IN (:ids)")
+    suspend fun restoreFavorites(ids: List<Int>)
 }

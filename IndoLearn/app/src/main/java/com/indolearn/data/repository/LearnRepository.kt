@@ -24,7 +24,7 @@ class LearnRepository(private val db: AppDatabase) {
      */
     suspend fun markLessonCompleted(id: Int, langCode: String) {
         db.lessonDao().markCompleted(id)
-        recomputeProgress(langCode)
+        recomputeProgress(langCode, recordStudy = true)
     }
 
     // Vocabulary
@@ -34,6 +34,7 @@ class LearnRepository(private val db: AppDatabase) {
 
     // Grammar
     fun getGrammar(level: Int, langCode: String) = db.grammarDao().getGrammarByLevel(level, langCode)
+    fun getAllGrammar(langCode: String) = db.grammarDao().getAllGrammar(langCode)
 
     // Dialogues
     fun getAllDialogues(langCode: String): Flow<List<DialogueEntity>> = db.dialogueDao().getAllDialogues(langCode)
@@ -51,20 +52,31 @@ class LearnRepository(private val db: AppDatabase) {
      * كانت `UserProgressEntity` تستخدم `totalLessons = 50` و`totalWords = 300`
      * وهما رقمان **خاطئان** (الحقيقي 55 و197)، ولا يتغيران عند إضافة محتوى.
      */
-    suspend fun recomputeProgress(langCode: String) {
+    suspend fun recomputeProgress(langCode: String, recordStudy: Boolean = false) {
         val totalLessons = db.lessonDao().countAll(langCode)
         val completed = db.lessonDao().countCompleted(langCode)
         val totalWords = db.vocabularyDao().countAll(langCode)
         val learned = db.reviewStateDao().countLearned(langCode)
 
         val current = db.progressDao().getProgressOnce() ?: UserProgressEntity()
+        val now = System.currentTimeMillis()
+        val day = 86_400_000L
+        val today = now / day
+        val previousDay = if (current.lastStudyDate > 0) current.lastStudyDate / day else -1L
+        val nextStreak = when {
+            !recordStudy -> current.streakDays
+            previousDay == today -> maxOf(1, current.streakDays)
+            previousDay == today - 1 -> maxOf(1, current.streakDays + 1)
+            else -> 1
+        }
         db.progressDao().updateProgress(
             current.copy(
                 completedLessons = completed,
                 totalLessons = totalLessons,
                 learnedWords = learned,
                 totalWords = totalWords,
-                lastStudyDate = System.currentTimeMillis()
+                lastStudyDate = if (recordStudy) now else current.lastStudyDate,
+                streakDays = nextStreak
             )
         )
         unlockAllStages()
@@ -83,6 +95,8 @@ class LearnRepository(private val db: AppDatabase) {
      */
     suspend fun unlockAllStages() = db.stageDao().unlockAll()
 
+    suspend fun pruneEmptyStages() = db.stageDao().deleteEmptyStages()
+
     // Lesson details
     suspend fun getLessonById(id: Int) = db.lessonDao().getLessonById(id)
     suspend fun getLessonDetail(id: Int) = db.lessonDetailDao().getLessonDetail(id)
@@ -92,20 +106,22 @@ class LearnRepository(private val db: AppDatabase) {
         db.trainingDao().getRandomQuizzes(limit, langCode)
 
     /** يحفظ نتيجة الاختبار — لم تكن تُحفظ إطلاقاً قبل الإصلاح. */
-    suspend fun saveQuizResult(lessonId: Int, score: Int, total: Int) {
+    suspend fun saveQuizResult(lessonId: Int, score: Int, total: Int, langCode: String) {
+        val effectiveLessonId = if (lessonId == MIXED_QUIZ_LESSON_ID && langCode == "TR") -2 else lessonId
         val percentage = if (total == 0) 0 else (score * 100) / total
-        val best = db.quizResultDao().getBestResult(lessonId)
+        val best = db.quizResultDao().getBestResult(effectiveLessonId)
         val isBest = best == null || percentage > best.percentage
-        if (isBest) db.quizResultDao().clearBestFlag(lessonId)
+        if (isBest) db.quizResultDao().clearBestFlag(effectiveLessonId)
         db.quizResultDao().insertResult(
             QuizResultEntity(
-                lessonId = lessonId,
+                lessonId = effectiveLessonId,
                 score = score,
                 totalQuestions = total,
                 percentage = percentage,
                 isBest = isBest
             )
         )
+        recomputeProgress(langCode, recordStudy = true)
     }
 
     fun getQuizHistory(lessonId: Int) = db.quizResultDao().getResultsForLesson(lessonId)
@@ -136,6 +152,8 @@ class LearnRepository(private val db: AppDatabase) {
             ?: ReviewState(itemId = itemId, kind = kind, languageCode = langCode)
         val updated = Sm2Scheduler.schedule(existing, grade, now)
         db.reviewStateDao().upsert(ReviewStateEntity.fromDomain(updated))
+        // التقييم نشاط تعلم حقيقي؛ يسجل الاستمرارية ويحدّث عدد الكلمات.
+        recomputeProgress(langCode, recordStudy = true)
         return updated
     }
 
@@ -188,6 +206,11 @@ class LearnRepository(private val db: AppDatabase) {
      *   - وفحص اكتمال يشمل كل الجداول لا جدول الدروس وحده.
      */
     suspend fun seedInitialData() {
+        // إعادة نشر نسخة محتوى مصححة يجب ألا تمس بيانات المستخدم المضمّنة
+        // مؤقتاً في جداول المحتوى القديمة.
+        val completedLessonIds = db.lessonDao().getCompletedIds()
+        val favoriteWordIds = db.vocabularyDao().getFavoriteIds()
+
         // Level 0 and Level 1 Lessons (Complete Curriculum)
         val lessons = listOf(
             LessonEntity(1, 0, "التحيات", "Salam", "تعلم التحيات الأساسية", "content1", false),
@@ -251,13 +274,13 @@ class LearnRepository(private val db: AppDatabase) {
         // قواعد الإندونيسية الأساسية — كانت قاعدة واحدة فقط مقابل 5 للتركية
         db.grammarDao().insertAll(CoreVocabulary.indonesianGrammar)
 
-        // Default progress
-        db.progressDao().updateProgress(UserProgressEntity())
+        // لا تستبدل التقدم الحالي أثناء تحديث المحتوى.
+        db.progressDao().initializeIfMissing(UserProgressEntity())
 
         // Seed Dialogues
         val dialoguesList = listOf(
-            DialogueEntity(1, "التعارف الأول في جاكرتا", "Perkenalan Pertama di Jakarta", "A: Halo, nama saya Ahmad. Saya dari Yaman.\nB: Halo, saya Siti. Senang bertemu denganmu.\nA: Saya senang juga. Kamu tinggal di mana?\nB: Saya tinggal di Jakarta.", 0),
-            DialogueEntity(2, "المساومة في السوق التقليدي", "Tawar-menawar di Pasar Tradisional", "Penjual: Ke sini dong! Lihat-lihat baju bagus dan murah.\nPembeli: Terima kasih. Baju merah ini berapa harganya?\nPenjual: Itu murah banget, cuma seratus ribu.\nPembeli: Bisa kurang tidak? Delapan puluh ribu saja ya?\nPenjual: Boleh deh, ambil saja!", 0)
+            DialogueEntity(1, "التعارف الأول في جاكرتا", "Perkenalan Pertama di Jakarta", "A: Halo, nama saya Ahmad. Saya dari Yaman. ||| مرحباً، اسمي أحمد وأنا من اليمن.\nB: Halo, saya Siti. Senang bertemu dengan Anda. ||| مرحباً، أنا سيتي. سعيدة بلقائك.\nA: Saya juga senang bertemu dengan Anda. Anda tinggal di mana? ||| وأنا سعيد بلقائك أيضاً. أين تسكنين؟\nB: Saya tinggal di Jakarta. ||| أسكن في جاكرتا.", 0),
+            DialogueEntity(2, "المساومة في السوق التقليدي", "Tawar-menawar di Pasar Tradisional", "Penjual: Silakan, lihat-lihat dulu. Ada baju bagus. ||| البائع: تفضل، ألقِ نظرة. لدينا ملابس جميلة.\nPembeli: Terima kasih. Berapa harga baju merah ini? ||| المشتري: شكراً. كم سعر هذا القميص الأحمر؟\nPenjual: Seratus ribu rupiah. ||| البائع: مئة ألف روبية.\nPembeli: Boleh kurang? Delapan puluh ribu, ya? ||| المشتري: هل يمكن التخفيض؟ ثمانون ألفاً؟\nPenjual: Baik, delapan puluh lima ribu. ||| البائع: حسناً، خمسة وثمانون ألفاً.", 0)
         )
         db.dialogueDao().insertAll(dialoguesList)
 
@@ -355,11 +378,8 @@ class LearnRepository(private val db: AppDatabase) {
 
         // === Full Curriculum Stages ===
         val stages = listOf(
-            StageEntity(1, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "الحروف، النطق، التحيات، التعارف، الأرقام", 0, true),
-            StageEntity(2, "المرحلة 2 — المبتدئ", "Tahap 2 - Pemula", "ترتيب الجملة، النفي، السؤال، الصفات", 1, true),
-            StageEntity(3, "المرحلة 3 — المبتدئ المتقدم", "Tahap 3 - Pemula Lanjut", "الأزمنة، القدرة، المقارنة", 2, true),
-            StageEntity(4, "المرحلة 4 — البادئات واللواحق", "Tahap 4 - Awalan & Akhiran", "me-, ber-, di-, ter-, -kan, -i", 3, true),
-            StageEntity(5, "المرحلة 5 — المتوسط العملي", "Tahap 5 - Menengah Praktis", "محادثات، قراءة، كتابة، مواقف حقيقية", 4, true),
+            StageEntity(1, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "التحيات، الضمائر، الجملة الأساسية، الأرقام والوقت", 0, true),
+            StageEntity(2, "المرحلة 2 — المبتدئ العملي", "Tahap 2 - Pemula Praktis", "الزمن، الأفعال، القدرة، البادئات، المقارنة والمواقف اليومية", 1, true),
         )
         db.stageDao().insertAll(stages)
 
@@ -965,7 +985,7 @@ class LearnRepository(private val db: AppDatabase) {
 
         // 6. Turkish Dialogues
         val turkishDialogues = listOf(
-            DialogueEntity(2001, "التعارف بالتركية", "Tanışma", "A: Merhaba, benim adım Ahmet. Senin adın ne?\nB: Merhaba Ahmet, benim adım Zeynep. Memnun oldum.\nA: Ben de memnun oldum. Nasılsın?\nB: İyiyim, teşekkür ederim. Sen nasılsın?\nA: Ben de iyiyim, sağ ol.", 0, "TR")
+            DialogueEntity(2001, "التعارف بالتركية", "Tanışma", "A: Merhaba, benim adım Ahmet. Senin adın ne? ||| مرحباً، اسمي أحمد. ما اسمك؟\nB: Merhaba Ahmet, benim adım Zeynep. Memnun oldum. ||| مرحباً أحمد، اسمي زينب. تشرفت بلقائك.\nA: Ben de memnun oldum. Nasılsın? ||| وأنا تشرفت بلقائك. كيف حالك؟\nB: İyiyim, teşekkür ederim. Sen nasılsın? ||| أنا بخير، شكراً. وأنت كيف حالك؟\nA: Ben de iyiyim, sağ ol. ||| وأنا بخير أيضاً، شكراً لك.", 0, "TR")
         )
         db.dialogueDao().insertAll(turkishDialogues)
 
@@ -1170,33 +1190,9 @@ class LearnRepository(private val db: AppDatabase) {
                 "لا يوجد فعل 'يكون' منفصل — يُلحق باللاحقة -yim", "قواعد", "TR")
         )
         db.trainingDao().insertAll(turkishTraining)
-    }
-    
-    suspend fun checkAndUpdateStreak() {
-        val currentProgress = db.progressDao().getProgressSync() ?: UserProgressEntity()
-        val currentTime = System.currentTimeMillis()
-        val lastStudyDate = currentProgress.lastStudyDate
 
-        val oneDayMillis = 24 * 60 * 60 * 1000L
-        val lastDay = lastStudyDate / oneDayMillis
-        val currentDay = currentTime / oneDayMillis
-        
-        var newStreak = currentProgress.streakDays
-        if (currentDay - lastDay == 1L) {
-            newStreak += 1
-        } else if (currentDay - lastDay > 1L) {
-            newStreak = 1
-        } else if (lastStudyDate == 0L) {
-            newStreak = 1
-        }
-        
-        if (lastStudyDate == 0L || currentDay > lastDay) {
-            db.progressDao().updateProgress(
-                currentProgress.copy(
-                    lastStudyDate = currentTime,
-                    streakDays = newStreak
-                )
-            )
-        }
+        // عمليات REPLACE أعلاه تنشر التصحيحات، ثم نعيد حقول المستخدم فقط.
+        if (completedLessonIds.isNotEmpty()) db.lessonDao().restoreCompleted(completedLessonIds)
+        if (favoriteWordIds.isNotEmpty()) db.vocabularyDao().restoreFavorites(favoriteWordIds)
     }
 }

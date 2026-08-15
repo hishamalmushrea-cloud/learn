@@ -27,4 +27,12 @@ interface StageDao {
     /** يفتح كل المراحل — لا تقييد تدريجي (قرار المستخدم). */
     @Query("UPDATE stages SET isUnlocked = 1 WHERE isUnlocked = 0")
     suspend fun unlockAll()
+
+    /** يحذف أغلفة مراحل لا يقابل مستواها أي درس فعلي في لغتها. */
+    @Query(
+        "DELETE FROM stages WHERE NOT EXISTS (" +
+            "SELECT 1 FROM lessons WHERE lessons.languageCode = stages.languageCode " +
+            "AND lessons.level = stages.level)"
+    )
+    suspend fun deleteEmptyStages()
 }

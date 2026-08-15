@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -153,7 +154,9 @@ class LearnViewModel @Inject constructor(
 
         grammarJob?.cancel()
         grammarJob = viewModelScope.launch {
-            repository.getGrammar(0, lang).catch { e -> e.printStackTrace() }
+            // شاشة القواعد مسار مرجعي كامل؛ كان ترشيح level=0 يخفي معظم
+            // القواعد (5 من 12 إندونيسية و3 من 5 تركية) بلا وسيلة للوصول.
+            repository.getAllGrammar(lang).catch { e -> e.printStackTrace() }
                 .collect { _grammar.value = it }
         }
 
@@ -236,6 +239,7 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getLessonById(id: Int): LessonEntity? {
         return try {
+            seedManager.ensureSeeded()
             repository.getLessonById(id)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -245,6 +249,7 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getLessonDetail(id: Int): LessonDetailEntity? {
         return try {
+            seedManager.ensureSeeded()
             repository.getLessonDetail(id)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -254,7 +259,10 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getRandomQuizzes(limit: Int = 10): List<TrainingItemEntity> {
         return try {
-            repository.getRandomQuizzes(limit, _currentLanguage.value)
+            seedManager.ensureSeeded()
+            val language = preferencesManager.selectedLanguage.first()
+            _currentLanguage.value = language
+            repository.getRandomQuizzes(limit, language)
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -329,7 +337,6 @@ class LearnViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.recordReview(itemId, kind, _currentLanguage.value, grade)
-                repository.recomputeProgress(_currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -340,7 +347,7 @@ class LearnViewModel @Inject constructor(
     fun saveQuizResult(lessonId: Int, score: Int, total: Int) {
         viewModelScope.launch {
             try {
-                repository.saveQuizResult(lessonId, score, total)
+                repository.saveQuizResult(lessonId, score, total, _currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

@@ -61,8 +61,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                     Text(
                         text = when (step) {
                             0 -> stringResource(R.string.welcome_title)
-                            1 -> stringResource(R.string.level_question)
-                            else -> stringResource(R.string.goal_question)
+                            else -> "ما اللغة التي تريد تعلّمها؟"
                         },
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
@@ -75,8 +74,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                     Text(
                         text = when (step) {
                             0 -> stringResource(R.string.welcome_subtitle)
-                            1 -> stringResource(R.string.level_desc)
-                            else -> stringResource(R.string.goal_desc)
+                            else -> "يمكنك تغيير اللغة لاحقاً من أعلى الصفحة الرئيسية."
                         },
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center
@@ -103,37 +101,21 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                 Text(stringResource(R.string.start_now), style = MaterialTheme.typography.titleMedium)
                             }
                         }
-                        1 -> {
-                            OutlinedButton(onClick = { step++ }, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                                Text(stringResource(R.string.level_beginner))
+                        else -> {
+                            fun finish(languageCode: String) {
+                                viewModel.completeOnboarding(languageCode)
+                                navController.navigate("home") {
+                                    popUpTo("onboarding") { inclusive = true }
+                                }
                             }
-                            OutlinedButton(onClick = { step++ }, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                                Text(stringResource(R.string.level_basic))
-                            }
-                        }
-                        2 -> {
-                            OutlinedButton(
-                                onClick = { 
-                                    viewModel.completeOnboarding()
-                                    navController.navigate("home") {
-                                        popUpTo("onboarding") { inclusive = true }
-                                    }
-                                }, 
+                            Button(
+                                onClick = { finish("ID") },
                                 modifier = Modifier.fillMaxWidth().height(56.dp)
-                            ) {
-                                Text(stringResource(R.string.goal_travel))
-                            }
+                            ) { Text("🇮🇩 الإندونيسية") }
                             OutlinedButton(
-                                onClick = { 
-                                    viewModel.completeOnboarding()
-                                    navController.navigate("home") {
-                                        popUpTo("onboarding") { inclusive = true }
-                                    }
-                                }, 
+                                onClick = { finish("TR") },
                                 modifier = Modifier.fillMaxWidth().height(56.dp)
-                            ) {
-                                Text(stringResource(R.string.goal_work))
-                            }
+                            ) { Text("🇹🇷 التركية") }
                         }
                     }
                 }

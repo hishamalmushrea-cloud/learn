@@ -200,7 +200,11 @@ private fun TaskCard(task: CoachTask, navController: NavController) {
         TaskType.RECOVER_FORGOTTEN -> Triple("🔴", "استرجاع ما نسيته", "flashcards")
         TaskType.DRILL_WEAK -> Triple("🟠", "تقوية نقاط الضعف", "flashcards")
         TaskType.REVIEW_DUE -> Triple("🔵", "مراجعة مستحقة", "flashcards")
-        TaskType.SCENARIO_PRACTICE -> Triple("🎭", "تدريب على موقف واقعي", "casual_interactive")
+        TaskType.SCENARIO_PRACTICE -> Triple(
+            "🎭",
+            "تدريب على موقف واقعي",
+            task.itemIds.firstOrNull()?.let { "scenario/$it" } ?: "scenarios"
+        )
         TaskType.NEW_LESSON -> Triple("🟢", "درس جديد", "lesson/${task.itemIds.firstOrNull() ?: 1}")
     }
 

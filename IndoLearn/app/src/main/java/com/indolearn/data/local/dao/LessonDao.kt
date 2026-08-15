@@ -24,6 +24,12 @@ interface LessonDao {
     @Query("UPDATE lessons SET completed = 1 WHERE id = :id")
     suspend fun markCompleted(id: Int)
 
+    @Query("SELECT id FROM lessons WHERE completed = 1")
+    suspend fun getCompletedIds(): List<Int>
+
+    @Query("UPDATE lessons SET completed = 1 WHERE id IN (:ids)")
+    suspend fun restoreCompleted(ids: List<Int>)
+
     /** الدروس غير المكتملة بالترتيب — يستخدمها المدرب اليومي لاقتراح الدرس التالي. */
     @Query("SELECT * FROM lessons WHERE languageCode = :langCode AND completed = 0 ORDER BY id")
     suspend fun getIncomplete(langCode: String): List<LessonEntity>

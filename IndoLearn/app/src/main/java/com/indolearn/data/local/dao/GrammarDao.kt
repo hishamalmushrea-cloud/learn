@@ -12,6 +12,10 @@ interface GrammarDao {
     @Query("SELECT * FROM grammar WHERE level = :level AND languageCode = :langCode ORDER BY id")
     fun getGrammarByLevel(level: Int, langCode: String): Flow<List<GrammarEntity>>
 
+    /** المسار الرئيسي للقواعد يعرض التسلسل كاملاً، لا المستوى صفر فقط. */
+    @Query("SELECT * FROM grammar WHERE languageCode = :langCode ORDER BY level, id")
+    fun getAllGrammar(langCode: String): Flow<List<GrammarEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(grammar: List<GrammarEntity>)
 }

@@ -3,6 +3,7 @@ package tools
 import com.indolearn.domain.coach.CoachConfig
 import com.indolearn.domain.coach.DailyCoach
 import com.indolearn.domain.coach.TaskType
+import com.indolearn.domain.quiz.AnswerEvaluator
 import com.indolearn.domain.srs.Grade
 import com.indolearn.domain.srs.ItemKind
 import com.indolearn.domain.srs.MasteryState
@@ -59,6 +60,21 @@ fun main() {
     println("=".repeat(66))
     println("IndoLearn — Learning Engine Spec (standalone, no Gradle)")
     println("=".repeat(66))
+
+    println("\n[Quiz] Answer evaluation")
+
+    check("Turkish letters are preserved and matched") {
+        assertTrue("Turkish answer rejected", AnswerEvaluator.isCorrect("  Öğrenciyim! ", "Öğrenciyim"))
+    }
+    check("a substring is never accepted as a full answer") {
+        assertTrue("substring accepted", !AnswerEvaluator.isCorrect("miyor", "Bilmiyorum"))
+    }
+    check("punctuation and repeated spaces are harmless") {
+        assertTrue("normalization failed", AnswerEvaluator.isCorrect("Saya   makan nasi", "Saya makan nasi."))
+    }
+    check("explicit answer alternatives are accepted") {
+        assertTrue("alternative rejected", AnswerEvaluator.isCorrect("لا بأس", "لا مشكلة|لا بأس"))
+    }
 
     println("\n[SRS] Spaced Repetition")
 

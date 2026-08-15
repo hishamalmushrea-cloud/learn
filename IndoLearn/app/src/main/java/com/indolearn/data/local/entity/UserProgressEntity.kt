@@ -24,6 +24,7 @@ data class UserProgressEntity(
     val totalLessons: Int = 0,
     val learnedWords: Int = 0,
     val totalWords: Int = 0,
-    val lastStudyDate: Long = System.currentTimeMillis(),
+    /** صفر يعني أنه لم يُسجّل أي نشاط تعليمي بعد. */
+    val lastStudyDate: Long = 0L,
     val streakDays: Int = 0
 )

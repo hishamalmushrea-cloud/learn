@@ -11,7 +11,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,12 +49,13 @@ class HomeViewModel @Inject constructor(
     /** عدد العناصر المستحقة للمراجعة الآن — يُعرض كشارة في الرئيسية. */
     val dueCount: StateFlow<Int> = _dueCount.asStateFlow()
 
+    private var masteryJob: Job? = null
+
     init {
         viewModelScope.launch {
             try {
                 // بذر ذرّي مضمون مرة واحدة (انظر SeedManager).
                 seedManager.ensureSeeded()
-                repository.recomputeProgress(_currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -65,15 +68,22 @@ class HomeViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            preferencesManager.selectedLanguage.collect { lang ->
+            preferencesManager.selectedLanguage.collectLatest { lang ->
                 _currentLanguage.value = lang
+                // user_progress صف ملخّص واحد؛ أعد حسابه فور تبديل اللغة كي
+                // لا يرى متعلم التركية أرقام الإندونيسية (والعكس).
+                seedManager.ensureSeeded()
+                repository.recomputeProgress(lang)
                 observeMastery(lang)
             }
         }
     }
 
     private fun observeMastery(lang: String) {
-        viewModelScope.launch {
+        // إلغاء مراقبة اللغة السابقة؛ وإلا يستمر Flow القديم في تحديث
+        // الأرقام بعد التبديل فتقفز الواجهة بين اللغتين.
+        masteryJob?.cancel()
+        masteryJob = viewModelScope.launch {
             repository.getReviewStates(lang)
                 .catch { e -> e.printStackTrace() }
                 .collect { states ->
