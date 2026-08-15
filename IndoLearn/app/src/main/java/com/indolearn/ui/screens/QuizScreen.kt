@@ -231,6 +231,7 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                                     onClick = {
                                         isCorrect = option == q.correctAnswer
                                         if (isCorrect) score++
+                                        viewModel.recordQuestionAttempt(q, option, isCorrect)
                                         showFeedback = true
                                     },
                                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -253,6 +254,7 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                             onClick = {
                                 isCorrect = AnswerEvaluator.isCorrect(textAnswer, q.correctAnswer)
                                 if (isCorrect) score++
+                                viewModel.recordQuestionAttempt(q, textAnswer.trim(), isCorrect)
                                 showFeedback = true
                             },
                             modifier = Modifier.fillMaxWidth().height(50.dp),

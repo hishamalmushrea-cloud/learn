@@ -8,6 +8,9 @@ import com.indolearn.data.local.entity.*
 /**
  * قاعدة بيانات التطبيق.
  *
+ * الإصدار 6:
+ *  - أُضيف `QuestionAttemptEntity` لحفظ أخطاء كل سؤال وبناء مراجعة أخطاء فعلية.
+ *
  * الإصدار 5:
  *  - أُضيف `ReviewStateEntity` (محرك التكرار المتباعد الفعلي).
  *  - أُزيل `FlashcardEntity` — كان هيكلاً بلا أي كود يستخدمه، ويدعم المفردات فقط.
@@ -31,9 +34,10 @@ import com.indolearn.data.local.entity.*
         StageEntity::class,
         TrainingItemEntity::class,
         UnitEntity::class,
-        NoteEntity::class
+        NoteEntity::class,
+        QuestionAttemptEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -49,5 +53,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun unitDao(): UnitDao
     abstract fun lessonDetailDao(): LessonDetailDao
     abstract fun quizResultDao(): QuizResultDao
+    abstract fun questionAttemptDao(): QuestionAttemptDao
     abstract fun noteDao(): NoteDao
 }

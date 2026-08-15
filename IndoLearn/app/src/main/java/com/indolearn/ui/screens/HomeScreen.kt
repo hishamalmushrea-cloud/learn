@@ -56,6 +56,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         HomeMenuItem("🃏", "البطاقات", "راجع بالبطاقات ثلاثية الأبعاد", "flashcards", CardPink, OnTertiaryContainerLight),
         HomeMenuItem("🧪", "اختبار سريع", "اختبر مستواك وحصيلتك", "quiz", CardOrange, OnTertiaryContainerLight),
         HomeMenuItem("🔄", "مراجعة اليوم", "كرر وثبت ما تعلمته", "review", CardBlue, OnPrimaryContainerLight),
+        HomeMenuItem("🧭", "راجع أخطاءك", "صحح إجابات الاختبارات السابقة", "mistakes", CardOrange, OnTertiaryContainerLight),
         HomeMenuItem("⭐", "المفضلة", "كلماتك المحفوظة", "favorites", CardGreen, OnSecondaryContainerLight),
         // كانت شاشة "تقدمي" مُعرَّفة في AppNavigation بلا أي مسار يصل إليها.
         HomeMenuItem("📊", "تقدمي", "إحصاءات إتقانك الحقيقية", "progress", CardPurple, OnPrimaryContainerLight),

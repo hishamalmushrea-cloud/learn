@@ -63,6 +63,9 @@ class LearnViewModel @Inject constructor(
     private val _notes = MutableStateFlow<List<NoteEntity>>(emptyList())
     val notes: StateFlow<List<NoteEntity>> = _notes.asStateFlow()
 
+    private val _mistakes = MutableStateFlow<List<QuestionAttemptEntity>>(emptyList())
+    val mistakes: StateFlow<List<QuestionAttemptEntity>> = _mistakes.asStateFlow()
+
     private var lessonsJob: Job? = null
     private var vocabJob: Job? = null
     private var grammarJob: Job? = null
@@ -71,6 +74,7 @@ class LearnViewModel @Inject constructor(
     private var stagesJob: Job? = null
     private var casualJob: Job? = null
     private var scenariosJob: Job? = null
+    private var mistakesJob: Job? = null
 
     // ⚠️ يجب أن تُعرَّف هذه الحقول **قبل** كتلة init.
     // كتلة init تستدعي loadAllDataForLanguage التي تكتب فيها، وفي Kotlin
@@ -190,6 +194,12 @@ class LearnViewModel @Inject constructor(
         scenariosJob = viewModelScope.launch {
             repository.getScenarios(lang).catch { e -> e.printStackTrace() }
                 .collect { _scenarios.value = it }
+        }
+
+        mistakesJob?.cancel()
+        mistakesJob = viewModelScope.launch {
+            repository.getRecentMistakes(lang).catch { e -> e.printStackTrace() }
+                .collect { _mistakes.value = it }
         }
 
         viewModelScope.launch {
@@ -337,6 +347,39 @@ class LearnViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.recordReview(itemId, kind, _currentLanguage.value, grade)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /** يحفظ كل محاولة كي يستطيع المتعلم مراجعة الخطأ نفسه، لا رقماً إجمالياً فقط. */
+    fun recordQuestionAttempt(item: TrainingItemEntity, userAnswer: String, correct: Boolean) {
+        viewModelScope.launch {
+            try {
+                repository.recordQuestionAttempt(
+                    QuestionAttemptEntity(
+                        questionId = item.id,
+                        question = item.question,
+                        userAnswer = userAnswer,
+                        correctAnswer = item.correctAnswer,
+                        explanation = item.explanation,
+                        isCorrect = correct,
+                        questionType = item.type,
+                        category = item.category,
+                        languageCode = _currentLanguage.value
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun clearQuestionHistory() {
+        viewModelScope.launch {
+            try {
+                repository.clearQuestionHistory(_currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

@@ -78,9 +78,13 @@ fun AppNavigation(navController: NavHostController) {
             val learnViewModel: LearnViewModel = hiltViewModel()
             SearchScreen(navController, learnViewModel) 
         }
-        composable("review") { 
+        composable("review") {
             val learnViewModel: LearnViewModel = hiltViewModel()
-            ReviewScreen(navController, learnViewModel) 
+            ReviewScreen(navController, learnViewModel)
+        }
+        composable("mistakes") {
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            MistakesScreen(navController, learnViewModel)
         }
         composable("dialogue") {
             val learnViewModel: LearnViewModel = hiltViewModel()

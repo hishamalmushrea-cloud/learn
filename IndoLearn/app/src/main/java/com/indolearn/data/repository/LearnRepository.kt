@@ -124,6 +124,16 @@ class LearnRepository(private val db: AppDatabase) {
 
     fun getQuizHistory(lessonId: Int) = db.quizResultDao().getResultsForLesson(lessonId)
 
+    // Question-level history: feeds «راجع أخطاءك» instead of keeping only a total score.
+    suspend fun recordQuestionAttempt(attempt: QuestionAttemptEntity) =
+        db.questionAttemptDao().insert(attempt)
+
+    fun getRecentMistakes(langCode: String) =
+        db.questionAttemptDao().observeRecentMistakes(langCode)
+
+    suspend fun clearQuestionHistory(langCode: String) =
+        db.questionAttemptDao().clearLanguageHistory(langCode)
+
     // ---------- Spaced repetition ----------
 
     /** كل حالات المراجعة للغة الحالية، كنماذج domain نقية. */
