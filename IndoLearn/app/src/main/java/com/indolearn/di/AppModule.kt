@@ -130,6 +130,37 @@ object AppModule {
         }
     }
 
+    /** ترحيل إضافي آمن: جدول مستقل لمحاولات الأسئلة، بلا تعديل لجداول المستخدم الحالية. */
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS question_attempts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    questionId INTEGER NOT NULL,
+                    question TEXT NOT NULL,
+                    userAnswer TEXT NOT NULL,
+                    correctAnswer TEXT NOT NULL,
+                    explanation TEXT NOT NULL,
+                    isCorrect INTEGER NOT NULL,
+                    questionType TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    languageCode TEXT NOT NULL,
+                    attemptedAt INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_question_attempts_languageCode_isCorrect_attemptedAt " +
+                    "ON question_attempts (languageCode, isCorrect, attemptedAt)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_question_attempts_questionId_languageCode " +
+                    "ON question_attempts (questionId, languageCode)"
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -138,7 +169,7 @@ object AppModule {
             AppDatabase::class.java,
             "indolearn_db"
         )
-            .addMigrations(MIGRATION_4_5)
+            .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
             // يبقى كشبكة أمان أخيرة للتثبيتات التجريبية القديمة فقط،
             // لكن المسار المعتاد صار ترحيلاً حقيقياً يحفظ البيانات.
             .fallbackToDestructiveMigration()

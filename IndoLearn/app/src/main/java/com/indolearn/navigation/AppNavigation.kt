@@ -78,13 +78,30 @@ fun AppNavigation(navController: NavHostController) {
             val learnViewModel: LearnViewModel = hiltViewModel()
             SearchScreen(navController, learnViewModel) 
         }
-        composable("review") { 
+        composable("review") {
             val learnViewModel: LearnViewModel = hiltViewModel()
-            ReviewScreen(navController, learnViewModel) 
+            ReviewScreen(navController, learnViewModel)
         }
-        composable("dialogue") { 
+        composable("mistakes") {
             val learnViewModel: LearnViewModel = hiltViewModel()
-            DialogueScreen(navController, learnViewModel) 
+            MistakesScreen(navController, learnViewModel)
+        }
+        composable("mistake_review") {
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            MistakeReviewScreen(navController, learnViewModel)
+        }
+        composable("dialogue") {
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            DialogueScreen(navController, learnViewModel)
+        }
+        composable("scenarios") {
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            ScenariosScreen(navController, learnViewModel)
+        }
+        composable("scenario/{id}") { backStackEntry ->
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull()
+            ScenariosScreen(navController, learnViewModel, id)
         }
 
         composable("favorites") { 

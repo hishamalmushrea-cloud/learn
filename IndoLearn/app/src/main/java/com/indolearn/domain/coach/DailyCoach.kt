@@ -25,6 +25,9 @@ enum class TaskType {
     /** تقوية العناصر الضعيفة. */
     DRILL_WEAK,
 
+    /** أسئلة أخطأ فيها المتعلم وحان وقت تثبيتها. */
+    REVIEW_MISTAKES,
+
     /** مراجعة مستحقة عادية. */
     REVIEW_DUE,
 
@@ -40,12 +43,20 @@ enum class TaskType {
  *
  * @param reason سبب مقروء بالعربية يُعرض للمستخدم — الشفافية جزء من التعليم.
  */
+data class LearningItemRef(
+    val id: Int,
+    val kind: ItemKind,
+    val languageCode: String
+)
+
 data class CoachTask(
     val type: TaskType,
-    val itemIds: List<Int>,
+    val items: List<LearningItemRef>,
     val reason: String
 ) {
-    val size: Int get() = itemIds.size
+    val size: Int get() = items.size
+    /** توافق للعرض القديم؛ لا تستخدمه لجلب كيان دون فحص [items.kind]. */
+    val itemIds: List<Int> get() = items.map { it.id }
 }
 
 /**
@@ -77,7 +88,9 @@ data class CoachConfig(
     /** أقصى عدد عناصر ضعيفة في تمرين تقوية واحد. */
     val maxWeakDrill: Int = 8,
     /** عدد الدروس الجديدة المسموح بها يومياً. */
-    val newLessonsPerDay: Int = 1
+    val newLessonsPerDay: Int = 1,
+    /** حد صغير يمنع جلسة الأخطاء من التحول إلى عقوبة. */
+    val maxMistakeReviews: Int = 5
 )
 
 object DailyCoach {
@@ -101,43 +114,66 @@ object DailyCoach {
         val forgotten = states.filter { it.mastery == MasteryState.FORGOTTEN }
         val weak = states.filter { it.mastery == MasteryState.WEAK }
         val mastered = states.count { it.mastery == MasteryState.MASTERED }
+        val sessionLanguage = states.firstOrNull()?.languageCode.orEmpty()
 
         val tasks = mutableListOf<CoachTask>()
         var budget = config.maxSessionItems
+        fun refs(values: List<ReviewState>) = values.map {
+            LearningItemRef(it.itemId, it.kind, it.languageCode)
+        }
 
-        // 1) المنسي أولاً — أعلى قيمة تعليمية، وأسرع ما يُفقد نهائياً.
-        val forgottenDue = forgotten.filter { it.isDue(now) }.take(budget)
+        // 1) أسئلة الخطأ المستحقة: حد صغير ومشجّع، ولا تخلط بمعرّفات الكلمات.
+        val dueQuestions = due
+            .filter { it.kind == ItemKind.QUESTION }
+            .sortedWith(compareByDescending<ReviewState> { it.lapses }.thenBy { it.accuracy })
+            .take(minOf(config.maxMistakeReviews, budget))
+        if (dueQuestions.isNotEmpty()) {
+            budget -= dueQuestions.size
+            tasks += CoachTask(
+                type = TaskType.REVIEW_MISTAKES,
+                items = refs(dueQuestions),
+                reason = "${dueQuestions.size} نقاط اختارها المدرب من محاولاتك السابقة لتثبيتها اليوم."
+            )
+        }
+
+        // 2) المنسي أولاً — أعلى قيمة تعليمية، وأسرع ما يُفقد نهائياً.
+        val forgottenDue = forgotten
+            .filter { it.kind != ItemKind.QUESTION && it.isDue(now) }
+            .take(budget)
         if (forgottenDue.isNotEmpty()) {
             budget -= forgottenDue.size
             tasks += CoachTask(
                 type = TaskType.RECOVER_FORGOTTEN,
-                itemIds = forgottenDue.map { it.itemId },
+                items = refs(forgottenDue),
                 reason = "نسيتَ ${forgottenDue.size} عنصراً كنت تعرفها. استرجاعها الآن أهم من أي شيء آخر."
             )
         }
 
         // 2) العناصر الضعيفة — تحتاج تكراراً مكثفاً لا مجرد عرض.
         val weakDue = weak
-            .filter { it.isDue(now) && it !in forgottenDue }
+            .filter { it.kind != ItemKind.QUESTION && it.isDue(now) && it !in forgottenDue }
             .sortedBy { it.accuracy }
             .take(minOf(config.maxWeakDrill, budget))
         if (weakDue.isNotEmpty()) {
             budget -= weakDue.size
             tasks += CoachTask(
                 type = TaskType.DRILL_WEAK,
-                itemIds = weakDue.map { it.itemId },
+                items = refs(weakDue),
                 reason = "لديك ${weakDue.size} عنصراً ضعيفاً تتكرر فيها أخطاؤك."
             )
         }
 
         // 3) المراجعة المستحقة العادية.
-        val handled = (forgottenDue + weakDue).map { it.itemId }.toSet()
-        val plainDue = due.filter { it.itemId !in handled }.take(budget)
+        val handled = (dueQuestions + forgottenDue + weakDue).map { it.itemId to it.kind }.toSet()
+        val plainDue = due
+            .filter { it.kind != ItemKind.QUESTION }
+            .filter { (it.itemId to it.kind) !in handled }
+            .take(budget)
         if (plainDue.isNotEmpty()) {
             budget -= plainDue.size
             tasks += CoachTask(
                 type = TaskType.REVIEW_DUE,
-                itemIds = plainDue.map { it.itemId },
+                items = refs(plainDue),
                 reason = "${plainDue.size} عنصراً حان موعد مراجعتها اليوم."
             )
         }
@@ -149,7 +185,7 @@ object DailyCoach {
             val newOnes = availableNewLessonIds.take(config.newLessonsPerDay)
             tasks += CoachTask(
                 type = TaskType.NEW_LESSON,
-                itemIds = newOnes,
+                items = newOnes.map { LearningItemRef(it, ItemKind.LESSON, sessionLanguage) },
                 reason = "مراجعاتك تحت السيطرة — يمكنك التقدّم إلى درس جديد."
             )
         }
@@ -158,7 +194,8 @@ object DailyCoach {
         if (availableScenarioIds.isNotEmpty() && tasks.isNotEmpty()) {
             tasks += CoachTask(
                 type = TaskType.SCENARIO_PRACTICE,
-                itemIds = availableScenarioIds.take(1),
+                items = availableScenarioIds.take(1)
+                    .map { LearningItemRef(it, ItemKind.SCENARIO, sessionLanguage) },
                 reason = "طبّق ما راجعته في موقف واقعي."
             )
         }
@@ -166,6 +203,7 @@ object DailyCoach {
         return DailySession(
             tasks = tasks,
             guidance = buildGuidance(
+                mistakes = dueQuestions.size,
                 forgotten = forgottenDue.size,
                 weak = weakDue.size,
                 due = plainDue.size,
@@ -184,6 +222,7 @@ object DailyCoach {
      * الرسالة التوجيهية. تشرح **لماذا** هذه هي خطة اليوم.
      */
     private fun buildGuidance(
+        mistakes: Int,
         forgotten: Int,
         weak: Int,
         due: Int,
@@ -194,7 +233,7 @@ object DailyCoach {
         if (totalTracked == 0) {
             return "أهلاً بك 👋 لم تبدأ بعد. لنبدأ بأول درس ونبني أساسك خطوة بخطوة."
         }
-        if (forgotten == 0 && weak == 0 && due == 0) {
+        if (mistakes == 0 && forgotten == 0 && weak == 0 && due == 0) {
             return if (newAllowed) {
                 "ممتاز ✅ لا توجد مراجعات متأخرة. اليوم وقت مناسب تماماً لدرس جديد."
             } else {
@@ -202,6 +241,7 @@ object DailyCoach {
             }
         }
         val parts = mutableListOf<String>()
+        if (mistakes > 0) parts += "$mistakes نقاط من محاولات سابقة"
         if (forgotten > 0) parts += "$forgotten عنصراً منسياً"
         if (weak > 0) parts += "$weak عنصراً ضعيفاً"
         if (due > 0) parts += "$due عنصراً مستحقاً للمراجعة"

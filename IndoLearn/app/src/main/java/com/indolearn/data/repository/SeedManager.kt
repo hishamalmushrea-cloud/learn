@@ -1,7 +1,9 @@
 package com.indolearn.data.repository
 
+import android.content.Context
 import androidx.room.withTransaction
 import com.indolearn.data.local.AppDatabase
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -40,10 +42,12 @@ import javax.inject.Singleton
  */
 @Singleton
 class SeedManager @Inject constructor(
+    @ApplicationContext context: Context,
     private val db: AppDatabase,
     private val repository: LearnRepository
 ) {
     private val mutex = Mutex()
+    private val seedPreferences = context.getSharedPreferences("content_seed", Context.MODE_PRIVATE)
 
     @Volatile
     private var done = false
@@ -57,10 +61,12 @@ class SeedManager @Inject constructor(
         mutex.withLock {
             if (done) return
             // الفحص داخل القفل: قد يكون منفّذ آخر أنهى البذر أثناء الانتظار.
-            if (isComplete()) {
+            val installedContentVersion = seedPreferences.getInt(KEY_CONTENT_VERSION, 0)
+            if (isComplete() && installedContentVersion >= CONTENT_VERSION) {
                 // التثبيتات القديمة تحمل صفوف مراحل بـ isUnlocked = 0 مخزّنة
                 // بالفعل؛ تغيير القيمة الافتراضية في الكود لا يمسّها.
                 // لذلك نفتحها هنا صراحةً عند كل إقلاع.
+                repository.pruneEmptyStages()
                 repository.unlockAllStages()
                 done = true
                 return
@@ -70,7 +76,10 @@ class SeedManager @Inject constructor(
                 repository.seedInitialData()
             }
             repository.recomputeProgress(DEFAULT_LANGUAGE)
+            repository.pruneEmptyStages()
             repository.unlockAllStages()
+            // لا نحدّث العلامة إلا بعد نجاح المعاملة وكل أعمال التنظيف.
+            seedPreferences.edit().putInt(KEY_CONTENT_VERSION, CONTENT_VERSION).apply()
             done = true
         }
     }
@@ -92,5 +101,8 @@ class SeedManager @Inject constructor(
 
     private companion object {
         const val DEFAULT_LANGUAGE = "ID"
+        const val KEY_CONTENT_VERSION = "content_version"
+        // ارفع الرقم عند تصحيح أو إضافة محتوى ثابت كي يصل للتثبيتات القديمة.
+        const val CONTENT_VERSION = 2
     }
 }

@@ -106,6 +106,9 @@ for sub in ("ui", "navigation", "viewmodel"):
         s = read(p)
         for r in re.findall(r'navigate\(\s*"([^"$]+)', s):
             used.add(r.split("/")[0].rstrip("/"))
+        # المسار قد يُبنى أولاً في متغير ثم يُمرر إلى navigate(route).
+        for r in re.findall(r'"([a-z_]+)/\$(?:\{|[A-Za-z_])', s):
+            used.add(r)
         for r in re.findall(r'HomeMenuItem\([^)]*?"([a-z_]+)",\s*Card', s):
             used.add(r)
 bb = os.path.join(SRC, "ui/components/AnimatedBottomBar.kt")

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -62,6 +63,9 @@ class LearnViewModel @Inject constructor(
     private val _notes = MutableStateFlow<List<NoteEntity>>(emptyList())
     val notes: StateFlow<List<NoteEntity>> = _notes.asStateFlow()
 
+    private val _mistakes = MutableStateFlow<List<QuestionAttemptEntity>>(emptyList())
+    val mistakes: StateFlow<List<QuestionAttemptEntity>> = _mistakes.asStateFlow()
+
     private var lessonsJob: Job? = null
     private var vocabJob: Job? = null
     private var grammarJob: Job? = null
@@ -70,6 +74,7 @@ class LearnViewModel @Inject constructor(
     private var stagesJob: Job? = null
     private var casualJob: Job? = null
     private var scenariosJob: Job? = null
+    private var mistakesJob: Job? = null
 
     // ⚠️ يجب أن تُعرَّف هذه الحقول **قبل** كتلة init.
     // كتلة init تستدعي loadAllDataForLanguage التي تكتب فيها، وفي Kotlin
@@ -153,7 +158,9 @@ class LearnViewModel @Inject constructor(
 
         grammarJob?.cancel()
         grammarJob = viewModelScope.launch {
-            repository.getGrammar(0, lang).catch { e -> e.printStackTrace() }
+            // شاشة القواعد مسار مرجعي كامل؛ كان ترشيح level=0 يخفي معظم
+            // القواعد (5 من 12 إندونيسية و3 من 5 تركية) بلا وسيلة للوصول.
+            repository.getAllGrammar(lang).catch { e -> e.printStackTrace() }
                 .collect { _grammar.value = it }
         }
 
@@ -187,6 +194,12 @@ class LearnViewModel @Inject constructor(
         scenariosJob = viewModelScope.launch {
             repository.getScenarios(lang).catch { e -> e.printStackTrace() }
                 .collect { _scenarios.value = it }
+        }
+
+        mistakesJob?.cancel()
+        mistakesJob = viewModelScope.launch {
+            repository.getRecentMistakes(lang).catch { e -> e.printStackTrace() }
+                .collect { _mistakes.value = it }
         }
 
         viewModelScope.launch {
@@ -236,6 +249,7 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getLessonById(id: Int): LessonEntity? {
         return try {
+            seedManager.ensureSeeded()
             repository.getLessonById(id)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -245,6 +259,7 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getLessonDetail(id: Int): LessonDetailEntity? {
         return try {
+            seedManager.ensureSeeded()
             repository.getLessonDetail(id)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -254,7 +269,10 @@ class LearnViewModel @Inject constructor(
 
     suspend fun getRandomQuizzes(limit: Int = 10): List<TrainingItemEntity> {
         return try {
-            repository.getRandomQuizzes(limit, _currentLanguage.value)
+            seedManager.ensureSeeded()
+            val language = preferencesManager.selectedLanguage.first()
+            _currentLanguage.value = language
+            repository.getRandomQuizzes(limit, language)
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -306,8 +324,9 @@ class LearnViewModel @Inject constructor(
                 _session.value = built
 
                 val dueIds = built.tasks
-                    .filter { it.type != TaskType.NEW_LESSON && it.type != TaskType.SCENARIO_PRACTICE }
-                    .flatMap { it.itemIds }
+                    .flatMap { it.items }
+                    .filter { it.kind == ItemKind.WORD }
+                    .map { it.id }
                 _reviewQueue.value = if (dueIds.isEmpty()) {
                     // لا توجد مراجعات مستحقة ⇒ قدّم عناصر جديدة لم تُدرس بعد.
                     val seen = states.map { it.itemId }.toSet()
@@ -329,18 +348,59 @@ class LearnViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.recordReview(itemId, kind, _currentLanguage.value, grade)
-                repository.recomputeProgress(_currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
+    /** يحفظ كل محاولة كي يستطيع المتعلم مراجعة الخطأ نفسه، لا رقماً إجمالياً فقط. */
+    fun recordQuestionAttempt(item: TrainingItemEntity, userAnswer: String, correct: Boolean) {
+        viewModelScope.launch {
+            try {
+                repository.recordQuestionAttempt(
+                    QuestionAttemptEntity(
+                        questionId = item.id,
+                        question = item.question,
+                        userAnswer = userAnswer,
+                        correctAnswer = item.correctAnswer,
+                        explanation = item.explanation,
+                        isCorrect = correct,
+                        questionType = item.type,
+                        category = item.category,
+                        languageCode = _currentLanguage.value
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun clearQuestionHistory() {
+        viewModelScope.launch {
+            try {
+                repository.clearQuestionHistory(_currentLanguage.value)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    suspend fun getDueMistakeQuestions(limit: Int = 5): List<TrainingItemEntity> = try {
+        seedManager.ensureSeeded()
+        val language = preferencesManager.selectedLanguage.first()
+        repository.getDueMistakeQuestions(language, limit)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        emptyList()
+    }
+
     /** يحفظ نتيجة الاختبار — لم تكن تُحفظ إطلاقاً قبل الإصلاح. */
     fun saveQuizResult(lessonId: Int, score: Int, total: Int) {
         viewModelScope.launch {
             try {
-                repository.saveQuizResult(lessonId, score, total)
+                repository.saveQuizResult(lessonId, score, total, _currentLanguage.value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

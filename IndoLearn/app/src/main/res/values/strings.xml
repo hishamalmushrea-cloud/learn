@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">IndoLearn</string>
     <string name="welcome_title">مرحباً بك في IndoLearn!</string>
-    <string name="welcome_subtitle">رحلتك لإتقان اللغة الإندونيسية تبدأ من هنا.</string>
+    <string name="welcome_subtitle">تعلّم الإندونيسية أو التركية بالعربية، من الأساس إلى مواقف الحياة اليومية.</string>
     <string name="start_now">ابدأ الآن</string>
     <string name="level_question">ما هو مستواك الحالي؟</string>
     <string name="level_desc">سنقوم بتخصيص الدروس بناءً على مستواك.</string>

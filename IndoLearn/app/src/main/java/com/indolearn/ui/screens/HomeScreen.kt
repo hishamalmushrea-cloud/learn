@@ -56,6 +56,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
         HomeMenuItem("🃏", "البطاقات", "راجع بالبطاقات ثلاثية الأبعاد", "flashcards", CardPink, OnTertiaryContainerLight),
         HomeMenuItem("🧪", "اختبار سريع", "اختبر مستواك وحصيلتك", "quiz", CardOrange, OnTertiaryContainerLight),
         HomeMenuItem("🔄", "مراجعة اليوم", "كرر وثبت ما تعلمته", "review", CardBlue, OnPrimaryContainerLight),
+        HomeMenuItem("🎯", "تدريب مخصص لك", "ثبّت النقاط التي أخطأت فيها", "mistakes", CardOrange, OnTertiaryContainerLight),
         HomeMenuItem("⭐", "المفضلة", "كلماتك المحفوظة", "favorites", CardGreen, OnSecondaryContainerLight),
         // كانت شاشة "تقدمي" مُعرَّفة في AppNavigation بلا أي مسار يصل إليها.
         HomeMenuItem("📊", "تقدمي", "إحصاءات إتقانك الحقيقية", "progress", CardPurple, OnPrimaryContainerLight),
@@ -63,7 +64,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
     val otherItems = listOf(
         HomeMenuItem("🎯", "المنهج الكامل", "خريطة طريق التعلم", "curriculum", CardPurple, OnPrimaryContainerLight),
-        HomeMenuItem("🎓", "مدرب اليومية", "سيناريوهات وألعاب تفاعلية", "casual_interactive", CardPink, OnTertiaryContainerLight),
+        HomeMenuItem("🎓", "مدرب اليومية", "ألعاب إنتاج لغوي تفاعلية", "casual_interactive", CardPink, OnTertiaryContainerLight),
+        HomeMenuItem("🎭", "مواقف واقعية", "استمع ومثّل أدوار الحياة اليومية", "scenarios", CardPink, OnTertiaryContainerLight),
         HomeMenuItem("🗣️", "محادثات ناطقة", "حوارات ثنائية مسموعة", "dialogue", CardOrange, OnTertiaryContainerLight),
         HomeMenuItem("📓", "دفتر أفكاري", "مذكراتك اللغوية والشخصية", "notebook", CardBlue, OnPrimaryContainerLight),
         HomeMenuItem("🔍", "البحث", "ابحث عن معاني الكلمات", "search", CardGreen, OnSecondaryContainerLight),
@@ -142,7 +144,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                             Icon(Icons.Default.Star, contentDescription = "Streak", tint = GoldBadge, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "3 أيام",
+                                "${progress.streakDays} ${if (progress.streakDays == 1) "يوم" else "أيام"}",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.Bold
@@ -286,7 +288,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
             // Section: Other
             item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
-                SectionHeader("💼 ريادة الأعمال وبناء الذات")
+                SectionHeader("🧰 التطبيق والمواقف والأدوات")
             }
             items(otherItems) { item ->
                 HomeCard(item) { navController.navigate(item.route) }

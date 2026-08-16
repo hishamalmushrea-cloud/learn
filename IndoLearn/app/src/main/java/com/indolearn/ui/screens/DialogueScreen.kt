@@ -35,6 +35,12 @@ fun DialogueScreen(navController: NavController, viewModel: LearnViewModel) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     var currentSpeed by remember { mutableStateOf(1.0f) }
 
+    // تبديل اللغة قد يقلّص عدد التبويبات (ID=2، TR=1). إبقاء الفهرس
+    // القديم كان يؤدي إلى IndexOutOfBoundsException.
+    LaunchedEffect(currentLanguage, dialogues.size) {
+        if (selectedTabIndex !in dialogues.indices) selectedTabIndex = 0
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             tts.shutdown()
@@ -115,11 +121,11 @@ fun DialogueScreen(navController: NavController, viewModel: LearnViewModel) {
                     }
                 }
 
-                val activeDialogue = dialogues[selectedTabIndex]
-                
+                val activeDialogue = dialogues.getOrElse(selectedTabIndex) { dialogues.first() }
+
                 // Show Subtitle
                 Text(
-                    text = "🇮🇩 ${activeDialogue.titleId}",
+                    text = "${if (currentLanguage == "TR") "🇹🇷" else "🇮🇩"} ${activeDialogue.titleId}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -140,15 +146,27 @@ fun DialogueScreen(navController: NavController, viewModel: LearnViewModel) {
                         if (line.isNotBlank() && line.contains(": ")) {
                             val parts = line.split(": ", limit = 2)
                             val speaker = parts[0].trim()
-                            val text = parts[1].trim()
-
-                            val isA = speaker.lowercase() == "a" || speaker.lowercase() == "penjual"
+                            val payload = parts[1].trim()
+                            val target = payload.substringBefore("|||").trim()
+                            val translation = payload.substringAfter("|||", "").trim()
+                            val normalizedSpeaker = speaker.lowercase()
+                            val isA = normalizedSpeaker in setOf("a", "penjual", "satıcı", "garson")
+                            val speakerLabel = when (normalizedSpeaker) {
+                                "penjual", "satıcı" -> "البائع"
+                                "pembeli", "müşteri" -> "المشتري"
+                                "garson", "pelayan" -> "النادل"
+                                "pelanggan" -> "الزبون"
+                                "a" -> "المتحدث أ"
+                                "b" -> "المتحدث ب"
+                                else -> speaker
+                            }
 
                             DialogueBubble(
-                                speaker = if (isA) "أحمد 🧔" else "سيتي 🧕",
-                                text = text,
+                                speaker = speakerLabel,
+                                text = target,
+                                translation = translation.substringAfter(":", translation).trim(),
                                 isA = isA,
-                                onSpeak = { tts.speak(text, currentSpeed, langCode = currentLanguage) }
+                                onSpeak = { tts.speak(target, currentSpeed, langCode = currentLanguage) }
                             )
                         }
                     }
@@ -162,28 +180,10 @@ fun DialogueScreen(navController: NavController, viewModel: LearnViewModel) {
 fun DialogueBubble(
     speaker: String,
     text: String,
+    translation: String,
     isA: Boolean,
     onSpeak: () -> Unit
 ) {
-    // Simple mock Arabic translations for our seeded dialogues to make it extremely premium!
-    val translation = when (text) {
-        "Halo, nama saya Ahmad. Saya dari Yaman." -> "مرحبا، اسمي أحمد. أنا من اليمن."
-        "Halo, saya Siti. Senang bertemu denganmu." -> "مرحبا، أنا سيتي. سعيدة بلقائك."
-        "Saya senang juga. Kamu tinggal di mana?" -> "أنا سعيد أيضاً. أين تسكنين؟"
-        "Saya tinggal di Jakarta." -> "أنا أسكن في جاكرتا."
-        "Ke sini dong! Lihat-lihat baju bagus dan murah." -> "تعال هنا! تفرج على الملابس الجميلة والرخيصة."
-        "Terima kasih. Baju merah ini berapa harganya?" -> "شكراً لك. هذه القميص الأحمر كم سعره؟"
-        "Itu murah banget, cuma seratus ribu." -> "هذا رخيص جداً، فقط مائة ألف روبية."
-        "Bisa kurang tidak? Delapan puluh ribu saja ya?" -> "هل يمكن تخفيضه؟ ثمانون ألف فقط يا؟"
-        "Boleh deh, ambil saja!" -> "حسنٌ، خذه!"
-        "Merhaba, benim adım Ahmet. Senin adın ne?" -> "مرحباً، اسمي أحمد. ما اسمكِ؟"
-        "Merhaba Ahmet, benim adım Zeynep. Memnun oldum." -> "مرحباً أحمد، اسمي زينب. سررت بلقائكِ."
-        "Ben de memnun oldum. Nasılsın?" -> "وأنا سررت بلقائكِ أيضاً. كيف حالكِ؟"
-        "İyiyim, teşekkür ederim. Sen nasılsın?" -> "بخير، شكراً لكِ. كيف حالكِ أنتِ؟"
-        "Ben de iyiyim, sağ ol." -> "أنا بخير أيضاً، تسلمي."
-        else -> ""
-    }
-
     val bubbleShape = if (isA) {
         RoundedCornerShape(16.dp, 16.dp, 2.dp, 16.dp)
     } else {

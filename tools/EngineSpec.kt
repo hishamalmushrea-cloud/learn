@@ -3,6 +3,9 @@ package tools
 import com.indolearn.domain.coach.CoachConfig
 import com.indolearn.domain.coach.DailyCoach
 import com.indolearn.domain.coach.TaskType
+import com.indolearn.domain.progress.StudyStreak
+import com.indolearn.domain.quiz.AnswerEvaluator
+import com.indolearn.domain.quiz.QuestionReviewScheduler
 import com.indolearn.domain.srs.Grade
 import com.indolearn.domain.srs.ItemKind
 import com.indolearn.domain.srs.MasteryState
@@ -59,6 +62,68 @@ fun main() {
     println("=".repeat(66))
     println("IndoLearn — Learning Engine Spec (standalone, no Gradle)")
     println("=".repeat(66))
+
+    println("\n[Quiz] Answer evaluation")
+
+    check("Turkish letters are preserved and matched") {
+        assertTrue("Turkish answer rejected", AnswerEvaluator.isCorrect("  Öğrenciyim! ", "Öğrenciyim"))
+    }
+    check("a substring is never accepted as a full answer") {
+        assertTrue("substring accepted", !AnswerEvaluator.isCorrect("miyor", "Bilmiyorum"))
+    }
+    check("punctuation and repeated spaces are harmless") {
+        assertTrue("normalization failed", AnswerEvaluator.isCorrect("Saya   makan nasi", "Saya makan nasi."))
+    }
+    check("explicit answer alternatives are accepted") {
+        assertTrue("alternative rejected", AnswerEvaluator.isCorrect("لا بأس", "لا مشكلة|لا بأس"))
+    }
+
+    println("\n[Quiz] Mistake scheduling")
+
+    check("first mistake is due after one day, not immediately repeated") {
+        val q = QuestionReviewScheduler.newState(7, "TR")
+        val next = QuestionReviewScheduler.schedule(q, correct = false, now = T0)
+        assertEq(1, next.intervalDays)
+        assertEq(T0 + DAY, next.dueAt)
+        assertEq(1, next.lapses)
+    }
+    check("correct recovery expands 3, 7, 14 days") {
+        var q = QuestionReviewScheduler.schedule(
+            QuestionReviewScheduler.newState(7, "TR"), false, T0
+        )
+        val intervals = mutableListOf<Int>()
+        repeat(3) {
+            q = QuestionReviewScheduler.schedule(q, true, q.dueAt)
+            intervals += q.intervalDays
+        }
+        assertEq(listOf(3, 7, 14), intervals)
+    }
+    check("another mistake pulls a recovered question back to one day") {
+        var q = QuestionReviewScheduler.schedule(
+            QuestionReviewScheduler.newState(7, "ID"), false, T0
+        )
+        q = QuestionReviewScheduler.schedule(q, true, q.dueAt)
+        q = QuestionReviewScheduler.schedule(q, false, q.dueAt)
+        assertEq(1, q.intervalDays)
+        assertEq(0, q.repetitions)
+        assertEq(2, q.lapses)
+    }
+
+    println("\n[Progress] Study streak")
+
+    check("first real activity starts a one-day streak") {
+        assertEq(1, StudyStreak.record(0, 0, T0).days)
+    }
+    check("several activities on one day do not inflate streak") {
+        val first = StudyStreak.record(0, 0, T0)
+        assertEq(1, StudyStreak.record(first.days, first.lastStudyAt, T0 + 60_000).days)
+    }
+    check("activity on the following day increments streak") {
+        assertEq(5, StudyStreak.record(4, T0, T0 + DAY).days)
+    }
+    check("a missed day resets streak") {
+        assertEq(1, StudyStreak.record(9, T0, T0 + 2 * DAY).days)
+    }
 
     println("\n[SRS] Spaced Repetition")
 
@@ -210,6 +275,25 @@ fun main() {
         val s = DailyCoach.buildSession(states, emptyList(), emptyList(), T0)
         val all = s.tasks.filter { it.type != TaskType.NEW_LESSON && it.type != TaskType.SCENARIO_PRACTICE }.flatMap { it.itemIds }
         assertEq(all.size, all.toSet().size)
+    }
+
+    check("due mistake questions are isolated, capped and typed") {
+        val questions = (1..9).map {
+            ReviewState(
+                itemId = it,
+                kind = ItemKind.QUESTION,
+                languageCode = "ID",
+                dueAt = T0 - DAY,
+                lapses = it,
+                totalReviews = it,
+                correctReviews = 0
+            )
+        }
+        val s = DailyCoach.buildSession(questions, emptyList(), emptyList(), T0)
+        val task = s.tasks.first()
+        assertEq(TaskType.REVIEW_MISTAKES, task.type)
+        assertEq(5, task.size)
+        assertTrue("lost question kind", task.items.all { it.kind == ItemKind.QUESTION })
     }
 
     check("all clear -> encouraging message") {

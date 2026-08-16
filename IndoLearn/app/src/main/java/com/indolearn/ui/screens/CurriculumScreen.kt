@@ -26,6 +26,7 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
     val stages = viewModel.stages.collectAsState().value
     val isReady = viewModel.isReady.collectAsState().value
     val lessonCounts = viewModel.lessonCounts.collectAsState().value
+    val currentLanguage = viewModel.currentLanguage.collectAsState().value
 
     Scaffold(
         topBar = {
@@ -62,14 +63,14 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text(
-                        "خريطة طريق تعلم الإندونيسية",
+                        "خريطة طريق تعلم ${if (currentLanguage == "TR") "التركية" else "الإندونيسية"}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "نهج تعليمي متسلسل ومدروس بعناية ينتقل بك من مستوى الصفر المطلق إلى مرحلة الطلاقة والمحادثة اليومية الحرة.",
+                        "مسار متدرج من الصفر إلى الأساس العملي. ابدأ بالمرحلة الأولى، وطبّق كل درس في البطاقات والمواقف الواقعية قبل الانتقال.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )

@@ -26,6 +26,9 @@ echo "==> compiling domain + spec"
 kotlinc \
   "$ROOT/IndoLearn/app/src/main/java/com/indolearn/domain/srs/SpacedRepetition.kt" \
   "$ROOT/IndoLearn/app/src/main/java/com/indolearn/domain/coach/DailyCoach.kt" \
+  "$ROOT/IndoLearn/app/src/main/java/com/indolearn/domain/progress/StudyStreak.kt" \
+  "$ROOT/IndoLearn/app/src/main/java/com/indolearn/domain/quiz/AnswerEvaluator.kt" \
+  "$ROOT/IndoLearn/app/src/main/java/com/indolearn/domain/quiz/QuestionReviewScheduler.kt" \
   "$ROOT/tools/EngineSpec.kt" \
   -include-runtime -d "$OUT" 2>&1 \
   | grep -iv 'warning\|restricted\|deprecated\|sun\.misc\|consider reporting\|native-access' || true

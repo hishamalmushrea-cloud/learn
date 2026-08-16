@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.indolearn.data.local.entity.MIXED_QUIZ_LESSON_ID
 import com.indolearn.data.local.entity.TrainingItemEntity
+import com.indolearn.domain.quiz.AnswerEvaluator
 import com.indolearn.ui.theme.*
 import com.indolearn.viewmodel.LearnViewModel
 
@@ -230,6 +231,7 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                                     onClick = {
                                         isCorrect = option == q.correctAnswer
                                         if (isCorrect) score++
+                                        viewModel.recordQuestionAttempt(q, option, isCorrect)
                                         showFeedback = true
                                     },
                                     modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -250,10 +252,9 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                         Spacer(Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                val cleanUser = textAnswer.trim().lowercase().replace(Regex("[^a-z0-9أ-ي ]"), "")
-                                val cleanCorrect = q.correctAnswer.trim().lowercase().replace(Regex("[^a-z0-9أ-ي ]"), "")
-                                isCorrect = cleanUser == cleanCorrect || (cleanCorrect.contains(cleanUser) && cleanUser.length > 3)
+                                isCorrect = AnswerEvaluator.isCorrect(textAnswer, q.correctAnswer)
                                 if (isCorrect) score++
+                                viewModel.recordQuestionAttempt(q, textAnswer.trim(), isCorrect)
                                 showFeedback = true
                             },
                             modifier = Modifier.fillMaxWidth().height(50.dp),
