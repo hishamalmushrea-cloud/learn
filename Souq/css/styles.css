@@ -409,6 +409,7 @@ blockquote p{color:var(--text-soft)}
 .badge.rose{background:rgba(225,29,72,.1);color:var(--rose)}
 .badge.green{background:rgba(22,163,74,.12);color:var(--green)}
 .badge.purple{background:rgba(124,58,237,.12);color:var(--purple)}
+.badge.amber{background:rgba(245,158,11,.15);color:var(--amber)}
 
 /* بطاقة العبارة (قاعدة العبارات) */
 .phrase-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:var(--shadow);border-right:4px solid var(--teal-600)}

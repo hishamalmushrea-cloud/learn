@@ -161,6 +161,75 @@ def assign_function(p):
     return ''
 
 
+ML_LANGS = [
+    {'code': 'tr', 'name': 'التركية', 'flag': '🇹🇷', 'color': 'c-blue'},
+    {'code': 'id', 'name': 'الإندونيسية', 'flag': '🇮🇩', 'color': 'c-green'},
+    {'code': 'tg', 'name': 'الطاجيكية', 'flag': '🇹🇯', 'color': 'c-rose'},
+    {'code': 'fr', 'name': 'الفرنسية', 'flag': '🇫🇷', 'color': 'c-purple'},
+    {'code': 'en', 'name': 'الإنجليزية', 'flag': '🇬🇧', 'color': 'c-orange'},
+]
+ML_LANG_FILE = {'turki': 'tr', 'indunisi': 'id', 'tajiki': 'tg', 'faransi': 'fr', 'inglizi': 'en'}
+ML_ROLE = {
+    '00-manhaj': 'manhaj',
+    '05-muqarana': 'compare',
+    '06-qawalib': 'templates',
+    '07-hiwarat': 'dialogues',
+    '08-qamus': 'dictionary',
+    '09-tahthir-wa-masadir': 'warnings',
+    '10-tadrib': 'training',
+    'README': 'about',
+}
+ML_ROLE_ICON = {'main': '🌐', 'manhaj': '🧭', 'compare': '🔁', 'templates': '📋',
+                'dialogues': '💬', 'dictionary': '🔤', 'warnings': '⚠️', 'training': '🎯', 'about': 'ℹ️'}
+
+
+def read_ml_docs():
+    """يقرأ ملفات الموسوعة متعددة اللغات (markdown)."""
+    docs = []
+    base = os.path.join(SRC, 'multilingual')
+    for path in sorted(glob.glob(os.path.join(base, '*.md'))):
+        fn = os.path.basename(path)
+        stem = fn[:-3]
+        if stem in ('_gen_csv',):
+            continue
+        with open(path, encoding='utf-8') as f:
+            raw = f.read()
+        title = stem
+        for line in raw.splitlines():
+            if line.startswith('# '):
+                title = line[2:].strip()
+                break
+        lang = 'all'
+        role = 'doc'
+        for kw, code in ML_LANG_FILE.items():
+            if kw in stem:
+                lang = code
+                role = 'main'
+                break
+        if role != 'main':
+            role = ML_ROLE.get(stem, 'doc')
+        icon = ML_ROLE_ICON.get(role, '📄')
+        color = 'c-slate'
+        if role == 'main':
+            lo = next((l for l in ML_LANGS if l['code'] == lang), None)
+            if lo:
+                icon = lo['flag']
+                color = lo['color']
+        docs.append({'id': 'ml-' + stem, 'file': fn, 'lang': lang, 'role': role,
+                     'title': title, 'label': title, 'icon': icon, 'color': color, 'raw': raw})
+    return docs
+
+
+def read_ml_phrases():
+    path = os.path.join(SRC, 'multilingual', 'phrases-ml.csv')
+    out = []
+    with open(path, encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            out.append({k: (row.get(k) or '').strip() for k in reader.fieldnames})
+    return out
+
+
 def main():
     chapters = read_chapters()
     about = read_about()
@@ -170,6 +239,10 @@ def main():
     functions = read_functions(chapters)
     for f in functions:
         f["count"] = sum(1 for p in phrases if p.get("func") == f["code"])
+
+    ml_docs = read_ml_docs()
+    ml_phrases = read_ml_phrases()
+    ml_counts = {l["code"]: sum(1 for p in ml_phrases if p.get("targetLanguage") == l["code"]) for l in ML_LANGS}
 
     countries = sorted({p["country"] for p in phrases if p["country"]})
     dialects = sorted({p["dialect"] for p in phrases if p["dialect"]})
@@ -186,6 +259,9 @@ def main():
         "dialectsCount": len(dialects),
         "situationsCount": len(situations),
         "functionsCount": len(functions),
+        "mlPhrasesCount": len(ml_phrases),
+        "mlLanguages": [l["name"] for l in ML_LANGS],
+        "mlLangCounts": ml_counts,
         "countries": countries,
         "dialects": dialects,
         "situations": situations,
@@ -208,6 +284,10 @@ def main():
     out.append("")
     out.append("const FUNCTIONS = " + json.dumps(functions, ensure_ascii=False, indent=1) + ";")
     out.append("")
+    out.append("const ML_LANGS = " + json.dumps(ML_LANGS, ensure_ascii=False, indent=1) + ";")
+    out.append("const ML_DOCS = " + json.dumps(ml_docs, ensure_ascii=False, indent=1) + ";")
+    out.append("const ML_PHRASES = " + json.dumps(ml_phrases, ensure_ascii=False, indent=1) + ";")
+    out.append("")
     out.append("const PHRASES = " + json.dumps(phrases, ensure_ascii=False, indent=1) + ";")
     out.append("")
 
@@ -219,6 +299,7 @@ def main():
     print(f"   الفصول: {len(chapters)}")
     print(f"   العبارات: {len(phrases)}")
     print(f"   الدول/المناطق: {len(countries)} | اللهجات: {len(dialects)} | المواقف: {len(situations)}")
+    print(f"   الوثائق متعددة اللغات: {len(ml_docs)} | العبارات المتعددة اللغات: {len(ml_phrases)}")
     print(f"   الحجم: {os.path.getsize(OUT)//1024} KB")
 
 if __name__ == "__main__":

@@ -20,6 +20,7 @@
   let theme = store.get('souq_theme','light');
   let favorites = store.get('souq_favs',[]);
   let activeFunc='';
+  let currentMlLang='';
 
   /* ---------- شاشة البداية ---------- */
   window.addEventListener('load', ()=>{
@@ -154,6 +155,11 @@
     html+=navItem('phrases','🔎','قاعدة العبارات','c-blue');
     html+=navItem('functions','🗂️','التصنيف الوظيفي','c-teal');
     html+=navItem('search','🔍','بحث شامل','c-purple');
+    html+='<li class="nav-label">🌐 لغات متعددة</li>';
+    html+=navItem('languages','🌐','اللغات (نظرة عامة)','c-teal');
+    html+=navItem('mlphrases','🔎','قاعدة العبارات المتعددة','c-blue');
+    html+=navItem('mlcompare','🔁','مقارنة الوظائف','c-purple');
+    ML_DOCS.forEach(d=>{ html+='<li><button class="nav-item" data-route="'+d.id+'"><span class="ni-num '+d.color+'" style="color:#fff">'+d.icon+'</span><span>'+esc(d.label)+'</span></button></li>'; });
     html+=navItem('about','ℹ️','عن الموسوعة','c-teal');
     html+=navItem('favorites','⭐','المفضلة','c-amber');
     list.innerHTML=html;
@@ -234,7 +240,7 @@
   /* ============================================================
      التوجيه (Routing)
      ============================================================ */
-  const ROUTES=['home','chapters','phrases','about','favorites','functions','search'].concat(CHAPTERS.map(c=>c.id));
+  const ROUTES=['home','chapters','phrases','about','favorites','functions','search','languages','mlphrases','mlcompare'].concat(CHAPTERS.map(c=>c.id), ML_DOCS.map(d=>d.id));
   const isChapter = id => CHAPTERS.some(c=>c.id===id);
 
   function route(){
@@ -243,6 +249,7 @@
     const params=new URLSearchParams(parts[1]||'');
     currentRoute = ROUTES.includes(clean)?clean:'home';
     activeFunc = currentRoute==='phrases' ? (params.get('func')||'') : '';
+    currentMlLang = currentRoute==='mlphrases' ? (params.get('lang')||'') : '';
     updateActiveNav();
     render(currentRoute);
     window.scrollTo({top:0});
@@ -253,9 +260,10 @@
     $$('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.route===currentRoute));
     let tab = currentRoute==='phrases'?'phrases':(currentRoute==='chapters'||isChapter(currentRoute))?'chapters':'home';
     $$('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.route===tab));
-    const map={home:SOUQ_META.appName, chapters:'أقسام الموسوعة', phrases:'قاعدة العبارات', about:'عن الموسوعة', favorites:'المفضلة', functions:'التصنيف الوظيفي', search:'البحث الشامل'};
+    const map={home:SOUQ_META.appName, chapters:'أقسام الموسوعة', phrases:'قاعدة العبارات', about:'عن الموسوعة', favorites:'المفضلة', functions:'التصنيف الوظيفي', search:'البحث الشامل', languages:'اللغات', mlphrases:'قاعدة العبارات المتعددة', mlcompare:'مقارنة الوظائف'};
     let title=map[currentRoute];
     if(!title){ const ch=CHAPTERS.find(c=>c.id===currentRoute); title=ch?ch.label:SOUQ_META.appName; }
+    if(!title){ const doc=ML_DOCS.find(d=>d.id===currentRoute); title=doc?doc.title:SOUQ_META.appName; }
     $('#sectionTitle').textContent=title;
   }
 
@@ -263,9 +271,12 @@
     const c=$('#content');
     const map={home:renderHome, chapters:renderChapters, phrases:renderPhrases, about:renderAbout, favorites:renderFavorites, functions:renderFunctions, search:renderSearch};
     if(isChapter(route)){ c.innerHTML=renderChapter(route); }
+    else if(ML_DOCS.some(d=>d.id===route)){ c.innerHTML=renderMlDoc(route); }
     else { c.innerHTML=(map[route]||renderHome)(); }
     if(route==='phrases') bindPhrases();
     if(route==='search') bindSearch();
+    if(route==='mlphrases') bindMlPhrases();
+    if(route==='mlcompare') bindMlCompare();
   }
 
   /* ============================================================
@@ -487,16 +498,25 @@
       const chRes=CHAPTERS.map(c=>({c,idx:c.raw.toLowerCase().indexOf(q)})).filter(x=>x.idx>=0);
       if(chRes.length){
         total+=chRes.length;
-        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">📘 الأقسام ('+chRes.length+')</h3>';
-        html+=chRes.map(({c})=>{
+        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">📘 أقسام الموسوعة العربية ('+chRes.length+')</h3>';
+        html+=chRes.slice(0,40).map(({c})=>{
           const idx=c.raw.toLowerCase().indexOf(q);
           const start=Math.max(0,idx-40);
           const snip=c.raw.substring(start,start+120).replace(/\n+/g,' ').replace(/\*\*/g,'').replace(/[#>*|]/g,'');
           return '<button class="section-tile" data-go="'+c.id+'" style="text-align:right;align-items:flex-start">'+
-            '<span class="ic '+c.color+'">'+c.icon+'</span>'+
-            '<span class="t">'+esc(c.label)+'</span>'+
-            '<span class="n">…'+esc(snip)+'…</span>'+
-          '</button>';
+            '<span class="ic '+c.color+'">'+c.icon+'</span><span class="t">'+esc(c.label)+'</span><span class="n">…'+esc(snip)+'…</span></button>';
+        }).join('');
+      }
+      const mlRes=ML_DOCS.map(d=>({d,idx:d.raw.toLowerCase().indexOf(q)})).filter(x=>x.idx>=0);
+      if(mlRes.length){
+        total+=mlRes.length;
+        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🌐 الموسوعة متعددة اللغات ('+mlRes.length+')</h3>';
+        html+=mlRes.slice(0,40).map(({d})=>{
+          const idx=d.raw.toLowerCase().indexOf(q);
+          const start=Math.max(0,idx-40);
+          const snip=d.raw.substring(start,start+120).replace(/\n+/g,' ').replace(/\*\*/g,'').replace(/[#>*|]/g,'');
+          return '<button class="section-tile" data-go="'+d.id+'" style="text-align:right;align-items:flex-start">'+
+            '<span class="ic '+d.color+'">'+d.icon+'</span><span class="t">'+esc(d.label)+'</span><span class="n">…'+esc(snip)+'…</span></button>';
         }).join('');
       }
     }
@@ -504,9 +524,14 @@
       const phRes=PHRASES.filter(p=>(p.phrase+' '+p.msa+' '+p.notes+' '+p.situation+' '+p.country+' '+p.dialect).toLowerCase().includes(q));
       if(phRes.length){
         total+=phRes.length;
-        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🔤 العبارات ('+phRes.length+')</h3>';
-        html+=phRes.slice(0,60).map(phraseCard).join('');
-        if(phRes.length>60) html+='<p style="text-align:center;color:var(--text-mute);padding:10px">وهناك '+(phRes.length-60)+' نتيجة أخرى — استخدم «قاعدة العبارات» للفلترة الكاملة.</p>';
+        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🔤 العبارات العربية ('+phRes.length+')</h3>';
+        html+=phRes.slice(0,40).map(phraseCard).join('');
+      }
+      const mlpRes=ML_PHRASES.filter(p=>(p.originalText+' '+p.arabic+' '+p.arabicTranslation+' '+p.arabicPronunciation+' '+p.country+' '+p.situation+' '+p.category).toLowerCase().includes(q));
+      if(mlpRes.length){
+        total+=mlpRes.length;
+        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🌐 العبارات المتعددة اللغات ('+mlpRes.length+')</h3>';
+        html+=mlpRes.slice(0,40).map(mlPhraseCard).join('');
       }
     }
     const cnt=$('#gsCount'); if(cnt) cnt.textContent=total+' نتيجة لـ «'+q+'»';
@@ -555,6 +580,150 @@
     const acc=e.target.closest('.acc-head');
     if(acc){ acc.parentElement.classList.toggle('open'); return; }
   });
+
+  /* ============================================================
+     القسم متعدد اللغات (Languages)
+     ============================================================ */
+  function renderLanguages(){
+    const langCards = ML_LANGS.map(l=>{
+      const doc = ML_DOCS.find(d=>d.lang===l.code && d.role==='main');
+      const cnt = SOUQ_META.mlLangCounts[l.code]||0;
+      return '<button class="section-tile" data-go="'+(doc?doc.id:'#')+'">'+
+        '<span class="ic '+l.color+'">'+l.flag+'</span>'+
+        '<span class="t">'+esc(l.name)+'</span>'+
+        '<span class="n">'+cnt+' عبارة</span>'+
+      '</button>';
+    }).join('');
+    const cross=[
+      {id:'mlcompare', icon:'🔁', c:'c-purple', t:'مقارنة الوظائف', n:'عبر اللغات'},
+      {id:'mlphrases', icon:'🔎', c:'c-blue', t:'قاعدة العبارات المتعددة', n:SOUQ_META.mlPhrasesCount+' عبارة'},
+      {id:'ml-05-muqarana', icon:'🔁', c:'c-slate', t:'جداول المقارنة', n:'الوظيفة × ٦ لغات'},
+      {id:'ml-07-hiwarat', icon:'💬', c:'c-slate', t:'حوارات متعددة اللغات', n:'نفس الموقف'},
+      {id:'ml-08-qamus', icon:'🔤', c:'c-slate', t:'قاموس مشترك', n:'كلمات وأنواع محلات'},
+      {id:'ml-06-qawalib', icon:'📋', c:'c-slate', t:'قوالب جاهزة', n:'قابلة لإعادة الاستخدام'},
+      {id:'ml-09-tahthir-wa-masadir', icon:'⚠️', c:'c-slate', t:'محاذير ومصادر', n:'ما يحتاج تحققاً'},
+      {id:'ml-10-tadrib', icon:'🎯', c:'c-slate', t:'تمارين مواقف', n:'أدوار ولعب'},
+      {id:'ml-00-manhaj', icon:'🧭', c:'c-slate', t:'المنهج', n:'سلّم الثقة والنطق'},
+      {id:'ml-README', icon:'ℹ️', c:'c-slate', t:'عن الموسوعة الموازية', n:'المنهجية'}
+    ];
+    const crossHtml=cross.map(q=>'<button class="section-tile" data-go="'+q.id+'"><span class="ic '+q.c+'">'+q.icon+'</span><span class="t">'+esc(q.t)+'</span><span class="n">'+esc(q.n)+'</span></button>').join('');
+    return '<div class="sec-intro">موسوعة لغة السوق موازية بخمس لغات: التركية، الإندونيسية، الطاجيكية، الفرنسية، والإنجليزية — معادلات وظيفية وثقافية لا ترجمة حرفية. '+SOUQ_META.mlPhrasesCount+' عبارة أصلية مع ترجمتها ونطقها.</div>'+
+      '<div class="sec-intro">اللغات</div>'+
+      '<div class="section-grid">'+langCards+'</div>'+
+      '<div class="sec-intro">مواد مشتركة وأدوات</div>'+
+      '<div class="section-grid">'+crossHtml+'</div>';
+  }
+
+  function renderMlDoc(id){
+    const d=ML_DOCS.find(x=>x.id===id);
+    if(!d) return renderLanguages();
+    const lm = ML_LANGS.find(l=>l.code===d.lang);
+    const langBadge = lm? '<span class="badge gold">'+lm.flag+' '+esc(lm.name)+'</span>' : '';
+    const openBtn = (d.role==='main' && d.lang!=='all') ? '<div class="filter-row" style="margin-top:14px"><button class="btn-primary ghost" data-go="mlphrases?lang='+d.lang+'" style="flex:1">تصفّح عبارات هذه اللغة</button></div>' : '';
+    return '<div class="chapter-head"><div style="display:flex;align-items:center"><span class="ch-num">'+d.icon+'</span><div><h1>'+esc(d.title)+'</h1><p>'+ (lm?esc(lm.name):'مادة مشتركة') +'</p></div></div></div>'+
+      (langBadge?'<div style="margin:10px 0">'+langBadge+'</div>':'')+
+      mdRender(d.raw)+
+      openBtn;
+  }
+
+  function mlPhraseCard(p){
+    const lm = ML_LANGS.find(l=>l.code===p.targetLanguage) || {flag:'🌐',name:''};
+    const b=(t,cls)=> t? '<span class="badge '+(cls||'')+'">'+esc(t)+'</span>' : '';
+    const arabicTxt = p.noDirectArabic==='yes' ? '— لا مقابل عربي مباشر —' : (p.arabic||'');
+    return '<div class="phrase-card" data-pid="'+esc(p.id)+'">'+
+      '<div class="phrase-main">'+esc(p.originalText)+'</div>'+
+      (arabicTxt? '<div class="phrase-msa"><b>العربية:</b> '+esc(arabicTxt)+'</div>' : '')+
+      (p.arabicTranslation? '<div class="phrase-msa"><b>المعنى:</b> '+esc(p.arabicTranslation)+'</div>' : '')+
+      (p.arabicPronunciation? '<div class="phrase-msa"><b>النطق:</b> '+esc(p.arabicPronunciation)+'</div>' : '')+
+      '<div class="phrase-meta">'+
+        b(lm.flag+' '+lm.name,'gold')+b(p.category,'teal')+b(p.country,'blue')+b(p.situation,'purple')+b(p.register)+b(p.frequency,'rose')+
+        (p.noDirectArabic==='yes'?b('بلا مقابل عربي','amber'):'')+
+      '</div>'+
+      (p.culturalNotes? '<div class="phrase-notes"><b>ملاحظات ثقافية:</b> '+esc(p.culturalNotes)+'</div>' : '')+
+    '</div>';
+  }
+
+  function renderMlPhrases(){
+    const cats=[...new Set(ML_PHRASES.map(p=>p.category))].sort();
+    const countries=[...new Set(ML_PHRASES.map(p=>p.country).filter(Boolean))].sort();
+    const opt=arr=>'<option value="">الكل</option>'+arr.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    const langOpt='<option value="">كل اللغات</option>'+ML_LANGS.map(l=>'<option value="'+l.code+'">'+l.flag+' '+esc(l.name)+'</option>').join('');
+    return '<div class="sec-intro">قاعدة بيانات متعددة اللغات فيها <b>'+SOUQ_META.mlPhrasesCount+'</b> عبارة أصلية ('+ML_LANGS.map(l=>l.flag+esc(l.name)).join('، ')+') مع ترجمتها ومعناها ونطقها التقريبي. ابحث وصفِّ.</div>'+
+      '<div class="filter-bar">'+
+        '<div class="search-box" style="margin-bottom:0"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 10-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg><input id="mlSearch" type="search" placeholder="ابحث في العبارات الأجنبية أو العربية..."></div>'+
+        '<div class="filter-row"><select id="mlLang" class="filter-select">'+langOpt+'</select><select id="mlCat" class="filter-select">'+opt(cats)+'</select></div>'+
+        '<div class="filter-row"><select id="mlCountry" class="filter-select">'+opt(countries)+'</select></div>'+
+      '</div>'+
+      '<div id="mlCount" class="result-count"></div>'+
+      '<div id="mlResults"></div>';
+  }
+
+  function getFilteredMlPhrases(){
+    const q=$('#mlSearch')?$('#mlSearch').value.trim().toLowerCase():'';
+    const lang=$('#mlLang')?$('#mlLang').value:'';
+    const cat=$('#mlCat')?$('#mlCat').value:'';
+    const country=$('#mlCountry')?$('#mlCountry').value:'';
+    return ML_PHRASES.filter(p=>{
+      if(lang && p.targetLanguage!==lang) return false;
+      if(cat && p.category!==cat) return false;
+      if(country && p.country!==country) return false;
+      if(q){
+        const hay=(p.originalText+' '+p.arabic+' '+p.arabicTranslation+' '+p.arabicPronunciation+' '+p.country+' '+p.situation+' '+p.category).toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderMlPhrasesResults(){
+    const list=getFilteredMlPhrases();
+    const cnt=$('#mlCount'); if(cnt) cnt.innerHTML=list.length+' نتيجة';
+    const box=$('#mlResults'); if(!box) return;
+    if(!list.length){ box.innerHTML='<p style="text-align:center;color:var(--text-mute);padding:24px">لا توجد نتائج مطابقة.</p>'; return; }
+    box.innerHTML=list.map(mlPhraseCard).join('');
+  }
+
+  function bindMlPhrases(){
+    const el=$('#mlLang'); if(el && currentMlLang) el.value=currentMlLang;
+    ['#mlSearch','#mlLang','#mlCat','#mlCountry'].forEach(sel=>{
+      const e=$(sel); if(!e) return;
+      e.addEventListener('input', renderMlPhrasesResults);
+      if(sel!=='#mlSearch') e.addEventListener('change', renderMlPhrasesResults);
+    });
+    renderMlPhrasesResults();
+  }
+
+  function renderMlCompare(){
+    const cats=[...new Set(ML_PHRASES.map(p=>p.category))].sort();
+    const opt='<option value="">اختر الوظيفة...</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+    return '<div class="sec-intro">قارن نفس الموقف الاجتماعي عبر اللغات الخمس. اختر وظيفة (التصنيف A–K) لعرض العبارة الأصلية في كل لغة جنباً إلى جنب.</div>'+
+      '<div class="filter-bar"><div class="filter-row"><select id="mcCat" class="filter-select" style="flex:1">'+opt+'</select></div></div>'+
+      '<div id="mcResults"></div>';
+  }
+
+  function renderMlCompareResults(){
+    const cat=$('#mcCat')?$('#mcCat').value:'';
+    const box=$('#mcResults'); if(!box) return;
+    if(!cat){ box.innerHTML='<p style="text-align:center;color:var(--text-mute);padding:20px">اختر وظيفة لعرض المقارنة.</p>'; return; }
+    const rows=ML_PHRASES.filter(p=>p.category===cat);
+    const subs=[...new Set(rows.map(p=>p.subcategory))];
+    let html='<div class="table-wrap"><table><thead><tr><th>الموقف</th>'+ML_LANGS.map(l=>'<th>'+l.flag+' '+esc(l.name)+'</th>').join('')+'</tr></thead><tbody>';
+    subs.forEach(sub=>{
+      html+='<tr><td><b>'+esc(sub)+'</b></td>'+ML_LANGS.map(l=>{
+        const ps=rows.filter(p=>p.subcategory===sub && p.targetLanguage===l.code);
+        const txt=ps.map(p=>p.originalText).join(' / ');
+        const pron=ps.map(p=>p.arabicPronunciation).filter(Boolean).join(' / ');
+        return '<td>'+esc(txt)+(pron?'<br><span style="color:var(--text-mute);font-size:12px">'+esc(pron)+'</span>':'')+'</td>';
+      }).join('')+'</tr>';
+    });
+    html+='</tbody></table></div>';
+    box.innerHTML=html;
+  }
+
+  function bindMlCompare(){
+    const el=$('#mcCat'); if(el) el.addEventListener('change', renderMlCompareResults);
+    renderMlCompareResults();
+  }
 
   /* ---------- Service Worker ---------- */
   function registerSW(){
