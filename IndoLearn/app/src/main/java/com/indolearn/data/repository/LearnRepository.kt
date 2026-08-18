@@ -400,6 +400,8 @@ class LearnRepository(private val db: AppDatabase) {
         // ==========================================================
         db.casualDao().insertAll(IndoLangContent.expressions)
         db.trainingDao().insertAll(IndoLangContent.registerQuizzes)
+        db.casualDao().insertScenarios(IndoScenariosA1.scenarios)
+        db.trainingDao().insertAll(IndoScenariosA1.quizzes)
 
         val scenarios = listOf(
             DailyScenarioEntity(1, "Market Negotiation", "تفاوض في السوق", 

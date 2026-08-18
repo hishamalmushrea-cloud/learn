@@ -103,6 +103,6 @@ class SeedManager @Inject constructor(
         const val DEFAULT_LANGUAGE = "ID"
         const val KEY_CONTENT_VERSION = "content_version"
         // ارفع الرقم عند تصحيح أو إضافة محتوى ثابت كي يصل للتثبيتات القديمة.
-        const val CONTENT_VERSION = 3
+        const val CONTENT_VERSION = 4
     }
 }
