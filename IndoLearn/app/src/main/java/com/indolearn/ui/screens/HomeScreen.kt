@@ -245,13 +245,13 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 Spacer(Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "مرشد التعلم وصندوق القوالب",
+                        text = "كيف تتعلم لغة فعلاً؟",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = OnTertiaryContainerLight
                     )
                     Text(
-                        text = "ابنِ جملك التفاعلية واكتشف أخطاء العرب الشائعة بقالب علمي",
+                        text = "عادات يومية صادقة، بلا وعد طلاقة سريعة",
                         style = MaterialTheme.typography.bodySmall,
                         color = OnTertiaryContainerLight.copy(alpha = 0.75f)
                     )

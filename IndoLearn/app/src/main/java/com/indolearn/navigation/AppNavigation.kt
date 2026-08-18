@@ -8,6 +8,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.indolearn.data.local.entity.MIXED_QUIZ_LESSON_ID
 import com.indolearn.ui.screens.*
 import com.indolearn.viewmodel.HomeViewModel
 import com.indolearn.viewmodel.LearnViewModel
@@ -73,6 +74,16 @@ fun AppNavigation(navController: NavHostController) {
         composable("quiz") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
             QuizScreen(navController, learnViewModel) 
+        }
+        composable("quiz/{category}/{pass}/{resultId}") { backStackEntry ->
+            val learnViewModel: LearnViewModel = hiltViewModel()
+            val category = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("category") ?: "",
+                "UTF-8"
+            )
+            val pass = backStackEntry.arguments?.getString("pass")?.toIntOrNull() ?: 50
+            val resultId = backStackEntry.arguments?.getString("resultId")?.toIntOrNull() ?: MIXED_QUIZ_LESSON_ID
+            QuizScreen(navController, learnViewModel, category, pass, resultId)
         }
         composable("search") { 
             val learnViewModel: LearnViewModel = hiltViewModel()
