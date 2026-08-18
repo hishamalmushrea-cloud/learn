@@ -13,6 +13,7 @@ const SOUQ_META = {
  "countriesCount": 40,
  "dialectsCount": 37,
  "situationsCount": 188,
+ "functionsCount": 11,
  "countries": [
   "تونس",
   "تونس/خليج",
@@ -465,6 +466,97 @@ const ABOUT = {
  "raw": "# موسوعة لغة السوق والبائع والزبون\n\n**المرجع العربي الأول (محاولة موسوعية) في لغة البائعين والتجار عند التعامل مع الزبائن في الحياة اليومية.**\n\n> إعداد: بحث لغوي-اجتماعي-تجاري ميداني رقمي\n> تاريخ الإعداد: 2026-08-13\n> الحالة: نسخة أولى قابلة للتوسع والتدقيق\n\n---\n\n## 1) ما هذه الموسوعة؟\n\nمجموعة منظمة من **العبارات والكلمات والأساليب والحوارات** التي يستخدمها البائعون والتجار الحقيقيون في الأسواق والمحلات مع الزبائن: جذبًا، وترحيبًا، وعرضًا، وإقناعًا، ومساومة، ومزاحًا، ووداعًا، وبناء علاقة.\n\nالهدف: أن تكون مرجعًا عمليًا لكل من يريد أن يفهم **لغة السوق الحية** — كاتبًا، أو مترجمًا، أو باحثًا، أو تاجرًا يريد تطوير تعامله، أو متعلمًا للعربية.\n\n## 2) منهجية البحث (باختصار)\n\n1. جمع الأنماط من مصادر متنوعة: تقارير صحفية عن أسواق شعبية، مقالات لغوية عن اللهجات، منتديات، مواد تعليمية للهجات، ملاحظات باعة حقيقيين منقولة في وسائل إعلام.\n2. تصنيف كل عبارة: وظيفتها، مخاطَبها، رسميتها، ألفتها، درجة شيوعها.\n3. التمييز الصارم بين:\n   - العبارة **المشتركة** (تفهم في أغلب الدول العربية) والعبارة **المحلية** (خاصة بمنطقة).\n   - الكلام **الطبيعي اليومي** والكلام **الكتابي/الإعلاني**.\n   - العبارة **الرائجة فعلًا** والعبارة **النادرة/القديمة**.\n4. وضع علامة على كل ما يحتاج تحققًا ميدانيًا إضافيًا، وعدم نسب عبارة لمنطقة دون دليل.\n5. إزالة التكرار الوظيفي (نحتفظ بالفرق فقط إذا كان فرق لهجة/ثقافة/رسمية/جنس/موقف مهمًا).\n\n## 3) نظام الرموز المستخدم في كل الملفات\n\n| الرمز | المعنى |\n|---|---|\n| 🔥 | شائعة جدًا — تسمعها يوميًا في السوق |\n| ⭐ | شائعة — مألوفة ومستعملة على نطاق واسع |\n| ✅ | مفيدة — طبيعية لكن تواترها أقل |\n| 🟡 | متوسطة — معروفة لكن استعمالها سياقي |\n| ⚪ | نادرة أو قديمة أو إقليمية جدًا |\n| ⚠️ | حساسة — تعتمد على السياق والبلد والعلاقة، انظر الملاحظات |\n\n**درجات الرسمية (سلم موحد):**\n1. **رسمي جدًا** — فنادق، شركات، متاجر راقية، مواقف رسمية.\n2. **محترم وودود** — الأسلوب العام الآمن في معظم الدول.\n3. **شعبي** — لغة السوق اليومية.\n4. **عفوي** — كلام يومي بين معارف.\n5. **مرح** — مع مزاح خفيف.\n6. **حميمي** — بين الأصدقاء والدائمين فقط (مع تحذيرات).\n\n**مصطلحات:** \"مشتركة\" = مفهومة ومستعملة في أكثر من منطقة عربية؛ \"خليجية\" = منطقة الخليج؛ \"شامية\" = الشام (سوريا/لبنان/الأردن/فلسطين)؛ \"مغاربية\" = المغرب/الجزائر/تونس/ليبيا/موريتانيا.\n\n## 4) هيكل الملفات\n\n| الملف | المحتوى |\n|---|---|\n| `01-mabadi-wa-tasnif.md` | القسم 1: مبادئ لغة السوق + التصنيف الوظيفي A–K |\n| `02-jathb-wa-tarhib.md` | القسمان 2–3: جذب الزبائن + الترحيب + الود والضيافة |\n| `03-mukhataba.md` | الأقسام 4–6: مخاطبة الرجال والنساء والفئات العمرية + الألقاب |\n| `04-3ard-wa-iqna.md` | القسمان 7–8: عرض المنتجات + الإقناع (النفسي والاجتماعي) |\n| `05-tafawud-wa-khasm.md` | القسمان 9–10: الخصم والتفاوض + الاعتراضات + فن التفاوض الشعبي |\n| `06-muzah-wa-wudd.md` | القسم 11: المزاح والود وحدوده |\n| `07-anwa3-zubana.md` | الأقسام 12–19: أنواع الزبائن + الشكاوى + البيع الإضافي + الإغلاق + التوديع |\n| `08-aswaq-wa-mahallat.md` | القسمان 20–21: الأسواق الشعبية والمتاجر الحديثة + أنواع المحلات + النداءات |\n| `09-duwal-wa-lahajat.md` | القسمان 22–23: لغة التاجر في كل دولة عربية + المقارنات |\n| `10-qawalib.md` | القسم 24: القوالب اللغوية القابلة لإعادة الاستخدام |\n| `11-hiwarat.md` | القسم 25: مكتبة الحوارات الواقعية (سيناريوهات كاملة) |\n| `12-qamus-wa-kalimat.md` | القسمان 26 و29: كلمات السوق + الألقاب + قاموس المصطلحات |\n| `13-tahthir.md` | القسم 27: عبارات ينبغي الحذر منها |\n| `14-afdhal.md` | القسم 28: أفضل العبارات وأكثرها فاعلية (قوائم مصنفة) |\n| `15-masadir.md` | القسم 30: المصادر والمراجع والتحقق |\n| `phrases-db.csv` | قاعدة البيانات الكاملة (ID + عبارة + فصحى + دولة + لهجة + موقف + مخاطب + رسمية + ألفة + مزاح + شيوع + ملاحظات) |\n\n## 5) تنبيه أمانة علمية\n\n- هذه الموسوعة تجمع **الاستعمال الحي** من مصادر متنوعة، وكل عبارة تحمل تقدير شيوع، لكن **درجة الشيوع الدقيقة تتغير من مدينة لأخرى ومن جيل لآخر**، ولا يمكن لأي مصدر مكتوب أن يحل محل الملاحظة الميدانية.\n- كل ما وُسم بـ\"تحتاج تحققًا\" يجب التحقق منه قبل اعتماده في نص أدبي أو دراسة.\n- اللهجات تُكتب بالعربية كما تُنطق تقريبًا (تهذيبًا)، وقد تختلف كتابة الكلمة نفسها بين المصادر.\n\n## 6) كيف تقرأ مدخلًا نموذجيًا؟\n\n> **«يا هلا وسهلا، نورتونا.»** 🔥\n> الفصحى: أهلًا وسهلًا، أنرتم المكان بقدومكم.\n> الموقف: استقبال زبون عند دخوله المحل. | النبرة: ودودة، مشتركة. | المخاطَب: رجل/امرأة/جمع. | اللهجة: مشتركة (خليجية وشامية في الأصل، مفهومة في كل العالم العربي). | ملاحظات: من أكثر جمل الاستقبال أمانًا؛ \"نورت\" للمفرد و\"نورتونا\" للجمع أو للتعظيم.\n\n---\n\n**ملاحظة حول هذا المستودع:** الملفات مكتوبة بالعربية، وتُقرأ أفضل في محرر يدعم العربية (VS Code، Typora، Obsidian، GitHub).\n"
 };
 
+const FUNCTIONS = [
+ {
+  "code": "A",
+  "name": "لفت الانتباه (جذب من الشارع/الممر)",
+  "examples": "\"تعال شوف\"، \"يا أخ، لحظة\"",
+  "where": "ملف 02",
+  "chapterId": "ch02",
+  "count": 30
+ },
+ {
+  "code": "B",
+  "name": "الترحيب",
+  "examples": "\"يا هلا وسهلا\"، \"نورتونا\"",
+  "where": "ملف 02",
+  "chapterId": "ch02",
+  "count": 36
+ },
+ {
+  "code": "C",
+  "name": "فتح الحديث",
+  "examples": "\"كيفك؟ شو بدك اليوم؟\"",
+  "where": "ملف 02",
+  "chapterId": "ch02",
+  "count": 6
+ },
+ {
+  "code": "D",
+  "name": "اكتشاف الحاجة",
+  "examples": "\"عندك شيء معين ببالك؟\"",
+  "where": "ملف 02",
+  "chapterId": "ch02",
+  "count": 4
+ },
+ {
+  "code": "E",
+  "name": "عرض المنتج",
+  "examples": "\"شوف هذا، وصل اليوم\"",
+  "where": "ملف 04",
+  "chapterId": "ch04",
+  "count": 23
+ },
+ {
+  "code": "F",
+  "name": "تعزيز القيمة",
+  "examples": "\"هذا آخر موديل، وجودته مضبوطة\"",
+  "where": "ملف 04",
+  "chapterId": "ch04",
+  "count": 1
+ },
+ {
+  "code": "G",
+  "name": "التعامل مع الاعتراض",
+  "examples": "\"غالي؟ بالعكس، حسبك...\"",
+  "where": "ملف 05",
+  "chapterId": "ch05",
+  "count": 6
+ },
+ {
+  "code": "H",
+  "name": "التفاوض",
+  "examples": "\"خلني أشوف لك سعر أحسن\"",
+  "where": "ملف 05",
+  "chapterId": "ch05",
+  "count": 25
+ },
+ {
+  "code": "I",
+  "name": "إغلاق البيع",
+  "examples": "\"نغلفها لك؟ نبدأ نجهزها؟\"",
+  "where": "ملف 07",
+  "chapterId": "ch07",
+  "count": 15
+ },
+ {
+  "code": "J",
+  "name": "البيع الإضافي",
+  "examples": "\"خذ معها هذا يكملها\"",
+  "where": "ملف 07",
+  "chapterId": "ch07",
+  "count": 6
+ },
+ {
+  "code": "K",
+  "name": "المحافظة على الزبون",
+  "examples": "\"نورتنا، نستناك دايماً\"",
+  "where": "ملف 07",
+  "chapterId": "ch07",
+  "count": 7
+ }
+];
+
 const PHRASES = [
  {
   "id": "J001",
@@ -478,7 +570,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أكثر نداء أمانًا للرجال في كل الدول"
+  "notes": "أكثر نداء أمانًا للرجال في كل الدول",
+  "func": "A"
  },
  {
   "id": "J002",
@@ -492,7 +585,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "آمن جدًا؛ لا تُقال لامرأة"
+  "notes": "آمن جدًا؛ لا تُقال لامرأة",
+  "func": "A"
  },
  {
   "id": "J003",
@@ -506,7 +600,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "تكريم للحرفي والمحترم"
+  "notes": "تكريم للحرفي والمحترم",
+  "func": "A"
  },
  {
   "id": "J004",
@@ -520,7 +615,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لا تقال لشاب صغير"
+  "notes": "لا تقال لشاب صغير",
+  "func": "A"
  },
  {
   "id": "J005",
@@ -534,7 +630,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "من ألقاب الاحترام المصرية"
+  "notes": "من ألقاب الاحترام المصرية",
+  "func": "A"
  },
  {
   "id": "J006",
@@ -548,7 +645,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "في مصر تُفهم للرجل الديني فقط"
+  "notes": "في مصر تُفهم للرجل الديني فقط",
+  "func": "A"
  },
  {
   "id": "J007",
@@ -562,7 +660,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لقب احترام عراقي لكل رجل"
+  "notes": "لقب احترام عراقي لكل رجل",
+  "func": "A"
  },
  {
   "id": "J008",
@@ -576,7 +675,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أكثر نداء مألوف في المغرب العربي"
+  "notes": "أكثر نداء مألوف في المغرب العربي",
+  "func": "A"
  },
  {
   "id": "J009",
@@ -590,7 +690,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "نداء الود السوداني"
+  "notes": "نداء الود السوداني",
+  "func": "A"
  },
  {
   "id": "J010",
@@ -604,7 +705,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "ممتازة مع الكبار"
+  "notes": "ممتازة مع الكبار",
+  "func": "A"
  },
  {
   "id": "J011",
@@ -618,7 +720,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أقوى أداة جذب: مشاهد مجانية"
+  "notes": "أقوى أداة جذب: مشاهد مجانية",
+  "func": "A"
  },
  {
   "id": "J012",
@@ -632,7 +735,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "يزيل مقاومة المار"
+  "notes": "يزيل مقاومة المار",
+  "func": "A"
  },
  {
   "id": "J013",
@@ -646,7 +750,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "فضول ناقص يفتح الحوار"
+  "notes": "فضول ناقص يفتح الحوار",
+  "func": "A"
  },
  {
   "id": "J014",
@@ -660,7 +765,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تمدح ذوقه قبل أن يرى"
+  "notes": "تمدح ذوقه قبل أن يرى",
+  "func": "A"
  },
  {
   "id": "J015",
@@ -674,7 +780,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "طلب وقت قصير يصعب رفضه"
+  "notes": "طلب وقت قصير يصعب رفضه",
+  "func": "A"
  },
  {
   "id": "J016",
@@ -688,7 +795,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تستغل لحظة المرور"
+  "notes": "تستغل لحظة المرور",
+  "func": "A"
  },
  {
   "id": "J017",
@@ -702,7 +810,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": "نكتة خفيفة تحول الوقوف لدخول"
+  "notes": "نكتة خفيفة تحول الوقوف لدخول",
+  "func": "B"
  },
  {
   "id": "J018",
@@ -716,7 +825,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الحداثة جاذب عالمي"
+  "notes": "الحداثة جاذب عالمي",
+  "func": "A"
  },
  {
   "id": "J019",
@@ -730,7 +840,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  },
  {
   "id": "J020",
@@ -744,7 +855,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  },
  {
   "id": "J021",
@@ -758,7 +870,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "نشتري ما يشتريه الآخرون"
+  "notes": "نشتري ما يشتريه الآخرون",
+  "func": ""
  },
  {
   "id": "J022",
@@ -772,7 +885,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "J023",
@@ -786,7 +900,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "تُقال بابتسامة لا بتهديد"
+  "notes": "تُقال بابتسامة لا بتهديد",
+  "func": ""
  },
  {
   "id": "J024",
@@ -800,7 +915,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "J025",
@@ -814,7 +930,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "النداء الأشهر في أسواق الملابس المصرية"
+  "notes": "النداء الأشهر في أسواق الملابس المصرية",
+  "func": "A"
  },
  {
   "id": "J026",
@@ -828,7 +945,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  },
  {
   "id": "J027",
@@ -842,7 +960,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "صيغة العرض الكلاسيكية"
+  "notes": "صيغة العرض الكلاسيكية",
+  "func": "E"
  },
  {
   "id": "J028",
@@ -856,7 +975,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "من أشهر نداءات الباعة المصريين؛ يضمن الحلاوة"
+  "notes": "من أشهر نداءات الباعة المصريين؛ يضمن الحلاوة",
+  "func": "A"
  },
  {
   "id": "J029",
@@ -870,7 +990,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "نداء قديم ما زال يُستأنس به"
+  "notes": "نداء قديم ما زال يُستأنس به",
+  "func": "A"
  },
  {
   "id": "J030",
@@ -884,7 +1005,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "موثق من تقرير باعة غزة"
+  "notes": "موثق من تقرير باعة غزة",
+  "func": "A"
  },
  {
   "id": "J031",
@@ -898,7 +1020,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يحول المار إلى زبون بلا إلحاح"
+  "notes": "يحول المار إلى زبون بلا إلحاح",
+  "func": "C"
  },
  {
   "id": "J032",
@@ -912,7 +1035,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "J033",
@@ -926,7 +1050,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "J034",
@@ -940,7 +1065,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "D"
  },
  {
   "id": "J035",
@@ -954,7 +1080,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أشهر ترحيب عربي"
+  "notes": "أشهر ترحيب عربي",
+  "func": "B"
  },
  {
   "id": "J036",
@@ -968,7 +1095,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "نورت للمفرد، نورتونا للجمع والتعظيم"
+  "notes": "نورت للمفرد، نورتونا للجمع والتعظيم",
+  "func": "B"
  },
  {
   "id": "J037",
@@ -982,7 +1110,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "آمنة في كل المستويات"
+  "notes": "آمنة في كل المستويات",
+  "func": "B"
  },
  {
   "id": "J038",
@@ -996,7 +1125,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "بُعد ديني محبوب"
+  "notes": "بُعد ديني محبوب",
+  "func": "B"
  },
  {
   "id": "J039",
@@ -1010,7 +1140,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "متعددة الوظائف"
+  "notes": "متعددة الوظائف",
+  "func": "B"
  },
  {
   "id": "J040",
@@ -1024,7 +1155,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J041",
@@ -1038,7 +1170,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "مخاطبة مباشرة بالقيمة"
+  "notes": "مخاطبة مباشرة بالقيمة",
+  "func": "B"
  },
  {
   "id": "J042",
@@ -1052,7 +1185,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J043",
@@ -1066,7 +1200,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J044",
@@ -1080,7 +1215,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J045",
@@ -1094,7 +1230,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الأكثر شيوعًا في الشام"
+  "notes": "الأكثر شيوعًا في الشام",
+  "func": "B"
  },
  {
   "id": "J046",
@@ -1108,7 +1245,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J047",
@@ -1122,7 +1260,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "شعار الترحيب العراقي الأشهر"
+  "notes": "شعار الترحيب العراقي الأشهر",
+  "func": "B"
  },
  {
   "id": "J048",
@@ -1136,7 +1275,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "تعظيم الترحيب"
+  "notes": "تعظيم الترحيب",
+  "func": "B"
  },
  {
   "id": "J049",
@@ -1150,7 +1290,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J050",
@@ -1164,7 +1305,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "من أجمل ألقاب السوق السعودي"
+  "notes": "من أجمل ألقاب السوق السعودي",
+  "func": "B"
  },
  {
   "id": "J051",
@@ -1178,7 +1320,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J052",
@@ -1192,7 +1335,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أقصى درجات الكرم اللفظي"
+  "notes": "أقصى درجات الكرم اللفظي",
+  "func": "B"
  },
  {
   "id": "J053",
@@ -1206,7 +1350,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J054",
@@ -1220,7 +1365,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "C"
  },
  {
   "id": "J055",
@@ -1234,7 +1380,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "C"
  },
  {
   "id": "J056",
@@ -1248,7 +1395,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "C"
  },
  {
   "id": "J057",
@@ -1262,7 +1410,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "C"
  },
  {
   "id": "J058",
@@ -1276,7 +1425,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "لغة الضيافة اليمنية"
+  "notes": "لغة الضيافة اليمنية",
+  "func": "B"
  },
  {
   "id": "J059",
@@ -1290,7 +1440,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تُقال ترحيبًا ووداعًا في عمان"
+  "notes": "تُقال ترحيبًا ووداعًا في عمان",
+  "func": "B"
  },
  {
   "id": "J060",
@@ -1304,7 +1455,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J061",
@@ -1318,7 +1470,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "من لبّيك"
+  "notes": "من لبّيك",
+  "func": "B"
  },
  {
   "id": "J062",
@@ -1332,7 +1485,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J063",
@@ -1346,7 +1500,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يُقدم كرسي في المحلات التقليدية"
+  "notes": "يُقدم كرسي في المحلات التقليدية",
+  "func": "B"
  },
  {
   "id": "J064",
@@ -1360,7 +1515,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "J065",
@@ -1374,7 +1530,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "J066",
@@ -1388,7 +1545,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "J067",
@@ -1402,7 +1560,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "أفضل سؤال: لا يفترض ولا يلزم"
+  "notes": "أفضل سؤال: لا يفترض ولا يلزم",
+  "func": "D"
  },
  {
   "id": "J068",
@@ -1416,7 +1575,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "يعطي حرية الاختيار فيكسب الثقة"
+  "notes": "يعطي حرية الاختيار فيكسب الثقة",
+  "func": "D"
  },
  {
   "id": "J069",
@@ -1430,7 +1590,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "احترام الخصوصية"
+  "notes": "احترام الخصوصية",
+  "func": "E"
  },
  {
   "id": "J070",
@@ -1444,7 +1605,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "يحدد الفئة السعرية والنوع"
+  "notes": "يحدد الفئة السعرية والنوع",
+  "func": "D"
  },
  {
   "id": "M001",
@@ -1458,7 +1620,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أنجح لقب عربي مشترك"
+  "notes": "أنجح لقب عربي مشترك",
+  "func": ""
  },
  {
   "id": "M002",
@@ -1472,7 +1635,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M003",
@@ -1486,7 +1650,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "من أكثر الألقاب أمانًا"
+  "notes": "من أكثر الألقاب أمانًا",
+  "func": ""
  },
  {
   "id": "M004",
@@ -1500,7 +1665,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "في الشام لصاحب الحرفة؛ خليجيًا لصاحب المحل"
+  "notes": "في الشام لصاحب الحرفة؛ خليجيًا لصاحب المحل",
+  "func": ""
  },
  {
   "id": "M005",
@@ -1514,7 +1680,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لقب فخم مجامل"
+  "notes": "لقب فخم مجامل",
+  "func": ""
  },
  {
   "id": "M006",
@@ -1528,7 +1695,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لكل رجل عراقي تقريبًا"
+  "notes": "لكل رجل عراقي تقريبًا",
+  "func": ""
  },
  {
   "id": "M007",
@@ -1542,7 +1710,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الأكثر تداولًا في المغرب العربي"
+  "notes": "الأكثر تداولًا في المغرب العربي",
+  "func": ""
  },
  {
   "id": "M008",
@@ -1556,7 +1725,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "في مصر للرجل الديني فقط تقريبًا"
+  "notes": "في مصر للرجل الديني فقط تقريبًا",
+  "func": ""
  },
  {
   "id": "M009",
@@ -1570,7 +1740,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "ممتازة مع الكبار"
+  "notes": "ممتازة مع الكبار",
+  "func": ""
  },
  {
   "id": "M010",
@@ -1584,7 +1755,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "بين الرجال فقط في السوق"
+  "notes": "بين الرجال فقط في السوق",
+  "func": ""
  },
  {
   "id": "M011",
@@ -1598,7 +1770,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M012",
@@ -1612,7 +1785,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "إطراء رجولة خليجي"
+  "notes": "إطراء رجولة خليجي",
+  "func": ""
  },
  {
   "id": "M013",
@@ -1626,7 +1800,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M014",
@@ -1640,7 +1815,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "إكرام لا وصفًا دينيًا حتمًا"
+  "notes": "إكرام لا وصفًا دينيًا حتمًا",
+  "func": ""
  },
  {
   "id": "M015",
@@ -1654,7 +1830,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "لا تقال لشاب"
+  "notes": "لا تقال لشاب",
+  "func": ""
  },
  {
   "id": "M016",
@@ -1668,7 +1845,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا (عراق)",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M017",
@@ -1682,7 +1860,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "لا تُقال لكبير في أول لقاء"
+  "notes": "لا تُقال لكبير في أول لقاء",
+  "func": ""
  },
  {
   "id": "M018",
@@ -1696,7 +1875,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M019",
@@ -1710,7 +1890,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "مجاملة مهنية شائعة"
+  "notes": "مجاملة مهنية شائعة",
+  "func": ""
  },
  {
   "id": "M020",
@@ -1724,7 +1905,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M021",
@@ -1738,7 +1920,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "تهذيب أفندم العثمانية"
+  "notes": "تهذيب أفندم العثمانية",
+  "func": ""
  },
  {
   "id": "M022",
@@ -1752,7 +1935,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M023",
@@ -1766,7 +1950,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "للدائمين والمعارف فقط"
+  "notes": "للدائمين والمعارف فقط",
+  "func": ""
  },
  {
   "id": "M024",
@@ -1780,7 +1965,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الأكثر أمانًا لكل الأعمار"
+  "notes": "الأكثر أمانًا لكل الأعمار",
+  "func": ""
  },
  {
   "id": "M025",
@@ -1794,7 +1980,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "آمنة جدًا"
+  "notes": "آمنة جدًا",
+  "func": ""
  },
  {
   "id": "M026",
@@ -1808,7 +1995,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "من أفضل ألقاب السوق للنساء"
+  "notes": "من أفضل ألقاب السوق للنساء",
+  "func": ""
  },
  {
   "id": "M027",
@@ -1822,7 +2010,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "للمحترمات والمتزوجات"
+  "notes": "للمحترمات والمتزوجات",
+  "func": ""
  },
  {
   "id": "M028",
@@ -1836,7 +2025,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "مجاملة شائعة"
+  "notes": "مجاملة شائعة",
+  "func": ""
  },
  {
   "id": "M029",
@@ -1850,7 +2040,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "مصرية خالصة؛ قد تُفهم خطأ خارج مصر"
+  "notes": "مصرية خالصة؛ قد تُفهم خطأ خارج مصر",
+  "func": ""
  },
  {
   "id": "M030",
@@ -1864,7 +2055,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M031",
@@ -1878,7 +2070,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "في المحلات الراقية"
+  "notes": "في المحلات الراقية",
+  "func": ""
  },
  {
   "id": "M032",
@@ -1892,7 +2085,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "قد تُعد قديمة مع الشابات"
+  "notes": "قد تُعد قديمة مع الشابات",
+  "func": ""
  },
  {
   "id": "M033",
@@ -1906,7 +2100,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "حنون وآمنة"
+  "notes": "حنون وآمنة",
+  "func": ""
  },
  {
   "id": "M034",
@@ -1920,7 +2115,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M035",
@@ -1934,7 +2130,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "من شاب لشابة قد يُفهم تقليلًا"
+  "notes": "من شاب لشابة قد يُفهم تقليلًا",
+  "func": ""
  },
  {
   "id": "M036",
@@ -1948,7 +2145,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "M037",
@@ -1962,7 +2160,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "إطراء عائلي محترم"
+  "notes": "إطراء عائلي محترم",
+  "func": ""
  },
  {
   "id": "M038",
@@ -1976,7 +2175,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "فقط إذا عُرفت الكنية"
+  "notes": "فقط إذا عُرفت الكنية",
+  "func": ""
  },
  {
   "id": "M039",
@@ -1990,7 +2190,8 @@ const PHRASES = [
   "familiarity": "⚠️",
   "humor": "لا",
   "frequency": "⚠️ حساسة",
-  "notes": "قد تُعد مضايقة؛ بين النساء فقط أو مع دائمة معروفة جدًا"
+  "notes": "قد تُعد مضايقة؛ بين النساء فقط أو مع دائمة معروفة جدًا",
+  "func": ""
  },
  {
   "id": "M040",
@@ -2004,7 +2205,8 @@ const PHRASES = [
   "familiarity": "⚠️",
   "humor": "لا",
   "frequency": "⚠️ حساسة",
-  "notes": "تعليق على المظهر؛ غير مناسب مع الغريبات"
+  "notes": "تعليق على المظهر؛ غير مناسب مع الغريبات",
+  "func": ""
  },
  {
   "id": "E001",
@@ -2018,7 +2220,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "E002",
@@ -2032,7 +2235,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  },
  {
   "id": "E003",
@@ -2046,7 +2250,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لك=هدية شخصية"
+  "notes": "لك=هدية شخصية",
+  "func": "E"
  },
  {
   "id": "E004",
@@ -2060,7 +2265,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E005",
@@ -2074,7 +2280,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تحدٍّ لطيف"
+  "notes": "تحدٍّ لطيف",
+  "func": "E"
  },
  {
   "id": "E006",
@@ -2088,7 +2295,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  },
  {
   "id": "E007",
@@ -2102,7 +2310,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "E008",
@@ -2116,7 +2325,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "شفافية تبني ثقة"
+  "notes": "شفافية تبني ثقة",
+  "func": "E"
  },
  {
   "id": "E009",
@@ -2130,7 +2340,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "نظيف=متقن في السوق"
+  "notes": "نظيف=متقن في السوق",
+  "func": "E"
  },
  {
   "id": "E010",
@@ -2144,7 +2355,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "كلمة أصلًا تفتح وتغلق صفقات"
+  "notes": "كلمة أصلًا تفتح وتغلق صفقات",
+  "func": "E"
  },
  {
   "id": "E011",
@@ -2158,7 +2370,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E012",
@@ -2172,7 +2385,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يقلب المخاطرة"
+  "notes": "يقلب المخاطرة",
+  "func": ""
  },
  {
   "id": "E013",
@@ -2186,7 +2400,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "اللمس يطلق تأثير الملكية"
+  "notes": "اللمس يطلق تأثير الملكية",
+  "func": ""
  },
  {
   "id": "E014",
@@ -2200,7 +2415,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E015",
@@ -2214,7 +2430,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E016",
@@ -2228,7 +2445,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "تصنيف صريح يريح الزبون"
+  "notes": "تصنيف صريح يريح الزبون",
+  "func": "E"
  },
  {
   "id": "E017",
@@ -2242,7 +2460,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E018",
@@ -2256,7 +2475,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E019",
@@ -2270,7 +2490,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E020",
@@ -2284,7 +2505,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لا تترك الزبون بلا بديل"
+  "notes": "لا تترك الزبون بلا بديل",
+  "func": ""
  },
  {
   "id": "E021",
@@ -2298,7 +2520,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "E022",
@@ -2312,7 +2535,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تكرار الشراء أقوى شهادة"
+  "notes": "تكرار الشراء أقوى شهادة",
+  "func": ""
  },
  {
   "id": "E023",
@@ -2326,7 +2550,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P001",
@@ -2340,7 +2565,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P002",
@@ -2354,7 +2580,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P003",
@@ -2368,7 +2595,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "مثل تجاري ذكي"
+  "notes": "مثل تجاري ذكي",
+  "func": ""
  },
  {
   "id": "P004",
@@ -2382,7 +2610,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "F"
  },
  {
   "id": "P005",
@@ -2396,7 +2625,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P006",
@@ -2410,7 +2640,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P007",
@@ -2424,7 +2655,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P008",
@@ -2438,7 +2670,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P009",
@@ -2452,7 +2685,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P010",
@@ -2466,7 +2700,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P011",
@@ -2480,7 +2715,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "P012",
@@ -2494,7 +2730,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أقوى مغلق صفقات"
+  "notes": "أقوى مغلق صفقات",
+  "func": ""
  },
  {
   "id": "P013",
@@ -2508,7 +2745,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P014",
@@ -2522,7 +2760,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P015",
@@ -2536,7 +2775,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "من أقوى أسلحة الإقناع"
+  "notes": "من أقوى أسلحة الإقناع",
+  "func": ""
  },
  {
   "id": "P016",
@@ -2550,7 +2790,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P017",
@@ -2564,7 +2805,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P018",
@@ -2578,7 +2820,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P019",
@@ -2592,7 +2835,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P020",
@@ -2606,7 +2850,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "للعطور والطعام"
+  "notes": "للعطور والطعام",
+  "func": ""
  },
  {
   "id": "P021",
@@ -2620,7 +2865,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "P022",
@@ -2634,7 +2880,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "N001",
@@ -2648,7 +2895,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N002",
@@ -2662,7 +2910,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N003",
@@ -2676,7 +2925,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N004",
@@ -2690,7 +2940,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "N005",
@@ -2704,7 +2955,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الخصم هدية شخصية"
+  "notes": "الخصم هدية شخصية",
+  "func": "H"
  },
  {
   "id": "N006",
@@ -2718,7 +2970,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N007",
@@ -2732,7 +2985,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "سرية الخصم ترفع قيمته"
+  "notes": "سرية الخصم ترفع قيمته",
+  "func": "H"
  },
  {
   "id": "N008",
@@ -2746,7 +3000,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N009",
@@ -2760,7 +3015,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N010",
@@ -2774,7 +3030,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "G"
  },
  {
   "id": "N011",
@@ -2788,7 +3045,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "G"
  },
  {
   "id": "N012",
@@ -2802,7 +3060,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "G"
  },
  {
   "id": "N013",
@@ -2816,7 +3075,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "مبالغة فكاهية"
+  "notes": "مبالغة فكاهية",
+  "func": "G"
  },
  {
   "id": "N014",
@@ -2830,7 +3090,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "G"
  },
  {
   "id": "N015",
@@ -2844,7 +3105,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "G"
  },
  {
   "id": "N016",
@@ -2858,7 +3120,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "N017",
@@ -2872,7 +3135,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "N018",
@@ -2886,7 +3150,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "N019",
@@ -2900,7 +3165,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "N020",
@@ -2914,7 +3180,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "N021",
@@ -2928,7 +3195,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "N022",
@@ -2942,7 +3210,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "N023",
@@ -2956,7 +3225,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "N024",
@@ -2970,7 +3240,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "N025",
@@ -2984,7 +3255,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "N026",
@@ -2998,7 +3270,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "K001",
@@ -3012,7 +3285,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "K002",
@@ -3026,7 +3300,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "K003",
@@ -3040,7 +3315,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "K004",
@@ -3054,7 +3330,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "K005",
@@ -3068,7 +3345,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "K006",
@@ -3082,7 +3360,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K007",
@@ -3096,7 +3375,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "K008",
@@ -3110,7 +3390,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "K009",
@@ -3124,7 +3405,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "K010",
@@ -3138,7 +3420,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "K011",
@@ -3152,7 +3435,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "K012",
@@ -3166,7 +3450,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الزيادة في الميزان أو الكمية"
+  "notes": "الزيادة في الميزان أو الكمية",
+  "func": ""
  },
  {
   "id": "K013",
@@ -3180,7 +3465,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K014",
@@ -3194,7 +3480,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K015",
@@ -3208,7 +3495,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K016",
@@ -3222,7 +3510,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K017",
@@ -3236,7 +3525,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "K018",
@@ -3250,7 +3540,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K019",
@@ -3264,7 +3555,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "K020",
@@ -3278,7 +3570,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "O001",
@@ -3292,7 +3585,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "إعادة تعريف الغلو بالقيمة"
+  "notes": "إعادة تعريف الغلو بالقيمة",
+  "func": ""
  },
  {
   "id": "O002",
@@ -3306,7 +3600,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "مقارنة حسية"
+  "notes": "مقارنة حسية",
+  "func": ""
  },
  {
   "id": "O003",
@@ -3320,7 +3615,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "مثل غالي مرة ولا رخيص مرتين"
+  "notes": "مثل غالي مرة ولا رخيص مرتين",
+  "func": ""
  },
  {
   "id": "O004",
@@ -3334,7 +3630,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تحدي واثق"
+  "notes": "تحدي واثق",
+  "func": ""
  },
  {
   "id": "O005",
@@ -3348,7 +3645,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "تمييز بالخدمة"
+  "notes": "تمييز بالخدمة",
+  "func": ""
  },
  {
   "id": "O006",
@@ -3362,7 +3660,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تأطير الزمن"
+  "notes": "تأطير الزمن",
+  "func": ""
  },
  {
   "id": "O007",
@@ -3376,7 +3675,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "فتح مساومة بدل جدال"
+  "notes": "فتح مساومة بدل جدال",
+  "func": ""
  },
  {
   "id": "O008",
@@ -3390,7 +3690,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "لا يدافع ولا يهاجم"
+  "notes": "لا يدافع ولا يهاجم",
+  "func": ""
  },
  {
   "id": "O009",
@@ -3404,7 +3705,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "O010",
@@ -3418,7 +3720,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يفتح الاعتراض الخفي"
+  "notes": "يفتح الاعتراض الخفي",
+  "func": ""
  },
  {
   "id": "O011",
@@ -3432,7 +3735,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "مجاملة + تطبيع"
+  "notes": "مجاملة + تطبيع",
+  "func": ""
  },
  {
   "id": "O012",
@@ -3446,7 +3750,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يحول بعدين إلى التزام تواصل"
+  "notes": "يحول بعدين إلى التزام تواصل",
+  "func": ""
  },
  {
   "id": "O013",
@@ -3460,7 +3765,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يثبت موعدًا"
+  "notes": "يثبت موعدًا",
+  "func": "A"
  },
  {
   "id": "O014",
@@ -3474,7 +3780,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يفتح سؤال الجودة"
+  "notes": "يفتح سؤال الجودة",
+  "func": ""
  },
  {
   "id": "O015",
@@ -3488,7 +3795,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "O016",
@@ -3502,7 +3810,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "لا تخف من المقارنة"
+  "notes": "لا تخف من المقارنة",
+  "func": ""
  },
  {
   "id": "O017",
@@ -3516,7 +3825,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "لا تحكم عليه"
+  "notes": "لا تحكم عليه",
+  "func": ""
  },
  {
   "id": "O018",
@@ -3530,7 +3840,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "نسخة اقتصادية"
+  "notes": "نسخة اقتصادية",
+  "func": ""
  },
  {
   "id": "O019",
@@ -3544,7 +3855,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "مرونة دفع"
+  "notes": "مرونة دفع",
+  "func": ""
  },
  {
   "id": "O020",
@@ -3558,7 +3870,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يزيل الحرج"
+  "notes": "يزيل الحرج",
+  "func": ""
  },
  {
   "id": "O021",
@@ -3572,7 +3885,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "O022",
@@ -3586,7 +3900,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "O023",
@@ -3600,7 +3915,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "يحول الرفض لصفقة آجلة"
+  "notes": "يحول الرفض لصفقة آجلة",
+  "func": "E"
  },
  {
   "id": "O024",
@@ -3614,7 +3930,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "البديل قبل الاعتذار"
+  "notes": "البديل قبل الاعتذار",
+  "func": "E"
  },
  {
   "id": "O025",
@@ -3628,7 +3945,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يحول الخروج لانتظار"
+  "notes": "يحول الخروج لانتظار",
+  "func": "E"
  },
  {
   "id": "I001",
@@ -3642,7 +3960,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الافتراض الأنعم"
+  "notes": "الافتراض الأنعم",
+  "func": "I"
  },
  {
   "id": "I002",
@@ -3656,7 +3975,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الحسبة تساوي الإغلاق"
+  "notes": "الحسبة تساوي الإغلاق",
+  "func": "I"
  },
  {
   "id": "I003",
@@ -3670,7 +3990,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "I004",
@@ -3684,7 +4005,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "خياران كلاهما شراء"
+  "notes": "خياران كلاهما شراء",
+  "func": "I"
  },
  {
   "id": "I005",
@@ -3698,7 +4020,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "I006",
@@ -3712,7 +4035,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "I007",
@@ -3726,7 +4050,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "تأكيد قراره"
+  "notes": "تأكيد قراره",
+  "func": ""
  },
  {
   "id": "I008",
@@ -3740,7 +4065,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يبدأ بالتنفيذ"
+  "notes": "يبدأ بالتنفيذ",
+  "func": ""
  },
  {
   "id": "I009",
@@ -3754,7 +4080,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "I010",
@@ -3768,7 +4095,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "إعلان الربح المزدوج"
+  "notes": "إعلان الربح المزدوج",
+  "func": ""
  },
  {
   "id": "I011",
@@ -3782,7 +4110,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "I012",
@@ -3796,7 +4125,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "E"
  },
  {
   "id": "I013",
@@ -3810,7 +4140,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "I014",
@@ -3824,7 +4155,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "I015",
@@ -3838,7 +4170,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "XS001",
@@ -3852,7 +4185,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "J"
  },
  {
   "id": "XS002",
@@ -3866,7 +4200,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "J"
  },
  {
   "id": "XS003",
@@ -3880,7 +4215,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "J"
  },
  {
   "id": "XS004",
@@ -3894,7 +4230,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "J"
  },
  {
   "id": "XS005",
@@ -3908,7 +4245,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تبرير بمصلحته"
+  "notes": "تبرير بمصلحته",
+  "func": "J"
  },
  {
   "id": "XS006",
@@ -3922,7 +4260,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "إثبات اجتماعي"
+  "notes": "إثبات اجتماعي",
+  "func": "J"
  },
  {
   "id": "XS007",
@@ -3936,7 +4275,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الخصم المشروط"
+  "notes": "الخصم المشروط",
+  "func": "H"
  },
  {
   "id": "XS008",
@@ -3950,7 +4290,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "تأطير الزيادة البسيطة"
+  "notes": "تأطير الزيادة البسيطة",
+  "func": ""
  },
  {
   "id": "XS009",
@@ -3964,7 +4305,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "XS010",
@@ -3978,7 +4320,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "للإلكترونيات والأحذية"
+  "notes": "للإلكترونيات والأحذية",
+  "func": ""
  },
  {
   "id": "XS011",
@@ -3992,7 +4335,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "XS012",
@@ -4006,7 +4350,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "التجميع عادة شرقية"
+  "notes": "التجميع عادة شرقية",
+  "func": ""
  },
  {
   "id": "XS013",
@@ -4020,7 +4365,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V001",
@@ -4034,7 +4380,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V002",
@@ -4048,7 +4395,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V003",
@@ -4062,7 +4410,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V004",
@@ -4076,7 +4425,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "دعاء وتوديع شرقي"
+  "notes": "دعاء وتوديع شرقي",
+  "func": "K"
  },
  {
   "id": "V005",
@@ -4090,7 +4440,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V006",
@@ -4104,7 +4455,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "سبب محدد للعودة"
+  "notes": "سبب محدد للعودة",
+  "func": "A"
  },
  {
   "id": "V007",
@@ -4118,7 +4470,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V008",
@@ -4132,7 +4485,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "K"
  },
  {
   "id": "V009",
@@ -4146,7 +4500,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "K"
  },
  {
   "id": "V010",
@@ -4160,7 +4515,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "V011",
@@ -4174,7 +4530,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "V012",
@@ -4188,7 +4545,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "تذكر الطلبات ذهب"
+  "notes": "تذكر الطلبات ذهب",
+  "func": "B"
  },
  {
   "id": "V013",
@@ -4202,7 +4560,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "K"
  },
  {
   "id": "V014",
@@ -4216,7 +4575,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "V015",
@@ -4230,7 +4590,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "K"
  },
  {
   "id": "V016",
@@ -4244,7 +4605,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "أعذر طريقة للحصول على تواصل"
+  "notes": "أعذر طريقة للحصول على تواصل",
+  "func": ""
  },
  {
   "id": "V017",
@@ -4258,7 +4620,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "صريح ومريح"
+  "notes": "صريح ومريح",
+  "func": ""
  },
  {
   "id": "V018",
@@ -4272,7 +4635,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "بلا عتاب"
+  "notes": "بلا عتاب",
+  "func": ""
  },
  {
   "id": "V019",
@@ -4286,7 +4650,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يمنحه عذرًا كريمًا"
+  "notes": "يمنحه عذرًا كريمًا",
+  "func": ""
  },
  {
   "id": "V020",
@@ -4300,7 +4665,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "أشهر عبارات جودة الخدمة الشعبية"
+  "notes": "أشهر عبارات جودة الخدمة الشعبية",
+  "func": ""
  },
  {
   "id": "Z001",
@@ -4314,7 +4680,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الاعتراف بالحق أولًا"
+  "notes": "الاعتراف بالحق أولًا",
+  "func": ""
  },
  {
   "id": "Z002",
@@ -4328,7 +4695,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "التعاطف قبل الحل"
+  "notes": "التعاطف قبل الحل",
+  "func": ""
  },
  {
   "id": "Z003",
@@ -4342,7 +4710,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "Z004",
@@ -4356,7 +4725,8 @@ const PHRASES = [
   "familiarity": "منخفضة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "Z005",
@@ -4370,7 +4740,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "Z006",
@@ -4384,7 +4755,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "يحول الشكوى إلى هدية"
+  "notes": "يحول الشكوى إلى هدية",
+  "func": ""
  },
  {
   "id": "Z007",
@@ -4398,7 +4770,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "اعتراف+تفسير+تعويض"
+  "notes": "اعتراف+تفسير+تعويض",
+  "func": ""
  },
  {
   "id": "Z008",
@@ -4412,7 +4785,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "Z009",
@@ -4426,7 +4800,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "Z010",
@@ -4440,7 +4815,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": "تعويض مادي"
+  "notes": "تعويض مادي",
+  "func": ""
  },
  {
   "id": "H001",
@@ -4454,7 +4830,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "بداية الحوار النموذجي"
+  "notes": "بداية الحوار النموذجي",
+  "func": "B"
  },
  {
   "id": "H002",
@@ -4468,7 +4845,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "H003",
@@ -4482,7 +4860,8 @@ const PHRASES = [
   "familiarity": "متوسطة",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "الرد الأمثل على بس أتفرج"
+  "notes": "الرد الأمثل على بس أتفرج",
+  "func": "C"
  },
  {
   "id": "MU001",
@@ -4496,7 +4875,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🔥 شائعة جدًا",
-  "notes": "مبالغة فكاهية"
+  "notes": "مبالغة فكاهية",
+  "func": "H"
  },
  {
   "id": "MU002",
@@ -4510,7 +4890,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "اعتراف مرح بالهزيمة"
+  "notes": "اعتراف مرح بالهزيمة",
+  "func": "H"
  },
  {
   "id": "MU003",
@@ -4524,7 +4905,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "MU004",
@@ -4538,7 +4920,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "للمكثر من اللمس"
+  "notes": "للمكثر من اللمس",
+  "func": ""
  },
  {
   "id": "MU005",
@@ -4552,7 +4935,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "MU006",
@@ -4566,7 +4950,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU007",
@@ -4580,7 +4965,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "مع الدائمين"
+  "notes": "مع الدائمين",
+  "func": ""
  },
  {
   "id": "MU008",
@@ -4594,7 +4980,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU009",
@@ -4608,7 +4995,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "MU010",
@@ -4622,7 +5010,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "MU011",
@@ -4636,7 +5025,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "بنبرة ضاحكة"
+  "notes": "بنبرة ضاحكة",
+  "func": "H"
  },
  {
   "id": "MU012",
@@ -4650,7 +5040,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "B"
  },
  {
   "id": "MU013",
@@ -4664,7 +5055,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": "K"
  },
  {
   "id": "MU014",
@@ -4678,7 +5070,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "مزاح مسبوق باحترام"
+  "notes": "مزاح مسبوق باحترام",
+  "func": ""
  },
  {
   "id": "MU015",
@@ -4692,7 +5085,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": "صدق نادر يبني ثقة"
+  "notes": "صدق نادر يبني ثقة",
+  "func": ""
  },
  {
   "id": "MU016",
@@ -4706,7 +5100,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU017",
@@ -4720,7 +5115,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🟡 متوسطة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU018",
@@ -4734,7 +5130,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU019",
@@ -4748,7 +5145,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU020",
@@ -4762,7 +5160,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "MU021",
@@ -4776,7 +5175,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU022",
@@ -4790,7 +5190,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "MU023",
@@ -4804,7 +5205,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🟡 متوسطة",
-  "notes": "مزاح شخصي بالاسم"
+  "notes": "مزاح شخصي بالاسم",
+  "func": ""
  },
  {
   "id": "MU024",
@@ -4818,7 +5220,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🟡 متوسطة",
-  "notes": "للدائم فقط"
+  "notes": "للدائم فقط",
+  "func": ""
  },
  {
   "id": "MU025",
@@ -4832,7 +5235,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🟡 متوسطة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "MU026",
@@ -4846,7 +5250,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU027",
@@ -4860,7 +5265,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU028",
@@ -4874,7 +5280,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "MU029",
@@ -4888,7 +5295,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU030",
@@ -4902,7 +5310,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU031",
@@ -4916,7 +5325,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "عند منح خصم"
+  "notes": "عند منح خصم",
+  "func": ""
  },
  {
   "id": "MU032",
@@ -4930,7 +5340,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "مع النساء تُقال بحذر شديد"
+  "notes": "مع النساء تُقال بحذر شديد",
+  "func": "H"
  },
  {
   "id": "MU033",
@@ -4944,7 +5355,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU034",
@@ -4958,7 +5370,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": "ثقة مرحة تبني ولاء"
+  "notes": "ثقة مرحة تبني ولاء",
+  "func": ""
  },
  {
   "id": "MU035",
@@ -4972,7 +5385,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🟡 متوسطة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU036",
@@ -4986,7 +5400,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "H"
  },
  {
   "id": "MU037",
@@ -5000,7 +5415,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "مع دائمة معروفة فقط"
+  "notes": "مع دائمة معروفة فقط",
+  "func": "B"
  },
  {
   "id": "MU038",
@@ -5014,7 +5430,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": "بين النساء فقط"
+  "notes": "بين النساء فقط",
+  "func": ""
  },
  {
   "id": "MU039",
@@ -5028,7 +5445,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU040",
@@ -5042,7 +5460,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  },
  {
   "id": "MU041",
@@ -5056,7 +5475,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": "K"
  },
  {
   "id": "MU042",
@@ -5070,7 +5490,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": "يجعل المحل ملاذًا"
+  "notes": "يجعل المحل ملاذًا",
+  "func": ""
  },
  {
   "id": "MU043",
@@ -5084,7 +5505,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU044",
@@ -5098,7 +5520,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU045",
@@ -5112,7 +5535,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "🔥 شائعة جدًا",
-  "notes": ""
+  "notes": "",
+  "func": "I"
  },
  {
   "id": "MU046",
@@ -5126,7 +5550,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "🟡 متوسطة",
-  "notes": "مع الشباب"
+  "notes": "مع الشباب",
+  "func": ""
  },
  {
   "id": "MU047",
@@ -5140,7 +5565,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU048",
@@ -5154,7 +5580,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "نعم",
   "frequency": "✅ مفيدة",
-  "notes": ""
+  "notes": "",
+  "func": ""
  },
  {
   "id": "MU049",
@@ -5168,7 +5595,8 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": "الزبون وجه خير"
+  "notes": "الزبون وجه خير",
+  "func": "B"
  },
  {
   "id": "MU050",
@@ -5182,6 +5610,7 @@ const PHRASES = [
   "familiarity": "عالية",
   "humor": "لا",
   "frequency": "⭐ شائعة",
-  "notes": ""
+  "notes": "",
+  "func": "A"
  }
 ];

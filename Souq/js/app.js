@@ -19,6 +19,7 @@
   let currentRoute='home';
   let theme = store.get('souq_theme','light');
   let favorites = store.get('souq_favs',[]);
+  let activeFunc='';
 
   /* ---------- شاشة البداية ---------- */
   window.addEventListener('load', ()=>{
@@ -151,6 +152,8 @@
     });
     html+='<li class="nav-label">استكشاف</li>';
     html+=navItem('phrases','🔎','قاعدة العبارات','c-blue');
+    html+=navItem('functions','🗂️','التصنيف الوظيفي','c-teal');
+    html+=navItem('search','🔍','بحث شامل','c-purple');
     html+=navItem('about','ℹ️','عن الموسوعة','c-teal');
     html+=navItem('favorites','⭐','المفضلة','c-amber');
     list.innerHTML=html;
@@ -231,13 +234,15 @@
   /* ============================================================
      التوجيه (Routing)
      ============================================================ */
-  const ROUTES=['home','chapters','phrases','about','favorites'].concat(CHAPTERS.map(c=>c.id));
+  const ROUTES=['home','chapters','phrases','about','favorites','functions','search'].concat(CHAPTERS.map(c=>c.id));
   const isChapter = id => CHAPTERS.some(c=>c.id===id);
 
   function route(){
-    const hashStr=location.hash||'#home';
-    let clean=hashStr.slice(1).split('?')[0]||'home';
+    const parts=(location.hash||'#home').slice(1).split('?');
+    let clean=parts[0]||'home';
+    const params=new URLSearchParams(parts[1]||'');
     currentRoute = ROUTES.includes(clean)?clean:'home';
+    activeFunc = currentRoute==='phrases' ? (params.get('func')||'') : '';
     updateActiveNav();
     render(currentRoute);
     window.scrollTo({top:0});
@@ -248,7 +253,7 @@
     $$('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.route===currentRoute));
     let tab = currentRoute==='phrases'?'phrases':(currentRoute==='chapters'||isChapter(currentRoute))?'chapters':'home';
     $$('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.route===tab));
-    const map={home:SOUQ_META.appName, chapters:'أقسام الموسوعة', phrases:'قاعدة العبارات', about:'عن الموسوعة', favorites:'المفضلة'};
+    const map={home:SOUQ_META.appName, chapters:'أقسام الموسوعة', phrases:'قاعدة العبارات', about:'عن الموسوعة', favorites:'المفضلة', functions:'التصنيف الوظيفي', search:'البحث الشامل'};
     let title=map[currentRoute];
     if(!title){ const ch=CHAPTERS.find(c=>c.id===currentRoute); title=ch?ch.label:SOUQ_META.appName; }
     $('#sectionTitle').textContent=title;
@@ -256,10 +261,11 @@
 
   function render(route){
     const c=$('#content');
-    const map={home:renderHome, chapters:renderChapters, phrases:renderPhrases, about:renderAbout, favorites:renderFavorites};
+    const map={home:renderHome, chapters:renderChapters, phrases:renderPhrases, about:renderAbout, favorites:renderFavorites, functions:renderFunctions, search:renderSearch};
     if(isChapter(route)){ c.innerHTML=renderChapter(route); }
     else { c.innerHTML=(map[route]||renderHome)(); }
     if(route==='phrases') bindPhrases();
+    if(route==='search') bindSearch();
   }
 
   /* ============================================================
@@ -351,7 +357,7 @@
       '<div class="phrase-main">«'+esc(p.phrase)+'»</div>'+
       (p.msa?'<div class="phrase-msa"><b>الفصحى:</b> '+esc(p.msa)+'</div>':'')+
       '<div class="phrase-meta">'+
-        b(p.country,'gold')+b(p.dialect,'teal')+b(p.situation,'blue')+b(p.addressee,'purple')+b(p.formality)+b(p.familiarity)+b(p.frequency,'rose')+b(p.humor)+
+        b(p.func,'teal')+b(p.country,'gold')+b(p.dialect,'teal')+b(p.situation,'blue')+b(p.addressee,'purple')+b(p.formality)+b(p.familiarity)+b(p.frequency,'rose')+b(p.humor)+
       '</div>'+
       (p.notes?'<div class="phrase-notes"><b>ملاحظات:</b> '+esc(p.notes)+'</div>':'')+
     '</div>';
@@ -360,7 +366,7 @@
   function renderPhrases(){
     const m=SOUQ_META;
     const opt=arr=>'<option value="">الكل</option>'+arr.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
-    return ''+
+      return funcBanner()+
       '<div class="sec-intro">قاعدة بيانات فيها <b>'+m.phrasesCount+'</b> عبارة وجملة من أسواق العربية، مع ترجمتها الفصحى ودولتها ولهجتها وموقفها. ابحث وصفِّ وفقاً لحاجتك.</div>'+
       '<div class="filter-bar">'+
         '<div class="search-box" style="margin-bottom:0">'+
@@ -388,6 +394,7 @@
     const s=$('#fSituation')?$('#fSituation').value:'';
     const a=$('#fAddressee')?$('#fAddressee').value:'';
     return PHRASES.filter(p=>{
+      if(activeFunc && p.func!==activeFunc) return false;
       if(c && p.country!==c) return false;
       if(d && p.dialect!==d) return false;
       if(s && p.situation!==s) return false;
@@ -420,6 +427,96 @@
       renderPhrasesResults();
     });
     renderPhrasesResults();
+  }
+
+  function funcBanner(){
+    if(!activeFunc) return '';
+    const f=FUNCTIONS.find(x=>x.code===activeFunc);
+    if(!f) return '';
+    return '<div class="box tip" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+      '<div><span class="bt">عبارات الوظيفة '+esc(f.code)+'</span> '+esc(f.name)+' — '+f.count+' عبارة</div>'+
+      '<button class="btn-primary ghost" data-go="phrases" style="flex:0 0 auto;padding:8px 14px">مسح التصفية</button>'+
+    '</div>';
+  }
+
+  function renderFunctions(){
+    const items=FUNCTIONS.map(f=>{
+      const ch=f.chapterId?CHAPTERS.find(c=>c.id===f.chapterId):null;
+      return '<div class="card">'+
+        '<h2><span class="ic c-teal" style="width:34px;height:34px;border-radius:10px;font-size:16px;display:inline-flex;align-items:center;justify-content:center;color:#fff;margin-left:8px">'+esc(f.code)+'</span>'+esc(f.name)+'</h2>'+
+        (f.examples?'<p style="color:var(--text-soft);font-size:14px">أمثلة: '+esc(f.examples)+'</p>':'')+
+        '<div class="phrase-meta" style="margin-top:8px">'+
+          '<span class="badge gold">'+f.count+' عبارة</span>'+
+          (ch?'<span class="badge blue">'+esc(ch.label)+'</span>':'')+
+        '</div>'+
+        '<div class="filter-row" style="margin-top:12px">'+
+          (f.count>0?'<button class="btn-primary ghost" data-go="phrases?func='+f.code+'" style="flex:1">عرض عبارات هذه الوظيفة</button>':'<span style="flex:1"></span>')+
+          (ch?'<button class="btn-primary ghost" data-go="'+ch.id+'" style="flex:1">القسم المختص ←</button>':'<span hidden></span>')+
+        '</div>'+
+      '</div>';
+    }).join('');
+    return '<div class="sec-intro">التصنيف الوظيفي (A–K) هو العمود الفقري للموسوعة: كل عبارة تنتمي إلى وظيفة بيعية. اختر وظيفة لتصفّح عباراتها أو تنتقل إلى قسمها المختص.</div><div style="display:flex;flex-direction:column;gap:14px">'+items+'</div>';
+  }
+
+  function renderSearch(){
+    return '<div class="sec-intro">بحث شامل في كل أقسام الموسوعة وقاعدة العبارات معاً.</div>'+
+      '<div class="filter-bar">'+
+        '<div class="search-box" style="margin-bottom:0">'+
+          '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 10-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>'+
+          '<input id="gsSearch" type="search" placeholder="ابحث عن عبارة، موضوع، كلمة، أو موقف...">'+
+        '</div>'+
+        '<div class="filter-row">'+
+          '<select id="gsScope" class="filter-select">'+
+            '<option value="all">الكل (أقسام + عبارات)</option>'+
+            '<option value="chapters">الأقسام فقط</option>'+
+            '<option value="phrases">العبارات فقط</option>'+
+          '</select>'+
+        '</div>'+
+      '</div>'+
+      '<div id="gsCount" class="result-count"></div>'+
+      '<div id="gsResults"></div>';
+  }
+
+  function renderGlobalResults(){
+    const q=$('#gsSearch')?$('#gsSearch').value.trim().toLowerCase():'';
+    const scope=$('#gsScope')?$('#gsScope').value:'all';
+    const box=$('#gsResults'); if(!box) return;
+    if(!q){ box.innerHTML='<p style="text-align:center;color:var(--text-mute);padding:20px">اكتب كلمة للبحث في الموسوعة.</p>'; const c=$('#gsCount'); if(c)c.textContent=''; return; }
+    let html=''; let total=0;
+    if(scope!=='phrases'){
+      const chRes=CHAPTERS.map(c=>({c,idx:c.raw.toLowerCase().indexOf(q)})).filter(x=>x.idx>=0);
+      if(chRes.length){
+        total+=chRes.length;
+        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">📘 الأقسام ('+chRes.length+')</h3>';
+        html+=chRes.map(({c})=>{
+          const idx=c.raw.toLowerCase().indexOf(q);
+          const start=Math.max(0,idx-40);
+          const snip=c.raw.substring(start,start+120).replace(/\n+/g,' ').replace(/\*\*/g,'').replace(/[#>*|]/g,'');
+          return '<button class="section-tile" data-go="'+c.id+'" style="text-align:right;align-items:flex-start">'+
+            '<span class="ic '+c.color+'">'+c.icon+'</span>'+
+            '<span class="t">'+esc(c.label)+'</span>'+
+            '<span class="n">…'+esc(snip)+'…</span>'+
+          '</button>';
+        }).join('');
+      }
+    }
+    if(scope!=='chapters'){
+      const phRes=PHRASES.filter(p=>(p.phrase+' '+p.msa+' '+p.notes+' '+p.situation+' '+p.country+' '+p.dialect).toLowerCase().includes(q));
+      if(phRes.length){
+        total+=phRes.length;
+        html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🔤 العبارات ('+phRes.length+')</h3>';
+        html+=phRes.slice(0,60).map(phraseCard).join('');
+        if(phRes.length>60) html+='<p style="text-align:center;color:var(--text-mute);padding:10px">وهناك '+(phRes.length-60)+' نتيجة أخرى — استخدم «قاعدة العبارات» للفلترة الكاملة.</p>';
+      }
+    }
+    const cnt=$('#gsCount'); if(cnt) cnt.textContent=total+' نتيجة لـ «'+q+'»';
+    box.innerHTML = total ? html : '<p style="text-align:center;color:var(--text-mute);padding:24px">لا توجد نتائج مطابقة لـ «'+esc(q)+'».</p>';
+  }
+
+  function bindSearch(){
+    const s=$('#gsSearch'); if(s) s.addEventListener('input', renderGlobalResults);
+    const sc=$('#gsScope'); if(sc) sc.addEventListener('change', renderGlobalResults);
+    renderGlobalResults();
   }
 
   function renderFavorites(){

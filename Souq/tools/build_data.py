@@ -100,10 +100,76 @@ def read_phrases():
             })
     return phrases
 
+FUNC_KEYWORDS = {
+    'A': ['جذب', 'لفت', 'شارع', 'ممر', 'نداء', 'تعال'],
+    'B': ['ترحيب', 'دعوة دخول', 'هلا', 'دخول', 'نورت'],
+    'C': ['فتح الحديث', 'حوار', 'حديث', 'استطلاع'],
+    'D': ['اكتشاف الحاجة', 'الحاجة'],
+    'E': ['عرض', 'منتج', 'سلعة', 'تقديم'],
+    'F': ['تعزيز القيمة', 'إقناع', 'قيمة', 'تأكيد', 'مميزات'],
+    'G': ['اعتراض', 'رفض', 'تحفظ'],
+    'H': ['تفاوض', 'مساومة', 'مكاسرة', 'خصم', 'سومة', 'السوم', 'مفاصلة', 'تشطار'],
+    'I': ['إغلاق', 'قفل', 'إنهاء', 'حسم', 'ختام'],
+    'J': ['بيع إضافي', 'إضافة', 'ملحق', 'أكسسوار', 'إضافي'],
+    'K': ['محافظة', 'توديع', 'وداع', 'علاقة', 'متابعة', 'وفاء', 'بعد البيع'],
+}
+FUNC_ORDER = 'ABCDEFGHIJK'
+
+
+def read_functions(chapters):
+    """يستخرج التصنيف الوظيفي (A–K) من جدول القسم 1 في الموسوعة."""
+    ch1 = next((c for c in chapters if c.get('num') == 1), None)
+    funcs = []
+    if not ch1:
+        return funcs
+    lines = ch1['raw'].split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.strip().startswith('|') and i + 1 < len(lines) and re.match(r'^\|[\s:\-|]+\|', lines[i + 1]):
+            j = i + 2
+            while j < len(lines) and lines[j].strip().startswith('|'):
+                cells = [c.strip() for c in lines[j].strip().strip('|').split('|')]
+                if cells and len(cells[0]) == 1 and cells[0] in FUNC_ORDER:
+                    code = cells[0]
+                    name = re.sub(r'\*\*', '', cells[1]).strip() if len(cells) > 1 else ''
+                    examples = re.sub(r'\*\*', '', cells[2]).strip() if len(cells) > 2 else ''
+                    where = cells[3].strip() if len(cells) > 3 else ''
+                    m = re.search(r'ملف\s*(\d{2})', where)
+                    chap = 'ch' + m.group(1) if m else ''
+                    funcs.append({'code': code, 'name': name, 'examples': examples, 'where': where, 'chapterId': chap})
+                j += 1
+            i = j
+        else:
+            i += 1
+    seen = set()
+    ordered = []
+    for code in FUNC_ORDER:
+        for f in funcs:
+            if f['code'] == code and f['code'] not in seen:
+                ordered.append(f)
+                seen.add(f['code'])
+    return ordered
+
+
+def assign_function(p):
+    text = ((p.get('situation') or '') + ' ' + (p.get('phrase') or '')).lower()
+    for code in FUNC_ORDER:
+        for kw in FUNC_KEYWORDS[code]:
+            if kw in text:
+                return code
+    return ''
+
+
 def main():
     chapters = read_chapters()
     about = read_about()
     phrases = read_phrases()
+    for p in phrases:
+        p["func"] = assign_function(p)
+    functions = read_functions(chapters)
+    for f in functions:
+        f["count"] = sum(1 for p in phrases if p.get("func") == f["code"])
 
     countries = sorted({p["country"] for p in phrases if p["country"]})
     dialects = sorted({p["dialect"] for p in phrases if p["dialect"]})
@@ -119,6 +185,7 @@ def main():
         "countriesCount": len(countries),
         "dialectsCount": len(dialects),
         "situationsCount": len(situations),
+        "functionsCount": len(functions),
         "countries": countries,
         "dialects": dialects,
         "situations": situations,
@@ -138,6 +205,8 @@ def main():
     out.append("const CHAPTERS = " + json.dumps(chapters, ensure_ascii=False, indent=1) + ";")
     out.append("")
     out.append("const ABOUT = " + json.dumps(about, ensure_ascii=False, indent=1) + ";")
+    out.append("")
+    out.append("const FUNCTIONS = " + json.dumps(functions, ensure_ascii=False, indent=1) + ";")
     out.append("")
     out.append("const PHRASES = " + json.dumps(phrases, ensure_ascii=False, indent=1) + ";")
     out.append("")
