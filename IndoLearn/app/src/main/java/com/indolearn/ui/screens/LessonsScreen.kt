@@ -36,7 +36,16 @@ fun LessonsScreen(navController: NavController, viewModel: LearnViewModel, level
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("📖 الدروس — المرحلة ${level + 1}") },
+                title = {
+                    Text(
+                        "📖 الدروس — " + when (level) {
+                            A0PronunciationContent.LEVEL -> "A0"
+                            0 -> "A1"
+                            1 -> "A2"
+                            else -> "المرحلة ${level + 1}"
+                        }
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "رجوع")

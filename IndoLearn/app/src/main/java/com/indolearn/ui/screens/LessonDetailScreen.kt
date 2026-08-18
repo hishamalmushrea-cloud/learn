@@ -1,5 +1,6 @@
 package com.indolearn.ui.screens
 
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -12,8 +13,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.indolearn.data.local.entity.A0_EXIT_QUIZ_LESSON_ID
 import com.indolearn.data.local.entity.LessonDetailEntity
 import com.indolearn.data.local.entity.LessonEntity
+import com.indolearn.data.repository.A0PronunciationContent
 import com.indolearn.utils.TtsManager
 import com.indolearn.viewmodel.LearnViewModel
 
@@ -74,7 +77,15 @@ fun LessonDetailScreen(
             }
             Spacer(Modifier.width(8.dp))
             Column {
-                Text("المرحلة ${(lesson?.level ?: 0) + 1}", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    when (lesson?.level) {
+                        A0PronunciationContent.LEVEL -> "المرحلة A0"
+                        0 -> "المرحلة A1"
+                        1 -> "المرحلة A2"
+                        else -> "المرحلة ${(lesson?.level ?: 0) + 1}"
+                    },
+                    style = MaterialTheme.typography.labelMedium
+                )
                 Text(lesson?.titleAr ?: "درس", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
         }
@@ -129,56 +140,68 @@ fun LessonDetailScreen(
                 }
             }
 
-            // Example with full analysis
             item {
-                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
-                val context = androidx.compose.ui.platform.LocalContext.current
+                var recall by remember { mutableStateOf("") }
+                var revealRecall by remember { mutableStateOf(false) }
                 Card {
                     Column(Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("🇮🇩 مثال", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            IconButton(onClick = {
-                                val exampleText = (lessonDetail?.wordByWord?.split("\n")?.firstOrNull() ?: "") + 
-                                    "\nتفكيك الكلمات:\n" + (lessonDetail?.wordByWord ?: "") +
-                                    "\nتركيب الجملة:\n" + (lessonDetail?.sentenceStructure ?: "")
-                                clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(exampleText))
-                                android.widget.Toast.makeText(context, "تم نسخ المثال وتفكيك الجملة! 📋", android.widget.Toast.LENGTH_SHORT).show()
-                            }) {
-                                Text("📋")
+                        Text("🇮🇩 أمثلة وترجمة", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        val exampleLines = lessonDetail?.wordByWord
+                            ?.split("\n")
+                            ?.map { it.trim() }
+                            ?.filter { it.isNotEmpty() }
+                            ?: emptyList()
+                        exampleLines.forEach { line ->
+                            val idn = line.substringBefore("|||").trim()
+                            val ar = line.substringAfter("|||", "").trim()
+                            Text(idn, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            if (ar.isNotEmpty()) Text(ar, style = MaterialTheme.typography.bodyMedium)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = {
+                                    tts.speak(idn, currentSpeed, langCode = currentLanguage)
+                                }) { Text("🔊") }
+                                Text("استمع", style = MaterialTheme.typography.bodySmall)
                             }
+                            Spacer(Modifier.height(4.dp))
                         }
                         Spacer(Modifier.height(8.dp))
-
-                        val example = lessonDetail?.wordByWord?.split("\n")?.firstOrNull() ?: ""
-                        Text(example, style = MaterialTheme.typography.titleLarge)
-                        
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { tts.speak(example, currentSpeed, langCode = currentLanguage) }) {
-                                Text("🔊")
-                            }
-                            Text("استمع للمثال", style = MaterialTheme.typography.bodyMedium)
-                        }
-
-                        Spacer(Modifier.height(12.dp))
-                        Text("🔎 كلمة بكلمة", fontWeight = FontWeight.Bold)
-                        Text(lessonDetail?.wordByWord ?: "")
-
-                        Spacer(Modifier.height(8.dp))
-                        Text("🧩 تركيب الجملة", fontWeight = FontWeight.Bold)
+                        Text("🧠 استرجاع نشط", fontWeight = FontWeight.Bold)
                         Text(lessonDetail?.sentenceStructure ?: "")
+                        OutlinedTextField(
+                            value = recall,
+                            onValueChange = { recall = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("اكتب ما تتذكره ثم اكشف") }
+                        )
+                        TextButton(onClick = { revealRecall = true }) { Text("كشف الدليل") }
+                        if (revealRecall) {
+                            Text(lessonDetail?.sentenceStructure ?: "", style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }
 
-            // Daily Usage + Formality
             item {
                 Card {
                     Column(Modifier.padding(16.dp)) {
-                        Text("🗣️ الاستخدام اليومي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("👂 تدريب تمييز", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
                         Text(lessonDetail?.dailyUsage ?: "")
-                        Spacer(Modifier.height(8.dp))
-                        Text("📚 " + (lessonDetail?.formalVsCasual ?: ""))
+                        val listenWords = lessonDetail?.formalVsCasual
+                            ?.removePrefix("اسمع:")
+                            ?.split(",")
+                            ?.map { it.trim() }
+                            ?.filter { it.isNotEmpty() }
+                            ?: emptyList()
+                        listenWords.forEach { word ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { tts.speak(word, currentSpeed, langCode = currentLanguage) }) {
+                                    Text("🔊")
+                                }
+                                Text(word)
+                            }
+                        }
                     }
                 }
             }
@@ -196,8 +219,37 @@ fun LessonDetailScreen(
                 }
             }
 
-            // Quiz & Completion
             item {
+                val drillCategory = when (lessonId) {
+                    401 -> "A0 كتابة"
+                    402 -> "A0 صوائت"
+                    403 -> "A0 سواكن"
+                    404 -> "A0 c j g"
+                    405 -> "A0 ng ny"
+                    406 -> "A0 sy kh"
+                    407 -> "A0 نبر"
+                    408 -> "A0 قراءة"
+                    else -> null
+                }
+                if (drillCategory != null) {
+                    OutlinedButton(
+                        onClick = { navController.navigate("quiz/${Uri.encode(drillCategory)}/60/-1") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("تدريب تمييز لهذا الدرس") }
+                    Spacer(Modifier.height(8.dp))
+                }
+                if (lessonId == 409) {
+                    Button(
+                        onClick = {
+                            navController.navigate(
+                                "quiz/${Uri.encode(A0PronunciationContent.EXIT_CATEGORY)}/" +
+                                    "${A0PronunciationContent.PASS_PERCENT}/$A0_EXIT_QUIZ_LESSON_ID"
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("اختبار انتقال A0 — نجاح 80٪") }
+                    Spacer(Modifier.height(8.dp))
+                }
                 Button(
                     onClick = {
                         viewModel.markLessonDone(lessonId)

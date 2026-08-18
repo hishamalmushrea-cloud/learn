@@ -105,6 +105,9 @@ class LearnRepository(private val db: AppDatabase) {
     suspend fun getRandomQuizzes(limit: Int, langCode: String) =
         db.trainingDao().getRandomQuizzes(limit, langCode)
 
+    suspend fun getQuizzesByCategory(category: String, langCode: String) =
+        db.trainingDao().getByCategoryOnce(category, langCode)
+
     /** يحفظ نتيجة الاختبار — لم تكن تُحفظ إطلاقاً قبل الإصلاح. */
     suspend fun saveQuizResult(lessonId: Int, score: Int, total: Int, langCode: String) {
         val effectiveLessonId = if (lessonId == MIXED_QUIZ_LESSON_ID && langCode == "TR") -2 else lessonId
@@ -256,6 +259,12 @@ class LearnRepository(private val db: AppDatabase) {
         val favoriteWordIds = db.vocabularyDao().getFavoriteIds()
 
         // Level 0 and Level 1 Lessons (Complete Curriculum)
+        db.stageDao().insertAll(listOf(A0PronunciationContent.stage))
+        db.unitDao().insertAll(A0PronunciationContent.units)
+        db.lessonDao().insertAll(A0PronunciationContent.lessons)
+        db.lessonDetailDao().insertAll(A0PronunciationContent.details)
+        db.trainingDao().insertAll(A0PronunciationContent.quizzes)
+
         val lessons = listOf(
             LessonEntity(1, 0, "التحيات", "Salam", "تعلم التحيات الأساسية", "content1", false),
             LessonEntity(2, 0, "الضمائر", "Kata Ganti", "saya, aku, kamu, Anda...", "content2", false),
@@ -422,8 +431,8 @@ class LearnRepository(private val db: AppDatabase) {
 
         // === Full Curriculum Stages ===
         val stages = listOf(
-            StageEntity(1, "المرحلة 1 — الصفر", "Tahap 1 - Nol", "التحيات، الضمائر، الجملة الأساسية، الأرقام والوقت", 0, true),
-            StageEntity(2, "المرحلة 2 — المبتدئ العملي", "Tahap 2 - Pemula Praktis", "الزمن، الأفعال، القدرة، البادئات، المقارنة والمواقف اليومية", 1, true),
+            StageEntity(1, "المرحلة A1 — الأساس", "Tahap A1 - Dasar", "التحيات، الضمائر، الجملة الأساسية، الأرقام والوقت", 0, true),
+            StageEntity(2, "المرحلة A2 — المبتدئ العملي", "Tahap A2 - Pemula Praktis", "الزمن، الأفعال، القدرة، البادئات، المقارنة والمواقف اليومية", 1, true),
         )
         db.stageDao().insertAll(stages)
 

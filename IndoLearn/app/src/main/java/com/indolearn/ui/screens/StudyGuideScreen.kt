@@ -35,7 +35,7 @@ fun StudyGuideScreen(navController: NavController, viewModel: LearnViewModel) {
     val currentLanguage = viewModel.currentLanguage.collectAsState().value
 
     var currentTab by remember { mutableStateOf(0) }
-    val tabs = listOf("🧩 صندوق القوالب", "⚠️ أخطاء العرب الشائعة", "✅ التقييم الذاتي للطلاقة")
+    val tabs = listOf("كيف تتعلم فعلاً؟", "🧩 القوالب", "⚠️ أخطاء العرب", "✅ تقييم ذاتي")
 
     DisposableEffect(Unit) {
         onDispose {
@@ -115,9 +115,10 @@ fun StudyGuideScreen(navController: NavController, viewModel: LearnViewModel) {
 
             Box(modifier = Modifier.weight(1f)) {
                 when (currentTab) {
-                    0 -> TemplateBuilderTab(currentLanguage, tts)
-                    1 -> CommonMistakesTab(currentLanguage)
-                    2 -> SelfAssessmentTab()
+                    0 -> HowLanguagesAreLearnedTab()
+                    1 -> TemplateBuilderTab(currentLanguage, tts)
+                    2 -> CommonMistakesTab(currentLanguage)
+                    3 -> SelfAssessmentTab()
                 }
             }
         }
@@ -526,8 +527,8 @@ fun SelfAssessmentTab() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text("📈 تقييم طلاقتي اللغوية الذاتي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("قيّم مهارتك بنفسك للتأكد من اكتمال أهداف الدراسة واكتساب المهارة الحقيقية:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            Text("📈 تقييم ذاتي صادق", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("هذه بنود قدرة عملية محدودة، لا شهادة طلاقة:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
             Spacer(Modifier.height(4.dp))
         }
 

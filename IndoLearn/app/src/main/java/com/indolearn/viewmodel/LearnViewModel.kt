@@ -279,6 +279,17 @@ class LearnViewModel @Inject constructor(
         }
     }
 
+    suspend fun getQuizzesByCategory(category: String): List<TrainingItemEntity> {
+        return try {
+            seedManager.ensureSeeded()
+            val language = preferencesManager.selectedLanguage.first()
+            repository.getQuizzesByCategory(category, language)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     fun saveNote(title: String, content: String) {
         viewModelScope.launch {
             try {

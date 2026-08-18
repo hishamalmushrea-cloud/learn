@@ -23,3 +23,6 @@ data class QuizResultEntity(
  * القيمة سالبة فلا يمكن أن تطابق أي معرّف درس حقيقي.
  */
 const val MIXED_QUIZ_LESSON_ID: Int = -1
+
+/** نتيجة اختبار انتقال A0؛ سالب حتى لا يصطدم بمعرّف درس. */
+const val A0_EXIT_QUIZ_LESSON_ID: Int = -3
