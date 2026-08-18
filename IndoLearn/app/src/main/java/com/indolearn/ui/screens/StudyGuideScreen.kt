@@ -125,6 +125,35 @@ fun StudyGuideScreen(navController: NavController, viewModel: LearnViewModel) {
     }
 }
 
+
+@Composable
+fun HowLanguagesAreLearnedTab() {
+    val points = listOf(
+        "اللغة مهارة تُبنى بالتكرار الموزّع والاستخدام، لا بقراءة الموسوعة مرة واحدة.",
+        "خمس عشرة إلى ثلاثين دقيقة يومياً أجدى من ساعات متقطعة أسبوعياً.",
+        "اسمع قبل أن تقرأ، ثم ظلّ الجملة، ثم استرجعها دون نص.",
+        "الأخطاء تُجدول (1 ثم 3 ثم 7 ثم 14 يوماً). الإعادة العشوائية لكل شيء تُرهق ولا تثبّت.",
+        "لن تصبح طليقاً من تطبيق وحده. التطبيق يعطيك مساراً وتمارين؛ المحادثة الحقيقية هي الوقود.",
+        "مرحلة A0 هنا للنطق والقراءة فقط. لا تعدك بجمل السوق قبل أن تميز ng و e pepet.",
+        "ترجمة جوجل كلمة بكلمة، وقوائم «ألف كلمة» الآلية، ووعد الطلاقة في أسابيع: تجنّبها."
+    )
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            Text("كيف تتعلم لغة فعلاً؟", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "دليل مختصر بلا مبالغة. الهدف قدرة عملية محدودة تُقاس بما تفعله، لا بما تحفظه.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline
+            )
+        }
+        items(points) { line ->
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                Text(line, modifier = Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
 // ==========================================
 // === TAB 1: INTERACTIVE TEMPLATE BUILDER ===
 // ==========================================
