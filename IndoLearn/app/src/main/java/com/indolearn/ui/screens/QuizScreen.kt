@@ -107,7 +107,7 @@ fun QuizScreen(
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (score >= questions.size / 2)
+                        containerColor = if (passed)
                             MaterialTheme.colorScheme.secondaryContainer
                         else MaterialTheme.colorScheme.errorContainer
                     )
