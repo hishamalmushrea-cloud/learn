@@ -25,13 +25,18 @@
   let currentDlgId='';
   let currentDlgLang='ar';
   let currentDlgRole='all';
+  let currentSearchQ='';
 
   /* ---------- شاشة البداية ---------- */
   window.addEventListener('load', ()=>{
+    const seen=store.get('souq_seen', false);
+    const wait=seen?0:800;
     setTimeout(()=>{
-      $('#splash').classList.add('hide');
-      setTimeout(()=>{ $('#splash').hidden=true; init(); }, 600);
-    }, 1000);
+      const sp=$('#splash');
+      if(sp){ sp.classList.add('hide'); setTimeout(()=>{ sp.hidden=true; }, seen?0:400); }
+      store.set('souq_seen', true);
+      init();
+    }, wait);
   });
 
   function init(){
@@ -230,6 +235,7 @@
       URL.revokeObjectURL(url); toast('تم التصدير 📁'); closeDrawer();
     });
 
+    $('#searchBtn')?.addEventListener('click', ()=>navigate('search'));
     $('#themeBtn')?.addEventListener('click', ()=>{
       theme = theme==='dark'?'light':'dark'; store.set('souq_theme',theme); applyTheme();
     });
@@ -301,6 +307,7 @@
     else { c.innerHTML=(map[route]||renderHome)(); }
     if(route==='phrases') bindPhrases();
     if(route==='search') bindSearch();
+    if(route==='home') bindHome();
     if(route==='mlphrases') bindMlPhrases();
     if(route==='mlcompare') bindMlCompare();
     if(route==='mldialogues') bindDialogues();
@@ -322,41 +329,40 @@
 
   function renderHome(){
     const m=SOUQ_META;
-    const stats=[
-      {ic:'📘', v:m.chaptersCount, l:'قسماً عربياً'},
-      {ic:'🔤', v:m.phrasesCount, l:'عبارة عربية'},
-      {ic:'🌐', v:5, l:'لغات أجنبية'},
-      {ic:'💬', v:m.mlPhrasesCount, l:'عبارة متعددة اللغات'}
+    const gates=[
+      {id:'chapters', ic:'📘', t:'الموسوعة العربية', n:m.chaptersCount+' قسماً و'+m.phrasesCount+' عبارة — جذب، تفاوض، لهجات'},
+      {id:'languages', ic:'🌐', t:'لغات السوق', n:'تركية · إندونيسية · طاجيكية · فرنسية · إنجليزية — '+m.mlPhrasesCount+' عبارة'},
+      {id:'search', ic:'🔍', t:'ابحث', n:'في الأقسام والعبارات والحوارات معاً'}
     ];
-    const statHtml=stats.map(s=>'<div class="stat-pill"><span class="sp-ic">'+s.ic+'</span><div><div class="sp-v">'+s.v+'</div><div class="sp-l">'+s.l+'</div></div></div>').join('');
-    const langTiles=ML_LANGS.map(l=>{
-      const d=ML_DOCS.find(x=>x.lang===l.code && x.role==='main');
-      const cnt=m.mlLangCounts[l.code]||0;
-      return '<button class="section-tile" data-go="'+(d?d.id:'languages')+'"><span class="ic '+l.color+'">'+l.flag+'</span><span class="t">'+esc(l.name)+'</span><span class="n">'+cnt+' عبارة أصلية</span></button>';
-    }).join('');
-    const quick=[
-      {id:'phrases', ic:'🔎', c:'c-blue', t:'قاعدة العبارات العربية', n:m.phrasesCount+' عبارة قابلة للبحث'},
-      {id:'languages', ic:'🌐', c:'c-teal', t:'بوابة اللغات', n:'تركية · إندونيسية · طاجيكية · فرنسية · إنجليزية'},
-      {id:'mlphrases', ic:'🔤', c:'c-purple', t:'عبارات متعددة اللغات', n:m.mlPhrasesCount+' عبارة مع نطق وترجمة'},
-      {id:'mlcompare', ic:'🔁', c:'c-orange', t:'مقارنة الوظائف', n:'نفس الموقف عبر خمس لغات'},
-      {id:'mldialogues', ic:'💬', c:'c-rose', t:'حوارات تفاعلية', n:'استمع ومثّل الدور'},
-      {id:'about', ic:'ℹ️', c:'c-slate', t:'عن الموسوعة', n:'المنهجية والرموز'},
-      {id:'favorites', ic:'⭐', c:'c-amber', t:'المفضلة', n:'عباراتك المحفوظة'}
-    ];
-    const quickHtml=quick.map(q=>'<button class="section-tile" data-go="'+q.id+'"><span class="ic '+q.c+'">'+q.ic+'</span><span class="t">'+esc(q.t)+'</span><span class="n">'+esc(q.n)+'</span></button>').join('');
+    const gateHtml=gates.map(g=>
+      '<button class="gate" data-go="'+g.id+'"><span class="gate-ic">'+g.ic+'</span><span class="gate-t">'+esc(g.t)+'</span><span class="gate-n">'+esc(g.n)+'</span></button>'
+    ).join('');
+    const chips=[
+      {id:'phrases', t:'عبارات عربية'},
+      {id:'mldialogues', t:'حوارات'},
+      {id:'mlcompare', t:'مقارنة'},
+      {id:'favorites', t:'المفضلة'}
+    ].map(c=>'<button class="chip" data-go="'+c.id+'">'+esc(c.t)+'</button>').join('');
     return ''+
       '<section class="hero">'+
         '<h1>'+esc(m.appName)+'</h1>'+
-        '<p>'+esc(m.subtitle)+' — ومعها موسوعة موازية بخمس لغات: كيف يتكلم بائع حقيقي، لا ترجمة حرفية.</p>'+
-        '<div class="hero-stats">'+statHtml+'</div>'+
+        '<p>كيف يتكلم بائع وزبون حقيقيان — بالعربية وخمس لغات.</p>'+
       '</section>'+
-      '<div class="card"><h2>🔎 ما هي موسوعة السوق؟</h2><p style="color:var(--text-soft);font-size:14.5px">دليل عربي شامل يجمع عبارات وأساليب ولهجات الباعة والزبائن: الجذب، الترحيب، العرض، الإقناع، المساومة، المزاح، إغلاق البيع، والتوديع. إلى جانبه طبقة موازية بالتركية والإندونيسية والطاجيكية والفرنسية والإنجليزية — المعادل الوظيفي والثقافي لا ترجمة الكلمات. كل المحتوى متاح دون إنترنت.</p></div>'+
-      '<div class="sec-intro">أقسام الموسوعة العربية ('+m.chaptersCount+')</div>'+
-      chaptersGrid()+
-      '<div class="sec-intro">لغات السوق حول العالم</div>'+
-      '<div class="section-grid">'+langTiles+'</div>'+
-      '<div class="sec-intro">أدوات إضافية</div>'+
-      '<div class="section-grid">'+quickHtml+'</div>';
+      '<div class="search-box home-search">'+
+        '<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 10-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg>'+
+        '<input id="homeSearch" type="search" placeholder="ابحث: غالي، Hoş geldiniz، تفاوض...">'+
+      '</div>'+
+      '<div class="gate-list">'+gateHtml+'</div>'+
+      '<div class="chip-row">'+chips+'</div>';
+  }
+
+  function bindHome(){
+    const hs=$('#homeSearch'); if(!hs) return;
+    hs.addEventListener('keydown', e=>{
+      if(e.key!=='Enter') return;
+      const q=hs.value.trim();
+      navigate('search'+(q?('?q='+encodeURIComponent(q)):''));
+    });
   }
 
   function renderChapters(){
@@ -592,7 +598,12 @@
   }
 
   function bindSearch(){
-    const s=$('#gsSearch'); if(s) s.addEventListener('input', renderGlobalResults);
+    const s=$('#gsSearch');
+    if(s){
+      if(currentSearchQ) s.value=currentSearchQ;
+      s.addEventListener('input', renderGlobalResults);
+      setTimeout(()=>s.focus(), 50);
+    }
     const sc=$('#gsScope'); if(sc) sc.addEventListener('change', renderGlobalResults);
     renderGlobalResults();
   }
