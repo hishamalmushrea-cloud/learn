@@ -412,8 +412,22 @@ blockquote p{color:var(--text-soft)}
 .badge.amber{background:rgba(245,158,11,.15);color:var(--amber)}
 
 /* بطاقة العبارة (قاعدة العبارات) */
-.phrase-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:var(--shadow);border-right:4px solid var(--teal-600)}
+.phrase-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:12px;box-shadow:var(--shadow);border-right:4px solid var(--teal-600)}
+.phrase-card.ml-card{border-right-color:#7c3aed;padding-left:46px}
 .phrase-main{font-size:18px;font-weight:800;color:var(--text);line-height:1.6;margin-bottom:6px}
+.ml-orig{font-size:20px;letter-spacing:.2px}
+.ml-langline{font-size:12.5px;font-weight:800;color:var(--text-soft);margin-bottom:6px}
+.ml-pron{font-size:13.5px;color:var(--teal-700);background:rgba(13,148,136,.08);border-radius:8px;padding:6px 10px;margin:6px 0 8px}
+[data-theme="dark"] .ml-pron{color:var(--teal-500);background:rgba(20,184,166,.1)}
+.compare-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.compare-cell{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px}
+.compare-card h2{font-size:16px;margin-bottom:12px}
+@media(min-width:720px){
+  .compare-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(min-width:1100px){
+  .compare-grid{grid-template-columns:repeat(5,1fr)}
+}
 .phrase-msa{font-size:14px;color:var(--text-soft);margin-bottom:8px}
 .phrase-msa b{color:var(--teal-700)}
 [data-theme="dark"] .phrase-msa b{color:var(--teal-500)}

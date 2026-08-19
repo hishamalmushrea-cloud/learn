@@ -156,10 +156,16 @@
     html+=navItem('functions','🗂️','التصنيف الوظيفي','c-teal');
     html+=navItem('search','🔍','بحث شامل','c-purple');
     html+='<li class="nav-label">🌐 لغات متعددة</li>';
-    html+=navItem('languages','🌐','اللغات (نظرة عامة)','c-teal');
-    html+=navItem('mlphrases','🔎','قاعدة العبارات المتعددة','c-blue');
+    html+=navItem('languages','🌐','بوابة اللغات','c-teal');
+    ML_LANGS.forEach(l=>{
+      const d=ML_DOCS.find(x=>x.lang===l.code && x.role==='main');
+      if(d) html+='<li><button class="nav-item" data-route="'+d.id+'"><span class="ni-num '+l.color+'" style="color:#fff">'+l.flag+'</span><span>'+esc(l.name)+'</span></button></li>';
+    });
+    html+=navItem('mlphrases','🔎','عبارات متعددة اللغات','c-blue');
     html+=navItem('mlcompare','🔁','مقارنة الوظائف','c-purple');
-    ML_DOCS.forEach(d=>{ html+='<li><button class="nav-item" data-route="'+d.id+'"><span class="ni-num '+d.color+'" style="color:#fff">'+d.icon+'</span><span>'+esc(d.label)+'</span></button></li>'; });
+    html+=navItem('ml-05-muqarana','📊','جداول المقارنة','c-slate');
+    html+=navItem('ml-07-hiwarat','💬','حوارات','c-slate');
+    html+=navItem('ml-00-manhaj','🧭','المنهج','c-slate');
     html+=navItem('about','ℹ️','عن الموسوعة','c-teal');
     html+=navItem('favorites','⭐','المفضلة','c-amber');
     list.innerHTML=html;
@@ -258,9 +264,10 @@
 
   function updateActiveNav(){
     $$('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.route===currentRoute));
-    let tab = currentRoute==='phrases'?'phrases':(currentRoute==='chapters'||isChapter(currentRoute))?'chapters':'home';
+    const isMl = currentRoute==='languages'||currentRoute==='mlphrases'||currentRoute==='mlcompare'||String(currentRoute).indexOf('ml-')===0;
+    let tab = currentRoute==='phrases'?'phrases':(currentRoute==='chapters'||isChapter(currentRoute))?'chapters':isMl?'languages':'home';
     $$('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.route===tab));
-    const map={home:SOUQ_META.appName, chapters:'أقسام الموسوعة', phrases:'قاعدة العبارات', about:'عن الموسوعة', favorites:'المفضلة', functions:'التصنيف الوظيفي', search:'البحث الشامل', languages:'اللغات', mlphrases:'قاعدة العبارات المتعددة', mlcompare:'مقارنة الوظائف'};
+    const map={home:SOUQ_META.appName, chapters:'أقسام الموسوعة', phrases:'قاعدة العبارات', about:'عن الموسوعة', favorites:'المفضلة', functions:'التصنيف الوظيفي', search:'البحث الشامل', languages:'بوابة اللغات', mlphrases:'عبارات متعددة اللغات', mlcompare:'مقارنة الوظائف'};
     let title=map[currentRoute];
     if(!title){ const ch=CHAPTERS.find(c=>c.id===currentRoute); title=ch?ch.label:SOUQ_META.appName; }
     if(!title){ const doc=ML_DOCS.find(d=>d.id===currentRoute); title=doc?doc.title:SOUQ_META.appName; }
@@ -269,7 +276,7 @@
 
   function render(route){
     const c=$('#content');
-    const map={home:renderHome, chapters:renderChapters, phrases:renderPhrases, about:renderAbout, favorites:renderFavorites, functions:renderFunctions, search:renderSearch};
+    const map={home:renderHome, chapters:renderChapters, phrases:renderPhrases, about:renderAbout, favorites:renderFavorites, functions:renderFunctions, search:renderSearch, languages:renderLanguages, mlphrases:renderMlPhrases, mlcompare:renderMlCompare};
     if(isChapter(route)){ c.innerHTML=renderChapter(route); }
     else if(ML_DOCS.some(d=>d.id===route)){ c.innerHTML=renderMlDoc(route); }
     else { c.innerHTML=(map[route]||renderHome)(); }
@@ -295,27 +302,37 @@
   function renderHome(){
     const m=SOUQ_META;
     const stats=[
-      {ic:'📘', v:m.chaptersCount, l:'قسم منظّم'},
-      {ic:'🔤', v:m.phrasesCount, l:'عبارة وجملة'},
-      {ic:'🌍', v:m.countriesCount, l:'دولة ومنطقة'},
-      {ic:'💬', v:m.situationsCount, l:'موقفاً ومجالاً'}
+      {ic:'📘', v:m.chaptersCount, l:'قسماً عربياً'},
+      {ic:'🔤', v:m.phrasesCount, l:'عبارة عربية'},
+      {ic:'🌐', v:5, l:'لغات أجنبية'},
+      {ic:'💬', v:m.mlPhrasesCount, l:'عبارة متعددة اللغات'}
     ];
     const statHtml=stats.map(s=>'<div class="stat-pill"><span class="sp-ic">'+s.ic+'</span><div><div class="sp-v">'+s.v+'</div><div class="sp-l">'+s.l+'</div></div></div>').join('');
+    const langTiles=ML_LANGS.map(l=>{
+      const d=ML_DOCS.find(x=>x.lang===l.code && x.role==='main');
+      const cnt=m.mlLangCounts[l.code]||0;
+      return '<button class="section-tile" data-go="'+(d?d.id:'languages')+'"><span class="ic '+l.color+'">'+l.flag+'</span><span class="t">'+esc(l.name)+'</span><span class="n">'+cnt+' عبارة أصلية</span></button>';
+    }).join('');
     const quick=[
-      {id:'phrases', ic:'🔎', c:'c-blue', t:'قاعدة العبارات', n:'بحث وفلترة'},
-      {id:'about', ic:'ℹ️', c:'c-teal', t:'عن الموسوعة', n:'المنهجية والرموز'},
+      {id:'phrases', ic:'🔎', c:'c-blue', t:'قاعدة العبارات العربية', n:m.phrasesCount+' عبارة قابلة للبحث'},
+      {id:'languages', ic:'🌐', c:'c-teal', t:'بوابة اللغات', n:'تركية · إندونيسية · طاجيكية · فرنسية · إنجليزية'},
+      {id:'mlphrases', ic:'🔤', c:'c-purple', t:'عبارات متعددة اللغات', n:m.mlPhrasesCount+' عبارة مع نطق وترجمة'},
+      {id:'mlcompare', ic:'🔁', c:'c-orange', t:'مقارنة الوظائف', n:'نفس الموقف عبر خمس لغات'},
+      {id:'about', ic:'ℹ️', c:'c-slate', t:'عن الموسوعة', n:'المنهجية والرموز'},
       {id:'favorites', ic:'⭐', c:'c-amber', t:'المفضلة', n:'عباراتك المحفوظة'}
     ];
     const quickHtml=quick.map(q=>'<button class="section-tile" data-go="'+q.id+'"><span class="ic '+q.c+'">'+q.ic+'</span><span class="t">'+esc(q.t)+'</span><span class="n">'+esc(q.n)+'</span></button>').join('');
     return ''+
       '<section class="hero">'+
         '<h1>'+esc(m.appName)+'</h1>'+
-        '<p>'+esc(m.subtitle)+'</p>'+
+        '<p>'+esc(m.subtitle)+' — ومعها موسوعة موازية بخمس لغات: كيف يتكلم بائع حقيقي، لا ترجمة حرفية.</p>'+
         '<div class="hero-stats">'+statHtml+'</div>'+
       '</section>'+
-      '<div class="card"><h2>🔎 ما هي موسوعة السوق؟</h2><p style="color:var(--text-soft);font-size:14.5px">دليل عربي شامل يجمع عبارات وأساليب ولهجات الباعة والزبائن في الأسواق العربية: الجذب، الترحيب، العرض، الإقناع، المساومة، المزاح، إغلاق البيع، والتوديع — مع قاعدة بيانات ضخمة قابلة للبحث والفلترة. كل المحتوى متاح دون إنترنت.</p></div>'+
-      '<div class="sec-intro">أقسام الموسوعة ('+m.chaptersCount+')</div>'+
+      '<div class="card"><h2>🔎 ما هي موسوعة السوق؟</h2><p style="color:var(--text-soft);font-size:14.5px">دليل عربي شامل يجمع عبارات وأساليب ولهجات الباعة والزبائن: الجذب، الترحيب، العرض، الإقناع، المساومة، المزاح، إغلاق البيع، والتوديع. إلى جانبه طبقة موازية بالتركية والإندونيسية والطاجيكية والفرنسية والإنجليزية — المعادل الوظيفي والثقافي لا ترجمة الكلمات. كل المحتوى متاح دون إنترنت.</p></div>'+
+      '<div class="sec-intro">أقسام الموسوعة العربية ('+m.chaptersCount+')</div>'+
       chaptersGrid()+
+      '<div class="sec-intro">لغات السوق حول العالم</div>'+
+      '<div class="section-grid">'+langTiles+'</div>'+
       '<div class="sec-intro">أدوات إضافية</div>'+
       '<div class="section-grid">'+quickHtml+'</div>';
   }
@@ -478,9 +495,10 @@
         '</div>'+
         '<div class="filter-row">'+
           '<select id="gsScope" class="filter-select">'+
-            '<option value="all">الكل (أقسام + عبارات)</option>'+
-            '<option value="chapters">الأقسام فقط</option>'+
-            '<option value="phrases">العبارات فقط</option>'+
+            '<option value="all">الكل (عربي + متعدد اللغات)</option>'+
+            '<option value="chapters">الأقسام العربية فقط</option>'+
+            '<option value="phrases">العبارات العربية فقط</option>'+
+            '<option value="ml">متعدد اللغات فقط</option>'+
           '</select>'+
         '</div>'+
       '</div>'+
@@ -494,7 +512,7 @@
     const box=$('#gsResults'); if(!box) return;
     if(!q){ box.innerHTML='<p style="text-align:center;color:var(--text-mute);padding:20px">اكتب كلمة للبحث في الموسوعة.</p>'; const c=$('#gsCount'); if(c)c.textContent=''; return; }
     let html=''; let total=0;
-    if(scope!=='phrases'){
+    if(scope!=='phrases' && scope!=='ml'){
       const chRes=CHAPTERS.map(c=>({c,idx:c.raw.toLowerCase().indexOf(q)})).filter(x=>x.idx>=0);
       if(chRes.length){
         total+=chRes.length;
@@ -520,14 +538,16 @@
         }).join('');
       }
     }
-    if(scope!=='chapters'){
+    if(scope!=='chapters' && scope!=='ml'){
       const phRes=PHRASES.filter(p=>(p.phrase+' '+p.msa+' '+p.notes+' '+p.situation+' '+p.country+' '+p.dialect).toLowerCase().includes(q));
       if(phRes.length){
         total+=phRes.length;
         html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🔤 العبارات العربية ('+phRes.length+')</h3>';
         html+=phRes.slice(0,40).map(phraseCard).join('');
       }
-      const mlpRes=ML_PHRASES.filter(p=>(p.originalText+' '+p.arabic+' '+p.arabicTranslation+' '+p.arabicPronunciation+' '+p.country+' '+p.situation+' '+p.category).toLowerCase().includes(q));
+    }
+    if(scope!=='chapters' && scope!=='phrases'){
+      const mlpRes=ML_PHRASES.filter(p=>(p.originalText+' '+p.arabic+' '+p.arabicTranslation+' '+p.arabicPronunciation+' '+p.country+' '+p.situation+' '+p.category+' '+p.literalTranslation+' '+p.culturalNotes).toLowerCase().includes(q));
       if(mlpRes.length){
         total+=mlpRes.length;
         html+='<h3 style="margin:16px 0 8px;color:var(--teal-700)">🌐 العبارات المتعددة اللغات ('+mlpRes.length+')</h3>';
@@ -545,9 +565,14 @@
   }
 
   function renderFavorites(){
-    if(!favorites.length) return '<div class="sec-intro">عباراتك المفضلة تظهر هنا.</div><div class="card" style="text-align:center;color:var(--text-mute)">لم تضف أي عبارة للمفضلة بعد. اضغط ☆ على أي عبارة في «قاعدة العبارات».</div>';
-    const list=PHRASES.filter(p=>favorites.includes(p.id));
-    return '<div class="sec-intro">لديك <b>'+list.length+'</b> عبارة في المفضلة.</div><div id="phResults">'+list.map(phraseCard).join('')+'</div>';
+    if(!favorites.length) return '<div class="sec-intro">عباراتك المفضلة تظهر هنا.</div><div class="card" style="text-align:center;color:var(--text-mute)">لم تضف أي عبارة للمفضلة بعد. اضغط ☆ على أي عبارة عربية أو متعددة اللغات.</div>';
+    const ar=PHRASES.filter(p=>favorites.includes(p.id));
+    const ml=ML_PHRASES.filter(p=>favorites.includes(p.id));
+    if(!ar.length && !ml.length) return '<div class="card" style="text-align:center;color:var(--text-mute)">المفضلة تشير إلى عبارات لم تعد موجودة.</div>';
+    let html='<div class="sec-intro">لديك <b>'+(ar.length+ml.length)+'</b> عبارة في المفضلة.</div>';
+    if(ar.length) html+='<h3 style="margin:8px 0 10px;color:var(--teal-700)">العبارات العربية</h3>'+ar.map(phraseCard).join('');
+    if(ml.length) html+='<h3 style="margin:16px 0 10px;color:var(--teal-700)">العبارات المتعددة اللغات</h3>'+ml.map(mlPhraseCard).join('');
+    return html;
   }
 
   function toggleFav(star){
@@ -607,8 +632,9 @@
       {id:'ml-README', icon:'ℹ️', c:'c-slate', t:'عن الموسوعة الموازية', n:'المنهجية'}
     ];
     const crossHtml=cross.map(q=>'<button class="section-tile" data-go="'+q.id+'"><span class="ic '+q.c+'">'+q.icon+'</span><span class="t">'+esc(q.t)+'</span><span class="n">'+esc(q.n)+'</span></button>').join('');
-    return '<div class="sec-intro">موسوعة لغة السوق موازية بخمس لغات: التركية، الإندونيسية، الطاجيكية، الفرنسية، والإنجليزية — معادلات وظيفية وثقافية لا ترجمة حرفية. '+SOUQ_META.mlPhrasesCount+' عبارة أصلية مع ترجمتها ونطقها.</div>'+
-      '<div class="sec-intro">اللغات</div>'+
+    return '<div class="chapter-head"><div style="display:flex;align-items:center"><span class="ch-num">🌐</span><div><h1>بوابة اللغات</h1><p>كيف يتكلم بائع حقيقي — لا ترجمة حرفية</p></div></div></div>'+
+      '<div class="card"><h2>كيف تُقرأ هذه الطبقة؟</h2><p style="color:var(--text-soft);font-size:14.5px">لا تبحث عن ترجمة «يا هلا وسهلا». ابحث: <b>ماذا يقول بائع حقيقي في هذا الموقف، في هذه الثقافة، لهذا المخاطَب؟</b> المسار: الموقف ← العبارة الأصلية ← النطق التقريبي ← المعنى بالعربية ← لمن ومتى تُقال.</p></div>'+
+      '<div class="sec-intro">خمس لغات · '+SOUQ_META.mlPhrasesCount+' عبارة أصلية</div>'+
       '<div class="section-grid">'+langCards+'</div>'+
       '<div class="sec-intro">مواد مشتركة وأدوات</div>'+
       '<div class="section-grid">'+crossHtml+'</div>';
@@ -618,28 +644,40 @@
     const d=ML_DOCS.find(x=>x.id===id);
     if(!d) return renderLanguages();
     const lm = ML_LANGS.find(l=>l.code===d.lang);
-    const langBadge = lm? '<span class="badge gold">'+lm.flag+' '+esc(lm.name)+'</span>' : '';
-    const openBtn = (d.role==='main' && d.lang!=='all') ? '<div class="filter-row" style="margin-top:14px"><button class="btn-primary ghost" data-go="mlphrases?lang='+d.lang+'" style="flex:1">تصفّح عبارات هذه اللغة</button></div>' : '';
-    return '<div class="chapter-head"><div style="display:flex;align-items:center"><span class="ch-num">'+d.icon+'</span><div><h1>'+esc(d.title)+'</h1><p>'+ (lm?esc(lm.name):'مادة مشتركة') +'</p></div></div></div>'+
-      (langBadge?'<div style="margin:10px 0">'+langBadge+'</div>':'')+
-      mdRender(d.raw)+
+    const toc=mdToc(d.raw);
+    const tocHtml = toc.length>1 ? '<div class="toc"><div class="toc-title">📑 محتويات هذا الملف</div>'+toc.map(t=>'<a data-anchor="'+t.id+'"><span class="dot"></span>'+esc(t.text)+'</a>').join('')+'</div>' : '';
+    const openBtn = (d.role==='main' && d.lang!=='all') ? '<div class="filter-row" style="margin-top:14px"><button class="btn-primary ghost" data-go="mlphrases?lang='+d.lang+'" style="flex:1">تصفّح عبارات '+esc(lm?lm.name:'هذه اللغة')+'</button><button class="btn-primary ghost" data-go="mlcompare" style="flex:1">قارن مع اللغات الأخرى</button></div>' : '';
+    return '<div class="chapter-head"><div style="display:flex;align-items:center"><span class="ch-num">'+d.icon+'</span><div><h1>'+esc(d.title)+'</h1><p>'+ (lm?lm.flag+' '+esc(lm.name):'مادة مشتركة عبر اللغات') +'</p></div></div></div>'+
+      '<div class="about-meta" style="margin-bottom:12px">'+
+        (lm?'<span class="badge gold">'+lm.flag+' '+esc(lm.name)+'</span>':'<span class="badge teal">مشترك</span>')+
+        '<span class="badge blue">موسوعة موازية</span>'+
+      '</div>'+
+      tocHtml+
+      '<div class="md-body">'+mdRender(d.raw)+'</div>'+
       openBtn;
   }
 
   function mlPhraseCard(p){
     const lm = ML_LANGS.find(l=>l.code===p.targetLanguage) || {flag:'🌐',name:''};
     const b=(t,cls)=> t? '<span class="badge '+(cls||'')+'">'+esc(t)+'</span>' : '';
-    const arabicTxt = p.noDirectArabic==='yes' ? '— لا مقابل عربي مباشر —' : (p.arabic||'');
-    return '<div class="phrase-card" data-pid="'+esc(p.id)+'">'+
-      '<div class="phrase-main">'+esc(p.originalText)+'</div>'+
-      (arabicTxt? '<div class="phrase-msa"><b>العربية:</b> '+esc(arabicTxt)+'</div>' : '')+
-      (p.arabicTranslation? '<div class="phrase-msa"><b>المعنى:</b> '+esc(p.arabicTranslation)+'</div>' : '')+
-      (p.arabicPronunciation? '<div class="phrase-msa"><b>النطق:</b> '+esc(p.arabicPronunciation)+'</div>' : '')+
+    const isFav=favorites.includes(p.id);
+    const arabicTxt = p.noDirectArabic==='yes' ? 'لا مقابل عربي مباشر' : (p.arabic||'');
+    const showLiteral = p.literalTranslation && p.literalTranslation!==p.arabicTranslation && p.literalTranslation!==arabicTxt;
+    return '<div class="phrase-card ml-card" data-pid="'+esc(p.id)+'">'+
+      '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
+      '<div class="ml-langline">'+lm.flag+' '+esc(lm.name)+(p.country?' · '+esc(p.country):'')+'</div>'+
+      '<div class="phrase-main ml-orig" dir="auto">'+esc(p.originalText)+'</div>'+
+      (p.arabicPronunciation? '<div class="ml-pron">النطق التقريبي: <b>'+esc(p.arabicPronunciation)+'</b></div>' : '')+
+      (arabicTxt? '<div class="phrase-msa"><b>المقابل العربي:</b> '+esc(arabicTxt)+'</div>' : '')+
+      (p.arabicTranslation? '<div class="phrase-msa"><b>المعنى الوظيفي:</b> '+esc(p.arabicTranslation)+'</div>' : '')+
+      (showLiteral? '<div class="phrase-msa"><b>حرفياً:</b> '+esc(p.literalTranslation)+'</div>' : '')+
       '<div class="phrase-meta">'+
-        b(lm.flag+' '+lm.name,'gold')+b(p.category,'teal')+b(p.country,'blue')+b(p.situation,'purple')+b(p.register)+b(p.frequency,'rose')+
+        b(p.category,'teal')+b(p.subcategory,'blue')+b(p.situation,'purple')+b(p.register)+b(p.audience)+b(p.frequency,'rose')+b(p.confidence,'gold')+
         (p.noDirectArabic==='yes'?b('بلا مقابل عربي','amber'):'')+
       '</div>'+
-      (p.culturalNotes? '<div class="phrase-notes"><b>ملاحظات ثقافية:</b> '+esc(p.culturalNotes)+'</div>' : '')+
+      (p.usageNotes? '<div class="phrase-notes"><b>متى تُقال:</b> '+esc(p.usageNotes)+'</div>' : '')+
+      (p.culturalNotes? '<div class="phrase-notes"><b>ملاحظة ثقافية:</b> '+esc(p.culturalNotes)+'</div>' : '')+
+      (p.alternatives? '<div class="phrase-notes"><b>بدائل:</b> <span dir="auto">'+esc(p.alternatives)+'</span></div>' : '')+
     '</div>';
   }
 
@@ -648,11 +686,11 @@
     const countries=[...new Set(ML_PHRASES.map(p=>p.country).filter(Boolean))].sort();
     const opt=arr=>'<option value="">الكل</option>'+arr.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
     const langOpt='<option value="">كل اللغات</option>'+ML_LANGS.map(l=>'<option value="'+l.code+'">'+l.flag+' '+esc(l.name)+'</option>').join('');
-    return '<div class="sec-intro">قاعدة بيانات متعددة اللغات فيها <b>'+SOUQ_META.mlPhrasesCount+'</b> عبارة أصلية ('+ML_LANGS.map(l=>l.flag+esc(l.name)).join('، ')+') مع ترجمتها ومعناها ونطقها التقريبي. ابحث وصفِّ.</div>'+
+    return '<div class="sec-intro">قاعدة بيانات متعددة اللغات فيها <b>'+SOUQ_META.mlPhrasesCount+'</b> عبارة أصلية ('+ML_LANGS.map(l=>l.flag+' '+esc(l.name)).join(' · ')+') مع المقابل العربي والمعنى الوظيفي والنطق التقريبي. ابحث وصفِّ حسب اللغة أو الوظيفة أو الدولة.</div>'+
       '<div class="filter-bar">'+
-        '<div class="search-box" style="margin-bottom:0"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 10-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg><input id="mlSearch" type="search" placeholder="ابحث في العبارات الأجنبية أو العربية..."></div>'+
+        '<div class="search-box" style="margin-bottom:0"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 10-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"/></svg><input id="mlSearch" type="search" placeholder="ابحث: Hoş geldiniz، غالي، son fiyat، mahal..."></div>'+
         '<div class="filter-row"><select id="mlLang" class="filter-select">'+langOpt+'</select><select id="mlCat" class="filter-select">'+opt(cats)+'</select></div>'+
-        '<div class="filter-row"><select id="mlCountry" class="filter-select">'+opt(countries)+'</select></div>'+
+        '<div class="filter-row"><select id="mlCountry" class="filter-select">'+opt(countries)+'</select><button id="mlClear" class="btn-primary ghost" style="flex:0 0 auto;padding:10px 18px">مسح الفلاتر</button></div>'+
       '</div>'+
       '<div id="mlCount" class="result-count"></div>'+
       '<div id="mlResults"></div>';
@@ -690,13 +728,19 @@
       e.addEventListener('input', renderMlPhrasesResults);
       if(sel!=='#mlSearch') e.addEventListener('change', renderMlPhrasesResults);
     });
+    const clr=$('#mlClear'); if(clr) clr.addEventListener('click',()=>{
+      if($('#mlSearch')) $('#mlSearch').value='';
+      ['#mlLang','#mlCat','#mlCountry'].forEach(s=>{const e=$(s); if(e) e.value='';});
+      currentMlLang='';
+      renderMlPhrasesResults();
+    });
     renderMlPhrasesResults();
   }
 
   function renderMlCompare(){
     const cats=[...new Set(ML_PHRASES.map(p=>p.category))].sort();
-    const opt='<option value="">اختر الوظيفة...</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
-    return '<div class="sec-intro">قارن نفس الموقف الاجتماعي عبر اللغات الخمس. اختر وظيفة (التصنيف A–K) لعرض العبارة الأصلية في كل لغة جنباً إلى جنب.</div>'+
+    const opt=cats.map((c,i)=>'<option value="'+esc(c)+'"'+(i===0?' selected':'')+'>'+esc(c)+'</option>').join('');
+    return '<div class="sec-intro">نفس الموقف الاجتماعي عبر اللغات الخمس: العبارة الأصلية ثم نطقها ثم معناها. هذا جدول معادل وظيفي، لا ترجمة كلمة بكلمة.</div>'+
       '<div class="filter-bar"><div class="filter-row"><select id="mcCat" class="filter-select" style="flex:1">'+opt+'</select></div></div>'+
       '<div id="mcResults"></div>';
   }
@@ -707,16 +751,21 @@
     if(!cat){ box.innerHTML='<p style="text-align:center;color:var(--text-mute);padding:20px">اختر وظيفة لعرض المقارنة.</p>'; return; }
     const rows=ML_PHRASES.filter(p=>p.category===cat);
     const subs=[...new Set(rows.map(p=>p.subcategory))];
-    let html='<div class="table-wrap"><table><thead><tr><th>الموقف</th>'+ML_LANGS.map(l=>'<th>'+l.flag+' '+esc(l.name)+'</th>').join('')+'</tr></thead><tbody>';
+    let html='<div class="compare-stack">';
     subs.forEach(sub=>{
-      html+='<tr><td><b>'+esc(sub)+'</b></td>'+ML_LANGS.map(l=>{
+      html+='<div class="card compare-card"><h2>'+esc(sub)+'</h2><div class="compare-grid">';
+      ML_LANGS.forEach(l=>{
         const ps=rows.filter(p=>p.subcategory===sub && p.targetLanguage===l.code);
-        const txt=ps.map(p=>p.originalText).join(' / ');
-        const pron=ps.map(p=>p.arabicPronunciation).filter(Boolean).join(' / ');
-        return '<td>'+esc(txt)+(pron?'<br><span style="color:var(--text-mute);font-size:12px">'+esc(pron)+'</span>':'')+'</td>';
-      }).join('')+'</tr>';
+        if(!ps.length){ html+='<div class="compare-cell"><div class="ml-langline">'+l.flag+' '+esc(l.name)+'</div><div class="text-mute">—</div></div>'; return; }
+        html+='<div class="compare-cell"><div class="ml-langline">'+l.flag+' '+esc(l.name)+'</div>'+
+          ps.map(p=>'<div class="ml-orig" dir="auto">'+esc(p.originalText)+'</div>'+
+            (p.arabicPronunciation?'<div class="ml-pron">'+esc(p.arabicPronunciation)+'</div>':'')+
+            (p.arabicTranslation?'<div class="phrase-msa">'+esc(p.arabicTranslation)+'</div>':'')
+          ).join('')+'</div>';
+      });
+      html+='</div></div>';
     });
-    html+='</tbody></table></div>';
+    html+='</div>';
     box.innerHTML=html;
   }
 
