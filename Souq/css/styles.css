@@ -396,7 +396,7 @@ td{color:var(--text-soft)}
   border:1px solid rgba(13,148,136,.22);
 }
 .speak-btn:active{transform:scale(.92);background:rgba(13,148,136,.22)}
-.speak-btn.wide{width:auto;padding:0 12px;border-radius:20px;font-size:13px;font-weight:700}
+.speak-btn.wide{width:auto;height:30px;padding:0 10px;border-radius:16px;font-size:12.5px;font-weight:800}
 [data-theme="dark"] .speak-btn{color:var(--teal-500)}
 .phrase-actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .eq-box{margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)}

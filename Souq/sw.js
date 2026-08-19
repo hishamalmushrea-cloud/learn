@@ -1,5 +1,5 @@
 /* Service Worker — يعمل بدون إنترنت */
-const CACHE = 'souq-guide-v6';
+const CACHE = 'souq-guide-v7';
 const ASSETS = [
   './',
   './index.html',

@@ -903,9 +903,10 @@
   const TTS_LANG = {ar:'ar-SA', tr:'tr-TR', id:'id-ID', tg:'ru-RU', fr:'fr-FR', en:'en-GB'};
 
   function speakBtn(text, lang){
-    const tx=String(text||'').trim();
+    const tx=plainSpeak(text||String(text||'').trim());
     if(!tx) return '';
-    return '<button type="button" class="speak-btn" data-speak="'+encodeURIComponent(tx)+'" data-lang="'+esc(lang||'ar')+'" aria-label="استمع">🔊</button>';
+    const L=guessLang(tx, lang);
+    return '<button type="button" class="speak-btn wide" data-speak="'+encodeURIComponent(tx)+'" data-lang="'+esc(L)+'" aria-label="استمع للنطق">🔊 استمع</button>';
   }
 
   function speak(text, lang){
@@ -920,6 +921,7 @@
     const code = TTS_LANG[lang] || 'ar-SA';
     u.lang = code;
     u.rate = 0.92;
+    toast('🔊 يقرأ الآن…');
     const pref = code.slice(0,2);
     const voices = syn.getVoices()||[];
     const v = voices.find(x=>x.lang && x.lang.toLowerCase().indexOf(pref)===0)
