@@ -83,7 +83,8 @@
 
   function mdRender(md){
     const lines = String(md==null?'':md).replace(/\r\n/g,'\n').split('\n');
-    let html='', i=0;
+    let html='', i=0, secOpen=false;
+    const closeSec=()=>{ if(secOpen){ html+='</section>'; secOpen=false; } };
     const isBlank = l=>/^\s*$/.test(l);
     const isH = l=>/^#{1,6}\s+/.test(l);
     const isHR = l=>/^---+\s*$/.test(l) || /^\*\*\*+\s*$/.test(l);
@@ -98,7 +99,11 @@
       if(i>=lines.length) break;
       let line=lines[i];
       let h=line.match(/^(#{1,6})\s+(.*)$/);
-      if(h){ const lvl=h[1].length; const txt=h[2].trim(); html+='<h'+lvl+' id="h'+i+'">'+inline(txt)+'</h'+lvl+'>'; i++; continue; }
+      if(h){
+        const lvl=h[1].length; const txt=h[2].trim();
+        if(lvl===2){ closeSec(); html+='<section class="md-sec">'; secOpen=true; }
+        html+='<h'+lvl+' id="h'+i+'">'+inline(txt)+'</h'+lvl+'>'; i++; continue;
+      }
       if(isHR(line)){ html+='<hr>'; i++; continue; }
       if(isQuote(line)){
         let buf=[];
@@ -136,6 +141,7 @@
       while(i<lines.length && !blockStart(lines[i])){ buf.push(lines[i]); i++; }
       html+='<p>'+inline(buf.join(' '))+'</p>';
     }
+    closeSec();
     return html;
   }
 
@@ -298,6 +304,7 @@
     if(route==='mlphrases') bindMlPhrases();
     if(route==='mlcompare') bindMlCompare();
     if(route==='mldialogues') bindDialogues();
+    bindReading();
   }
 
   /* ============================================================
@@ -360,7 +367,7 @@
     const c=CHAPTERS.find(x=>x.id===id);
     if(!c) return renderHome();
     const toc=mdToc(c.raw);
-    const tocHtml = toc.length>1 ? '<div class="toc"><div class="toc-title">📑 محتويات القسم</div>'+toc.map(t=>'<a data-anchor="'+t.id+'"><span class="dot"></span>'+esc(t.text)+'</a>').join('')+'</div>' : '';
+    const tocHtml = toc.length>1 ? '<nav class="toc" aria-label="محتويات القسم"><div class="toc-title">📑 محتويات القسم</div>'+toc.map(t=>'<a data-anchor="'+t.id+'"><span class="dot"></span>'+esc(t.text)+'</a>').join('')+'</nav>' : '';
     const idx=CHAPTERS.findIndex(x=>x.id===id);
     const prev=idx>0?CHAPTERS[idx-1]:null;
     const next=idx<CHAPTERS.length-1?CHAPTERS[idx+1]:null;
@@ -372,8 +379,10 @@
           '<div><h1>'+esc(c.title)+'</h1><p>القسم '+c.num+' من '+SOUQ_META.chaptersCount+'</p></div>'+
         '</div>'+
       '</div>'+
-      tocHtml+
-      mdRender(c.raw)+
+      '<div class="reading">'+
+        tocHtml+
+        '<div class="md-body">'+mdRender(c.raw)+'</div>'+
+      '</div>'+
       nav;
   }
 
@@ -392,18 +401,26 @@
   }
 
   /* ---------- قاعدة العبارات ---------- */
+  function moreFold(inner, label){
+    const html=String(inner||'');
+    if(!html.trim()) return '';
+    return '<details class="more"><summary>'+esc(label||'التفاصيل')+'</summary><div class="more-body">'+html+'</div></details>';
+  }
+
   function phraseCard(p){
     const isFav=favorites.includes(p.id);
     const b=(t,cls)=> t?'<span class="badge '+(cls||'')+'">'+esc(t)+'</span>':'';
-    return '<div class="phrase-card" data-pid="'+esc(p.id)+'">'+
-      '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
-      '<div class="phrase-main">'+speakBtn(p.phrase,'ar')+'«'+esc(p.phrase)+'»</div>'+
-      (p.msa?'<div class="phrase-msa"><b>الفصحى:</b> '+esc(p.msa)+'</div>':'')+
+    const extra=
       '<div class="phrase-meta">'+
         b(p.func,'teal')+b(p.country,'gold')+b(p.dialect,'teal')+b(p.situation,'blue')+b(p.addressee,'purple')+b(p.formality)+b(p.familiarity)+b(p.frequency,'rose')+b(p.humor)+
       '</div>'+
       (p.notes?'<div class="phrase-notes"><b>ملاحظات:</b> '+esc(p.notes)+'</div>':'')+
-      equivalentsBox(p.phrase, p.msa)+
+      equivalentsBox(p.phrase, p.msa);
+    return '<div class="phrase-card" data-pid="'+esc(p.id)+'">'+
+      '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
+      '<div class="phrase-main">'+speakBtn(p.phrase,'ar')+'«'+esc(p.phrase)+'»</div>'+
+      (p.msa?'<div class="phrase-msa">'+esc(p.msa)+'</div>':'')+
+      moreFold(extra, 'متى وأين تُقال')+
     '</div>';
   }
 
@@ -671,8 +688,10 @@
         (lm?'<span class="badge gold">'+lm.flag+' '+esc(lm.name)+'</span>':'<span class="badge teal">مشترك</span>')+
         '<span class="badge blue">موسوعة موازية</span>'+
       '</div>'+
-      tocHtml+
-      '<div class="md-body">'+mdRender(d.raw)+'</div>'+
+      '<div class="reading">'+
+        tocHtml+
+        '<div class="md-body">'+mdRender(d.raw)+'</div>'+
+      '</div>'+
       openBtn;
   }
 
@@ -682,13 +701,7 @@
     const isFav=favorites.includes(p.id);
     const arabicTxt = p.noDirectArabic==='yes' ? 'لا مقابل عربي مباشر' : (p.arabic||'');
     const showLiteral = p.literalTranslation && p.literalTranslation!==p.arabicTranslation && p.literalTranslation!==arabicTxt;
-    return '<div class="phrase-card ml-card" data-pid="'+esc(p.id)+'">'+
-      '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
-      '<div class="ml-langline">'+lm.flag+' '+esc(lm.name)+(p.country?' · '+esc(p.country):'')+'</div>'+
-      '<div class="phrase-main ml-orig" dir="auto">'+speakBtn(p.originalText, p.targetLanguage)+esc(p.originalText)+'</div>'+
-      (p.arabicPronunciation? '<div class="ml-pron">النطق التقريبي: <b>'+esc(p.arabicPronunciation)+'</b></div>' : '')+
-      (arabicTxt? '<div class="phrase-msa">'+speakBtn(p.noDirectArabic==='yes'?'':(p.arabic||''),'ar')+'<b>المقابل العربي:</b> '+esc(arabicTxt)+'</div>' : '')+
-      (p.arabicTranslation? '<div class="phrase-msa"><b>المعنى الوظيفي:</b> '+esc(p.arabicTranslation)+'</div>' : '')+
+    const extra=
       (showLiteral? '<div class="phrase-msa"><b>حرفياً:</b> '+esc(p.literalTranslation)+'</div>' : '')+
       '<div class="phrase-meta">'+
         b(p.category,'teal')+b(p.subcategory,'blue')+b(p.situation,'purple')+b(p.register)+b(p.audience)+b(p.frequency,'rose')+b(p.confidence,'gold')+
@@ -697,7 +710,15 @@
       (p.usageNotes? '<div class="phrase-notes"><b>متى تُقال:</b> '+esc(p.usageNotes)+'</div>' : '')+
       (p.culturalNotes? '<div class="phrase-notes"><b>ملاحظة ثقافية:</b> '+esc(p.culturalNotes)+'</div>' : '')+
       (p.alternatives? '<div class="phrase-notes"><b>بدائل:</b> <span dir="auto">'+esc(p.alternatives)+'</span></div>' : '')+
-      relatedLangsBox(p)+
+      relatedLangsBox(p);
+    return '<div class="phrase-card ml-card" data-pid="'+esc(p.id)+'">'+
+      '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
+      '<div class="ml-langline">'+lm.flag+' '+esc(lm.name)+(p.country?' · '+esc(p.country):'')+'</div>'+
+      '<div class="phrase-main ml-orig" dir="auto">'+speakBtn(p.originalText, p.targetLanguage)+esc(p.originalText)+'</div>'+
+      (p.arabicPronunciation? '<div class="ml-pron">'+esc(p.arabicPronunciation)+'</div>' : '')+
+      (arabicTxt? '<div class="phrase-msa">'+speakBtn(p.noDirectArabic==='yes'?'':(p.arabic||''),'ar')+esc(arabicTxt)+'</div>' : '')+
+      (p.arabicTranslation? '<div class="phrase-sense">'+esc(p.arabicTranslation)+'</div>' : '')+
+      moreFold(extra, 'تفاصيل وملاحظات')+
     '</div>';
   }
 
@@ -795,6 +816,24 @@
     renderMlCompareResults();
   }
 
+
+
+  function bindReading(){
+    const links=$$('.toc [data-anchor]');
+    if(!links.length) return;
+    const map={};
+    links.forEach(a=>{ const el=document.getElementById(a.dataset.anchor); if(el) map[el.id]=a; });
+    if(!window.IntersectionObserver) return;
+    const obs=new IntersectionObserver(entries=>{
+      entries.forEach(en=>{
+        if(!en.isIntersecting) return;
+        const a=map[en.target.id];
+        if(!a) return;
+        links.forEach(x=>x.classList.toggle('on', x===a));
+      });
+    },{rootMargin:'-18% 0px -70% 0px', threshold:0});
+    Object.keys(map).forEach(id=>obs.observe(document.getElementById(id)));
+  }
 
   /* ============================================================
      نطق + ربط العبارات + حوارات تفاعلية

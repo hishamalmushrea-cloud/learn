@@ -532,3 +532,54 @@ blockquote p{color:var(--text-soft)}
 .fav-star.on{background:rgba(245,158,11,.16);color:#f59e0b}
 .fav-star:active{transform:scale(.9)}
 .toc a{cursor:pointer}
+.toc a.on{background:rgba(13,148,136,.12);color:var(--teal-700);font-weight:800}
+
+/* قراءة مريحة */
+.reading{display:block}
+.md-body{max-width:40rem}
+.md-sec{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:8px 16px 12px;margin:16px 0;box-shadow:var(--shadow);
+}
+.md-sec > h2{margin-top:8px}
+.md-sec > h2:first-child{margin-top:10px}
+.phrase-sense{font-size:14.5px;color:var(--text);line-height:1.7;margin:4px 0 8px}
+details.more{margin-top:8px}
+details.more summary{
+  cursor:pointer;font-weight:800;font-size:13px;color:var(--teal-700);
+  list-style:none;padding:6px 0;
+}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:" ▾";font-weight:700}
+details.more[open] summary::after{content:" ▴"}
+[data-theme="dark"] details.more summary{color:var(--teal-500)}
+.more-body{padding-top:4px}
+
+.content code, .md-body code{
+  font-family:inherit;font-weight:800;font-size:15px;
+  background:rgba(13,148,136,.1);border:1px solid rgba(13,148,136,.22);
+  border-radius:10px;padding:2px 9px;direction:auto;display:inline-block;margin:1px 2px;
+}
+blockquote{
+  background:var(--surface);box-shadow:var(--shadow);
+  border-right:4px solid var(--amber);position:relative;
+}
+blockquote::before{content:"❝";position:absolute;left:12px;top:4px;font-size:22px;color:var(--amber);opacity:.7}
+
+@media(max-width:959px){
+  .reading .toc{
+    position:sticky;top:calc(var(--header-h) + 8px);z-index:8;
+    max-height:34vh;overflow:auto;margin-bottom:12px;
+  }
+}
+@media(min-width:960px){
+  .reading{
+    display:grid;grid-template-columns:minmax(190px,230px) minmax(0,40rem);
+    gap:22px;align-items:start;
+  }
+  .reading .toc{
+    position:sticky;top:calc(var(--header-h) + 14px);
+    max-height:calc(100vh - var(--header-h) - 40px);overflow:auto;
+  }
+  .md-body{max-width:40rem}
+}
