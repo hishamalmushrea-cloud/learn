@@ -384,10 +384,16 @@ td{color:var(--text-soft)}
 }
 
 /* أزرار النطق */
+.say{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;vertical-align:middle;margin:3px 4px 3px 0;max-width:100%}
+.say-block{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:4px 0}
+.say-inline{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:4px 0}
+.say-txt{line-height:1.7}
+.say-sep{color:var(--text-mute);padding:0 2px}
 .speak-btn{
   display:inline-flex;align-items:center;justify-content:center;gap:4px;
-  width:34px;height:34px;border-radius:50%;background:rgba(13,148,136,.12);
-  color:var(--teal-700);font-size:15px;vertical-align:middle;margin-right:6px;
+  width:30px;height:30px;border-radius:50%;background:rgba(13,148,136,.14);
+  color:var(--teal-700);font-size:14px;vertical-align:middle;margin:0;
+  border:1px solid rgba(13,148,136,.22);
 }
 .speak-btn:active{transform:scale(.92);background:rgba(13,148,136,.22)}
 .speak-btn.wide{width:auto;padding:0 12px;border-radius:20px;font-size:13px;font-weight:700}

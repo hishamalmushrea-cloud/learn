@@ -49,6 +49,7 @@
     $('#content').hidden=false;
     $('#bottomNav').hidden=false;
     if(window.matchMedia('(min-width:900px)').matches){ $('#drawer').hidden=false; }
+    if(window.speechSynthesis){ try{ speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', function(){}); }catch(e){} }
     route();
   }
 
@@ -59,19 +60,69 @@
      ============================================================ */
   const C0='\u0000';
 
-  function inline(raw){
+  function plainSpeak(s){
+    return String(s==null?'':s).replace(/[*_`#>]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function isSpeakable(text){
+    const tx=plainSpeak(text);
+    if(tx.length<2 || tx.length>280) return false;
+    if(/^[-–—\d\s.,:;!?/%()«»"']+$/.test(tx)) return false;
+    return /[\u0600-\u06FFa-zA-Z\u0400-\u04FF]/.test(tx);
+  }
+  function guessLang(text, fallback){
+    const tx=String(text||'');
+    const ar=/[\u0600-\u06FF]/.test(tx);
+    const cyr=/[\u0400-\u04FF]/.test(tx);
+    const trc=/[çğıöşüÇĞİÖŞÜ]/.test(tx);
+    const frc=/[àâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇ]/.test(tx);
+    const lat=/[A-Za-z]/.test(tx);
+    if(cyr) return 'tg';
+    if(trc) return 'tr';
+    if(frc && !trc) return 'fr';
+    if(ar && !lat && !cyr) return 'ar';
+    if(lat) return (fallback && fallback!=='ar' && fallback!=='all') ? fallback : 'en';
+    return fallback || 'ar';
+  }
+  function sayWrap(text, lang, innerHtml){
+    const tx=plainSpeak(text);
+    if(!isSpeakable(tx)) return innerHtml!=null?innerHtml:esc(String(text||''));
+    return '<span class="say">'+speakBtn(tx, lang)+'<span class="say-txt" dir="auto">'+(innerHtml!=null?innerHtml:esc(tx))+'</span></span>';
+  }
+  function sayMany(text, lang){
+    const raw=String(text||'').trim();
+    const parts=raw.split(/\s*[·•]+|\s+\/\s+/).map(s=>s.trim()).filter(Boolean);
+    if(parts.length>1 && parts.length<14 && parts.every(p=>p.length<48)){
+      return parts.map(p=>sayWrap(p, lang)).join('<span class="say-sep"> · </span>');
+    }
+    return sayWrap(raw, lang);
+  }
+  function listenItem(raw, lang){
+    const inner=inline(raw, lang);
+    if(inner.indexOf('data-speak')>=0) return inner;
+    const plain=plainSpeak(raw);
+    if(isSpeakable(plain) && plain.length<=160) return sayWrap(plain, lang, inner);
+    return inner;
+  }
+
+  function inline(raw, lang){
     const codes=[], links=[];
     let t = String(raw==null?'':raw);
     t = t.replace(/`([^`]+)`/g, (m,c)=>{ codes.push(c); return C0+'C'+(codes.length-1)+C0; });
     t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m,txt,url)=>{ links.push([txt,url]); return C0+'L'+(links.length-1)+C0; });
     t = esc(t);
     t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    t = t.replace(new RegExp(C0+'C(\\d+)'+C0,'g'), (m,n)=> '<code>'+esc(codes[+n])+'</code>');
+    t = t.replace(/<strong>([^<]+)<\/strong>/g, (m,x)=>{
+      const plain=x.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+      if(isSpeakable(plain) && (guessLang(plain,lang)!=='ar' || plain.length<=90))
+        return sayWrap(plain, lang, '<strong>'+x+'</strong>');
+      return m;
+    });
+    t = t.replace(new RegExp(C0+'C(\\d+)'+C0,'g'), (m,n)=> '<code>'+sayMany(codes[+n], lang)+'</code>');
     t = t.replace(new RegExp(C0+'L(\\d+)'+C0,'g'), (m,n)=>{ const x=links[+n]; return '<a href="'+esc(x[1])+'" target="_blank" rel="noopener">'+esc(x[0])+'</a>'; });
     return t;
   }
 
-  function renderTable(rows){
+  function renderTable(rows, lang){
     const cells = row => row.replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
     const header = cells(rows[0]);
     const body = rows.slice(2).map(r=>cells(r));
@@ -79,14 +130,14 @@
     let html='<div class="table-wrap"><table><thead><tr>'+header.map(h=>'<th>'+inline(h)+'</th>').join('')+'</tr></thead><tbody>';
     body.forEach(r=>{
       html+='<tr>';
-      labels.forEach((lab,i)=>{ html+='<td data-label="'+esc(lab)+'">'+inline(r[i]||'')+'</td>'; });
+      labels.forEach((lab,i)=>{ html+='<td data-label="'+esc(lab)+'">'+listenItem(r[i]||'', lang)+'</td>'; });
       html+='</tr>';
     });
     html+='</tbody></table></div>';
     return html;
   }
 
-  function mdRender(md){
+  function mdRender(md, lang){
     const lines = String(md==null?'':md).replace(/\r\n/g,'\n').split('\n');
     let html='', i=0, secOpen=false;
     const closeSec=()=>{ if(secOpen){ html+='</section>'; secOpen=false; } };
@@ -107,19 +158,19 @@
       if(h){
         const lvl=h[1].length; const txt=h[2].trim();
         if(lvl===2){ closeSec(); html+='<section class="md-sec">'; secOpen=true; }
-        html+='<h'+lvl+' id="h'+i+'">'+inline(txt)+'</h'+lvl+'>'; i++; continue;
+        html+='<h'+lvl+' id="h'+i+'">'+inline(txt, lang)+'</h'+lvl+'>'; i++; continue;
       }
       if(isHR(line)){ html+='<hr>'; i++; continue; }
       if(isQuote(line)){
         let buf=[];
         while(i<lines.length && isQuote(lines[i])){ buf.push(lines[i].replace(/^>\s?/,'')); i++; }
-        html+='<blockquote>'+mdRender(buf.join('\n'))+'</blockquote>';
+        html+='<blockquote>'+mdRender(buf.join('\n'), lang)+'</blockquote>';
         continue;
       }
       if(isTable(line) && i+1<lines.length && /^\|[\s:|-]*\|?\s*$/.test(lines[i+1]) && lines[i+1].includes('-')){
         let tbuf=[];
         while(i<lines.length && isTable(lines[i])){ tbuf.push(lines[i]); i++; }
-        html+=renderTable(tbuf);
+        html+=renderTable(tbuf, lang);
         continue;
       }
       if(isUL(line)){
@@ -129,7 +180,7 @@
           else if(!blockStart(lines[i])){ items[items.length-1]+=' '+lines[i].trim(); i++; }
           else break;
         }
-        html+='<ul>'+items.map(li=>'<li>'+inline(li)+'</li>').join('')+'</ul>';
+        html+='<ul>'+items.map(li=>'<li>'+listenItem(li, lang)+'</li>').join('')+'</ul>';
         continue;
       }
       if(isOL(line)){
@@ -139,12 +190,12 @@
           else if(!blockStart(lines[i])){ items[items.length-1]+=' '+lines[i].trim(); i++; }
           else break;
         }
-        html+='<ol>'+items.map(li=>'<li>'+inline(li)+'</li>').join('')+'</ol>';
+        html+='<ol>'+items.map(li=>'<li>'+listenItem(li, lang)+'</li>').join('')+'</ol>';
         continue;
       }
       let buf=[];
       while(i<lines.length && !blockStart(lines[i])){ buf.push(lines[i]); i++; }
-      html+='<p>'+inline(buf.join(' '))+'</p>';
+      html+='<p>'+listenItem(buf.join(' '), lang)+'</p>';
     }
     closeSec();
     return html;
@@ -387,7 +438,7 @@
       '</div>'+
       '<div class="reading">'+
         tocHtml+
-        '<div class="md-body">'+mdRender(c.raw)+'</div>'+
+        '<div class="md-body">'+mdRender(c.raw, 'ar')+'</div>'+
       '</div>'+
       nav;
   }
@@ -403,7 +454,7 @@
         '<span class="badge purple">'+m.dialectsCount+' لهجة</span>'+
         '<span class="badge rose">'+m.situationsCount+' موقف</span>'+
       '</div></div>'+
-      mdRender(a.raw);
+      mdRender(a.raw, 'ar');
   }
 
   /* ---------- قاعدة العبارات ---------- */
@@ -424,7 +475,7 @@
       equivalentsBox(p.phrase, p.msa);
     return '<div class="phrase-card" data-pid="'+esc(p.id)+'">'+
       '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
-      '<div class="phrase-main">'+speakBtn(p.phrase,'ar')+'«'+esc(p.phrase)+'»</div>'+
+      '<div class="say say-block">'+speakBtn(p.phrase,'ar')+'<div class="phrase-main">«'+esc(p.phrase)+'»</div></div>'+
       (p.msa?'<div class="phrase-msa">'+esc(p.msa)+'</div>':'')+
       moreFold(extra, 'متى وأين تُقال')+
     '</div>';
@@ -701,7 +752,7 @@
       '</div>'+
       '<div class="reading">'+
         tocHtml+
-        '<div class="md-body">'+mdRender(d.raw)+'</div>'+
+        '<div class="md-body">'+mdRender(d.raw, (d.lang && d.lang!=='all')?d.lang:'')+'</div>'+
       '</div>'+
       openBtn;
   }
@@ -725,9 +776,9 @@
     return '<div class="phrase-card ml-card" data-pid="'+esc(p.id)+'">'+
       '<button class="fav-star '+(isFav?'on':'')+'" data-pid="'+esc(p.id)+'" aria-label="مفضلة">'+(isFav?'★':'☆')+'</button>'+
       '<div class="ml-langline">'+lm.flag+' '+esc(lm.name)+(p.country?' · '+esc(p.country):'')+'</div>'+
-      '<div class="phrase-main ml-orig" dir="auto">'+speakBtn(p.originalText, p.targetLanguage)+esc(p.originalText)+'</div>'+
+      '<div class="say say-block">'+speakBtn(p.originalText, p.targetLanguage)+'<div class="phrase-main ml-orig" dir="auto">'+esc(p.originalText)+'</div></div>'+
       (p.arabicPronunciation? '<div class="ml-pron">'+esc(p.arabicPronunciation)+'</div>' : '')+
-      (arabicTxt? '<div class="phrase-msa">'+speakBtn(p.noDirectArabic==='yes'?'':(p.arabic||''),'ar')+esc(arabicTxt)+'</div>' : '')+
+      (arabicTxt? '<div class="say say-inline">'+speakBtn(p.noDirectArabic==='yes'?'':(p.arabic||''),'ar')+'<div class="phrase-msa">'+esc(arabicTxt)+'</div></div>' : '')+
       (p.arabicTranslation? '<div class="phrase-sense">'+esc(p.arabicTranslation)+'</div>' : '')+
       moreFold(extra, 'تفاصيل وملاحظات')+
     '</div>';
@@ -811,7 +862,7 @@
         const ps=rows.filter(p=>p.subcategory===sub && p.targetLanguage===l.code);
         if(!ps.length){ html+='<div class="compare-cell"><div class="ml-langline">'+l.flag+' '+esc(l.name)+'</div><div class="text-mute">—</div></div>'; return; }
         html+='<div class="compare-cell"><div class="ml-langline">'+l.flag+' '+esc(l.name)+'</div>'+
-          ps.map(p=>'<div class="ml-orig" dir="auto">'+speakBtn(p.originalText,l.code)+esc(p.originalText)+'</div>'+
+          ps.map(p=>'<div class="say say-block">'+speakBtn(p.originalText,l.code)+'<div class="ml-orig" dir="auto">'+esc(p.originalText)+'</div></div>'+
             (p.arabicPronunciation?'<div class="ml-pron">'+esc(p.arabicPronunciation)+'</div>':'')+
             (p.arabicTranslation?'<div class="phrase-msa">'+esc(p.arabicTranslation)+'</div>':'')
           ).join('')+'</div>';
@@ -874,7 +925,7 @@
     const v = voices.find(x=>x.lang && x.lang.toLowerCase().indexOf(pref)===0)
            || voices.find(x=>x.lang && x.lang.toLowerCase().indexOf(code.toLowerCase())===0);
     if(v) u.voice=v;
-    if(lang==='tg') toast('الطاجيكية تُقرأ بصوت قريب (روسي) إن وُجد');
+    if(lang==='tg' && !speak._tg){ speak._tg=1; toast('الطاجيكية تُقرأ بصوت قريب إن وُجد'); }
     syn.speak(u);
   }
 
@@ -1028,7 +1079,7 @@
       const hide = currentDlgRole!=='all' && currentDlgRole!==ln.role;
       return '<div class="bubble '+ln.role+(hide?' hidden-role':'')+'">'+
         '<div class="who">'+who+'</div>'+
-        '<div class="line" dir="auto">'+speakBtn(ln.text, currentDlgLang)+esc(ln.text)+'</div>'+
+        '<div class="say say-block">'+speakBtn(ln.text, currentDlgLang)+'<div class="line" dir="auto">'+esc(ln.text)+'</div></div>'+
       '</div>';
     }).join('');
     const allText=pack.lines.map(x=>x.text).join('. ');
