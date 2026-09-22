@@ -61,7 +61,7 @@ class LibraryRepository(context: Context, languageCode: String) {
         "10" to "👋", "11" to "💬", "12" to "🛒", "13" to "🍜", "14" to "🗣️",
         "15" to "⚖️", "16" to "🎭", "17" to "🎧", "18" to "🌏", "19" to "🔗",
         "20" to "🔁", "21" to "💡", "22" to "📑", "23" to "🔢", "24" to "🗂️",
-        "25" to "⚡", "26" to "🏪"
+        "25" to "⚡", "26" to "🏪", "27" to "🌱"
     )
 
     suspend fun listDocs(): List<LibraryDoc> = withContext(Dispatchers.IO) {

@@ -35,7 +35,7 @@ fun StudyGuideScreen(navController: NavController, viewModel: LearnViewModel) {
     val currentLanguage = viewModel.currentLanguage.collectAsState().value
 
     var currentTab by remember { mutableStateOf(0) }
-    val tabs = listOf("🧩 صندوق القوالب", "⚠️ أخطاء العرب الشائعة", "✅ التقييم الذاتي للطلاقة")
+    val tabs = listOf("كيف تتعلم فعلاً؟", "🧩 القوالب", "⚠️ أخطاء العرب", "✅ تقييم ذاتي")
 
     DisposableEffect(Unit) {
         onDispose {
@@ -115,10 +115,40 @@ fun StudyGuideScreen(navController: NavController, viewModel: LearnViewModel) {
 
             Box(modifier = Modifier.weight(1f)) {
                 when (currentTab) {
-                    0 -> TemplateBuilderTab(currentLanguage, tts)
-                    1 -> CommonMistakesTab(currentLanguage)
-                    2 -> SelfAssessmentTab()
+                    0 -> HowLanguagesAreLearnedTab()
+                    1 -> TemplateBuilderTab(currentLanguage, tts)
+                    2 -> CommonMistakesTab(currentLanguage)
+                    3 -> SelfAssessmentTab()
                 }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun HowLanguagesAreLearnedTab() {
+    val points = listOf(
+        "اللغة مهارة تُبنى بالتكرار الموزّع والاستخدام، لا بقراءة الموسوعة مرة واحدة.",
+        "خمس عشرة إلى ثلاثين دقيقة يومياً أجدى من ساعات متقطعة أسبوعياً.",
+        "اسمع قبل أن تقرأ، ثم ظلّ الجملة، ثم استرجعها دون نص.",
+        "الأخطاء تُجدول (1 ثم 3 ثم 7 ثم 14 يوماً). الإعادة العشوائية لكل شيء تُرهق ولا تثبّت.",
+        "لن تصبح طليقاً من تطبيق وحده. التطبيق يعطيك مساراً وتمارين؛ المحادثة الحقيقية هي الوقود.",
+        "مرحلة A0 هنا للنطق والقراءة فقط. لا تعدك بجمل السوق قبل أن تميز ng و e pepet.",
+        "ترجمة جوجل كلمة بكلمة، وقوائم «ألف كلمة» الآلية، ووعد الطلاقة في أسابيع: تجنّبها."
+    )
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            Text("كيف تتعلم لغة فعلاً؟", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "دليل مختصر بلا مبالغة. الهدف قدرة عملية محدودة تُقاس بما تفعله، لا بما تحفظه.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline
+            )
+        }
+        items(points) { line ->
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                Text(line, modifier = Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -526,8 +556,8 @@ fun SelfAssessmentTab() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text("📈 تقييم طلاقتي اللغوية الذاتي", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("قيّم مهارتك بنفسك للتأكد من اكتمال أهداف الدراسة واكتساب المهارة الحقيقية:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            Text("📈 تقييم ذاتي صادق", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("هذه بنود قدرة عملية محدودة، لا شهادة طلاقة:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
             Spacer(Modifier.height(4.dp))
         }
 

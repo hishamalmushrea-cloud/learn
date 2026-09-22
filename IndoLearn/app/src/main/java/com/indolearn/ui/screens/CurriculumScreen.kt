@@ -70,7 +70,7 @@ fun CurriculumScreen(navController: NavController, viewModel: LearnViewModel) {
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "مسار متدرج من الصفر إلى الأساس العملي. ابدأ بالمرحلة الأولى، وطبّق كل درس في البطاقات والمواقف الواقعية قبل الانتقال.",
+                        "ابدأ بـ A0 للنطق والقراءة إن كانت لغتك الإندونيسية، ثم الأساس العملي. لا مراحل فارغة ولا وعد بالطلاقة.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )

@@ -143,8 +143,16 @@ _GEN_TR = os.path.join(
     ROOT, "IndoLearn", "app", "src", "main", "java", "com", "indolearn",
     "data", "repository", "TurkLangContent.kt",
 )
+_A0 = os.path.join(
+    ROOT, "IndoLearn", "app", "src", "main", "java", "com", "indolearn",
+    "data", "repository", "A0PronunciationContent.kt",
+)
+_SC = os.path.join(
+    ROOT, "IndoLearn", "app", "src", "main", "java", "com", "indolearn",
+    "data", "repository", "IndoScenariosA1.kt",
+)
 _sources = [open(REPO, encoding="utf-8").read()]
-for _g in (GENERATED, _GEN_TR):
+for _g in (GENERATED, _GEN_TR, _A0, _SC):
     if os.path.exists(_g):
         _sources.append(open(_g, encoding="utf-8").read())
 REPO_SRC = strip_comments("\n".join(_sources))

@@ -39,6 +39,9 @@ interface TrainingDao {
     @Query("SELECT * FROM training_items WHERE id IN (:ids) AND languageCode = :langCode")
     suspend fun getByIds(ids: List<Int>, langCode: String): List<TrainingItemEntity>
 
+    @Query("SELECT * FROM training_items WHERE category = :category AND languageCode = :langCode")
+    suspend fun getByCategoryOnce(category: String, langCode: String): List<TrainingItemEntity>
+
     @Query("SELECT COUNT(*) FROM training_items")
     suspend fun countAny(): Int
 

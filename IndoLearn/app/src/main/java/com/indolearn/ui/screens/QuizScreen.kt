@@ -25,7 +25,13 @@ import com.indolearn.viewmodel.LearnViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
+fun QuizScreen(
+    navController: NavController,
+    viewModel: LearnViewModel,
+    category: String? = null,
+    passPercent: Int = 50,
+    resultLessonId: Int = MIXED_QUIZ_LESSON_ID
+) {
     var questions by remember { mutableStateOf<List<TrainingItemEntity>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var currentQuestionIndex by remember { mutableStateOf(0) }
@@ -36,7 +42,11 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
     var isCorrect by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        questions = viewModel.getRandomQuizzes(10)
+        questions = if (!category.isNullOrBlank()) {
+            viewModel.getQuizzesByCategory(category)
+        } else {
+            viewModel.getRandomQuizzes(10)
+        }
         isLoading = false
     }
 
@@ -82,12 +92,14 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
             }
 
             if (showResult) {
+                val percent = if (questions.isEmpty()) 0 else (score * 100) / questions.size
+                val passed = percent >= passPercent
                 // RESULT SCREEN
                 Spacer(Modifier.height(48.dp))
-                Text(if (score >= questions.size / 2) "🎉" else "💪", fontSize = 72.sp)
+                Text(if (passed) "🎉" else "💪", fontSize = 72.sp)
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    if (score >= questions.size / 2) "أحسنت!" else "حاول مرة أخرى!",
+                    if (passed) "نجحت (${percent}٪)" else "لم تبلغ ${passPercent}٪ بعد",
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -95,7 +107,7 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (score >= questions.size / 2)
+                        containerColor = if (passed)
                             MaterialTheme.colorScheme.secondaryContainer
                         else MaterialTheme.colorScheme.errorContainer
                     )
@@ -214,7 +226,7 @@ fun QuizScreen(navController: NavController, viewModel: LearnViewModel) {
                                 // هذا اختبار مختلط لا يخص درساً بعينه، لذلك
                                 // يُحفظ تحت معرّف مخصص لا يصطدم بأي درس.
                                 viewModel.saveQuizResult(
-                                    MIXED_QUIZ_LESSON_ID, score, questions.size
+                                    resultLessonId, score, questions.size
                                 )
                                 showResult = true
                             }
